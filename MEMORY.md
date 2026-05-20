@@ -121,7 +121,7 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 | Neon | DATABASE_URL, DIRECT_URL | ✅ |
 | Upstash | UPSTASH_REDIS_REST_URL, TOKEN | ✅ |
 | Cloudflare R2 | R2_KEY_ID, R2_SECRET, R2_ACCOUNT_ID | ✅ |
-| Cloudflare DNS | ACCOUNT_ID, ZONE_ID | 🔶 zone created, nameservers pending |
+| Cloudflare DNS | ACCOUNT_ID, ZONE_ID | ✅ live, NS migrated, Vercel attached |
 | Razorpay | KEY_ID, KEY_SECRET, WEBHOOK_SECRET | ⏳ |
 | ~~Firebase~~ | ~~5 public + 3 admin SDK keys~~ | ❌ Dropped 20 May — replaced by Meta |
 | ~~WATI~~ | ~~API_URL, TOKEN, WEBHOOK_SECRET~~ | ❌ Dropped 20 May — replaced by Meta |

@@ -55,9 +55,9 @@
 
 **Domain:**
 - [x] Add dronagiriherbal.in to Cloudflare (zone created 20 May 2026)
-- [ ] Update nameservers at GoDaddy → Cloudflare's (propagation: 1–24h)
-- [ ] Add DNS records (A / CNAME) pointing dronagiriherbal.in → Vercel
-- [ ] Attach dronagiriherbal.in as custom domain in Vercel project (SSL auto-issued)
+- [x] Update nameservers at GoDaddy → Cloudflare's
+- [x] Add DNS records (A / CNAME) pointing dronagiriherbal.in → Vercel
+- [x] Attach dronagiriherbal.in as custom domain in Vercel project (SSL auto-issued)
 - [ ] Decide fate of dronagiriherbal.com (kill / 301 to .in / keep as old.*) — tracked in DISPUTE.md
 
 ---

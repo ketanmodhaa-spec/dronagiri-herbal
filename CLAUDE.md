@@ -291,13 +291,13 @@ Print and laminate alias cheatsheet for Sarita's production area.
 | Neon PostgreSQL | ✅ Done | Both URLs in .env |
 | Upstash Redis | ✅ Done | REST URL + token in .env |
 | Cloudflare R2 | ✅ Done | Bucket + API token in Doppler |
-| Cloudflare DNS | 🔶 Partial | Zone for dronagiriherbal.in created. Nameserver migration at GoDaddy pending. Vercel custom domain attach pending. |
+| Cloudflare DNS | ✅ Done | dronagiriherbal.in zone active. NS migrated from GoDaddy → Cloudflare. DNS records pointing to Vercel. |
 | Razorpay | ⏳ Pending | Sarita to complete KYC |
 | Meta WhatsApp Business API | ⏳ Pending | Single service for OTP + notifications. Replaces Firebase + WATI. |
 | Resend | ✅ Done | API key in Doppler. Domain verified for dronagiriherbal.in. |
 | Anthropic | ⏳ Pending | |
 | Sentry | ⏳ Pending | |
-| Vercel | ⏳ Pending | Connect after repo push |
+| Vercel | ✅ Done | Project live. dronagiriherbal.in attached with SSL. |
 
 ---
 

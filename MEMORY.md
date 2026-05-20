@@ -125,7 +125,7 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 | ~~Firebase~~ | ~~5 public + 3 admin SDK keys~~ | ❌ Dropped 20 May — replaced by Meta |
 | ~~WATI~~ | ~~API_URL, TOKEN, WEBHOOK_SECRET~~ | ❌ Dropped 20 May — replaced by Meta |
 | Meta WhatsApp BA | APP_ID, APP_SECRET, PHONE_NUMBER_ID, BUSINESS_ACCOUNT_ID, ACCESS_TOKEN, WEBHOOK_VERIFY_TOKEN | ⏳ |
-| Resend | API_KEY | ⏳ |
+| Resend | API_KEY | ✅ |
 | Anthropic | API_KEY | ⏳ |
 | Sentry | DSN, AUTH_TOKEN | ⏳ |
 

@@ -293,7 +293,7 @@ Print and laminate alias cheatsheet for Sarita's production area.
 | Cloudflare R2 | ✅ Done | Bucket + API token in .env |
 | Razorpay | ⏳ Pending | Sarita to complete KYC |
 | Meta WhatsApp Business API | ⏳ Pending | Single service for OTP + notifications. Replaces Firebase + WATI. |
-| Resend | ⏳ Pending | |
+| Resend | ✅ Done | API key in Doppler. Domain verified for dronagiriherbal.in. |
 | Anthropic | ⏳ Pending | |
 | Sentry | ⏳ Pending | |
 | Vercel | ⏳ Pending | Connect after repo push |

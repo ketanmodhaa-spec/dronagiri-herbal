@@ -49,7 +49,7 @@
 
 **Pending services:**
 - [ ] Meta WhatsApp Business API — register WhatsApp number, get app + access token, submit templates
-- [ ] Resend — signup + domain verify (dronagiriherbal.in)
+- [x] Resend — signup + domain verify (dronagiriherbal.in) — done 20 May 2026
 - [ ] Anthropic — get API key + set spend limit
 - [ ] Sentry — setup project
 

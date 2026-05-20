@@ -8,11 +8,13 @@
 ## Today — 15 May 2026
 
 ### In progress right now
-- [ ] Create repo on D: drive
-- [ ] Install Node.js and Git (verify versions)
-- [ ] Initialize monorepo structure
-- [ ] Push to GitHub
-- [ ] Connect GitHub to Vercel
+- [x] Create repo on D: drive — done 20 May 2026
+- [x] Install Node.js and Git (verify versions) — done 20 May 2026
+- [x] Initialize monorepo structure (pnpm + Turborepo + Next.js 14 + Tailwind + Prisma) — done 20 May 2026
+- [x] Push to GitHub — done 20 May 2026
+- [x] Connect GitHub to Vercel — done 20 May 2026 (live at dronagiriherbal.in with SSL)
+- [x] Doppler setup (workplace + dev config linked to repo) — done 20 May 2026
+- [x] Neon agent skill + MCP for Claude — done 20 May 2026
 
 ### Blocked
 - ⏳ Razorpay KYC — Sarita to complete independently.

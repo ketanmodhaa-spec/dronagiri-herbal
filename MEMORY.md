@@ -1,7 +1,7 @@
 # MEMORY.md — Dronagiri Herbal
 > Architectural decisions, rationale, and context that must persist.
 > Add entries chronologically. Never delete old entries — cross them out if reversed.
-> Last updated: 15 May 2026
+> Last updated: 20 May 2026
 
 ---
 
@@ -21,11 +21,12 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 
 ---
 
-### [15 May 2026] Firebase Admin SDK blocked
-**Decision:** Skip Admin SDK key for now — use Firebase REST API  
-**Reason:** Google Workspace org policy `iam.disableServiceAccountKeyCreation` is enforced on dronagiriherbal.com domain. Key creation blocked.  
-**Workaround:** Firebase REST API for server-side OTP verification — no service account key needed.  
-**Revisit:** When developer sets up — they may use Workload Identity Federation as permanent fix.
+### ~~[15 May 2026] Firebase Admin SDK blocked~~ (REVERSED 20 May 2026)
+~~**Decision:** Skip Admin SDK key for now — use Firebase REST API~~  
+~~**Reason:** Google Workspace org policy `iam.disableServiceAccountKeyCreation` is enforced on dronagiriherbal.com domain. Key creation blocked.~~  
+~~**Workaround:** Firebase REST API for server-side OTP verification — no service account key needed.~~  
+~~**Revisit:** When developer sets up — they may use Workload Identity Federation as permanent fix.~~  
+**Superseded by:** [20 May 2026] Meta WhatsApp Business API replaces Firebase Phone Auth — Firebase is no longer used at all.
 
 ---
 
@@ -38,7 +39,8 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 ### [15 May 2026] Phone OTP as primary identity
 **Decision:** Phone number is the primary customer identity  
 **Reason:** Indian users verify phone for everything — banking, UPI, Swiggy, Flipkart. Password creates friction and drop-offs.  
-**Implementation:** Firebase Phone Auth → OTP → Customer record in DB with phone as unique key.
+~~**Implementation:** Firebase Phone Auth → OTP → Customer record in DB with phone as unique key.~~  
+**Implementation (updated 20 May 2026):** Meta WhatsApp Business API → OTP via WhatsApp message → Customer record in DB with phone as unique key. SMS fallback if WhatsApp delivery fails.
 
 ---
 
@@ -95,6 +97,22 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 
 ---
 
+### [20 May 2026] Meta WhatsApp Business API — replaces Firebase + WATI
+**Decision:** Single integration with Meta WhatsApp Business API directly. Drops Firebase Phone Auth and WATI.  
+**Reason:** One service for both OTP delivery and notification templates. Cheaper than Firebase + WATI combined. No Firebase Admin SDK org-policy workaround needed. Single template approval flow with Meta.  
+**Implementation:** OTP delivered via WhatsApp message → user enters code → server verifies via Meta API → session created. Notifications use same Meta Business API with approved templates.  
+**Env vars (in turbo.json globalEnv):** META_APP_ID, META_APP_SECRET, META_WHATSAPP_PHONE_NUMBER_ID, META_WHATSAPP_BUSINESS_ACCOUNT_ID, META_WHATSAPP_ACCESS_TOKEN, META_WHATSAPP_WEBHOOK_VERIFY_TOKEN.
+
+---
+
+### [20 May 2026] Domain finalised — dronagiriherbal.in
+**Decision:** Canonical domain is **dronagiriherbal.in** (not .com).  
+**Reason:** Locked in by Jaydeep. Earlier doc references to .com are stale.  
+**Impact:** Update all hardcoded references, Vercel domain config, Doppler env vars (NEXT_PUBLIC_DOMAIN, EMAIL_FROM, ADMIN_DEFAULT_EMAIL), Google Search Console verification, GA4 property domain.  
+**Open question:** Old WordPress currently lives at dronagiriherbal.com — should it migrate to old.dronagiriherbal.in or stay on .com permanently? (Tracked in DISPUTE.md DNS migration entry.)
+
+---
+
 ## Service Credentials Reference
 *(Values are in .env.local — this is just a checklist)*
 
@@ -104,8 +122,9 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 | Upstash | UPSTASH_REDIS_REST_URL, TOKEN | ✅ |
 | Cloudflare R2 | R2_KEY_ID, R2_SECRET, R2_ACCOUNT_ID | ✅ |
 | Razorpay | KEY_ID, KEY_SECRET, WEBHOOK_SECRET | ⏳ |
-| Firebase | 5 public + 3 admin SDK keys | 🔶 |
-| WATI | API_URL, TOKEN, WEBHOOK_SECRET | ⏳ |
+| ~~Firebase~~ | ~~5 public + 3 admin SDK keys~~ | ❌ Dropped 20 May — replaced by Meta |
+| ~~WATI~~ | ~~API_URL, TOKEN, WEBHOOK_SECRET~~ | ❌ Dropped 20 May — replaced by Meta |
+| Meta WhatsApp BA | APP_ID, APP_SECRET, PHONE_NUMBER_ID, BUSINESS_ACCOUNT_ID, ACCESS_TOKEN, WEBHOOK_VERIFY_TOKEN | ⏳ |
 | Resend | API_KEY | ⏳ |
 | Anthropic | API_KEY | ⏳ |
 | Sentry | DSN, AUTH_TOKEN | ⏳ |

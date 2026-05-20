@@ -1,7 +1,36 @@
 # DISCUSSION.md — Dronagiri Herbal
 > Log of key discussions, decisions made, and their rationale.
 > Date-stamped entries. Most recent at top.
-> Last updated: 15 May 2026
+> Last updated: 20 May 2026
+
+---
+
+## [20 May 2026] — Stack reconciliation + Doppler + Vercel monorepo
+
+**Participants:** Jaydeep Buch + Claude  
+**Context:** Resumed after 2-month break. Reviewed env template against populated planning docs; two stack discrepancies surfaced and were resolved.
+
+### Decisions:
+
+**Meta WhatsApp Business API — replaces Firebase Phone Auth and WATI**  
+Decision: Single direct integration with Meta WhatsApp Business API for both OTP delivery and notification templates.  
+Rationale: Cheaper than running Firebase + WATI in parallel. Single template approval flow with Meta. Eliminates the Firebase Admin SDK org-policy blocker entirely. WATI was a middleware layer over the same Meta API — going direct removes the markup.  
+Impact: Firebase entries removed from active stack. WATI account no longer needed. All 13 WhatsApp templates submitted to Meta directly (not via WATI).
+
+**Domain finalised — dronagiriherbal.in**  
+Decision: Canonical TLD is `.in`, not `.com`.  
+Rationale: [user-supplied]  
+Impact: Update all docs (this session). Doppler/Vercel env vars: NEXT_PUBLIC_DOMAIN, EMAIL_FROM, ADMIN_DEFAULT_EMAIL all switch to .in. DNS migration plan in DISPUTE.md updated.
+
+**Doppler for secrets management**  
+Decision: Use Doppler instead of `.env` files for all environments (dev, preview, prod).  
+Rationale: Single source of truth, automatic sync to Vercel, no risk of committing secrets.  
+Impact: Dev commands wrap as `doppler run -- pnpm dev`. Vercel env vars sync from Doppler. env.local.txt retained as a local catalog of variable names; .env.local stays in repo (empty, gitignored) for localhost-only fallbacks until ~25% milestone.
+
+**Vercel monorepo — Root Directory = apps/web**  
+Decision: Set Vercel project's Root Directory to `apps/web` (with "Include files outside the root directory" enabled).  
+Rationale: Standard pattern for Next.js + Turborepo. Vercel auto-detects Next.js from that path and uses Turborepo for caching. No vercel.json hacks needed.  
+Impact: First two Vercel builds failed because Root was still at repo root — fixed by changing this setting.
 
 ---
 

@@ -1,7 +1,7 @@
 # AUDIT.md — Dronagiri Herbal
 > Security audit log, code review notes, and compliance checklist.
 > Run a full audit before every major milestone.
-> Last updated: 15 May 2026
+> Last updated: 20 May 2026
 
 ---
 
@@ -51,7 +51,8 @@
 
 ### WhatsApp Restock
 - [ ] Authorised phone allowlist checked before every command
-- [ ] WATI webhook signature verified
+- [ ] Meta WhatsApp webhook signature verified (X-Hub-Signature-256, HMAC-SHA256 with META_APP_SECRET)
+- [ ] Meta webhook verify token challenge matched (GET subscription)
 - [ ] Message deduplication via Redis (24h TTL)
 - [ ] Rate limit: 20 commands/hour per phone
 - [ ] Group chat messages silently ignored
@@ -84,10 +85,10 @@ Next audit: After Step 1 completion
 
 ## Known Security Decisions (Accepted Risks)
 
-### Firebase Admin SDK via REST API
-**Risk:** Slightly less control than Admin SDK  
-**Accepted:** Yes — org policy prevents key creation. REST API is documented and supported.  
-**Mitigation:** OTP verification still happens server-side via REST API. Token validity confirmed server-side before any session is created.
+### Meta WhatsApp OTP — delivery dependent on WhatsApp availability
+**Risk:** Users without WhatsApp cannot receive OTP. Phone numbers must be registered on WhatsApp for delivery to succeed.  
+**Accepted:** Yes (20 May 2026) — WhatsApp penetration in India is ~95%+ for the target demographic. Switched from Firebase Phone Auth (SMS) to Meta WhatsApp BA after eliminating Firebase entirely.  
+**Mitigation:** SMS fallback path if Meta WhatsApp delivery fails or times out (provider TBD — MSG91 in parking lot). OTP code verification happens server-side via Meta verification endpoint before any session is created.
 
 ### COD — No payment at time of order
 **Risk:** Customer can place order with no upfront payment  

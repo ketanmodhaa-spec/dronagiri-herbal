@@ -1,7 +1,7 @@
 # CLAUDE.md — Dronagiri Herbal Platform
 > This file is read automatically by Claude Code at every session start.
 > Keep it updated. It is the single source of truth for AI context.
-> Last updated: 15 May 2026
+> Last updated: 20 May 2026
 
 ---
 
@@ -9,9 +9,9 @@
 
 **Client:** Sarita Modha — Solo entrepreneur, Ahmedabad, Gujarat  
 **Brand:** Dronagiri Herbal — "Sanjivani for Hair & Skin Care"  
-**Domain:** dronagiriherbal.com  
+**Domain:** dronagiriherbal.in  
 **Registration:** UDYAM-GJ-01-0019327 | KVIC: S0/GJ/KVIC/22/2022 | WHO GMP | Trademark ®  
-**Contact:** store@dronagiriherbal.com | +91 94290 29840  
+**Contact:** store@dronagiriherbal.in | +91 94290 29840  
 
 **Architect/PM:** Jaydeep Buch (non-technical, Claude Code primary tool)  
 **Deployment partner:** Previous web agency (technical, handles hosting)
@@ -38,9 +38,9 @@ ORM:         Prisma
 Cache:       Upstash Redis (REST API — edge compatible)
 Storage:     Cloudflare R2 (product images)
 Payments:    Razorpay (UPI + Cards + COD)
-WhatsApp:    WATI (Business API)
+WhatsApp:    Meta WhatsApp Business API (direct — both OTP and notifications)
+OTP:         Meta WhatsApp Business API (replaces Firebase Phone Auth)
 Email:       Resend
-Phone OTP:   Firebase Phone Auth
 AI:          Anthropic Claude API (DronaBot)
 Hosting:     Vercel (Pro)
 Monitoring:  Sentry
@@ -100,7 +100,7 @@ dronagiri-herbal/                   ← root (D:/dronagiri-herbal)
 
 ```
 Guest checkout    → No login. Phone captured at checkout only.
-Phone OTP         → Firebase. Primary identity for Indian users.
+Phone OTP         → Meta WhatsApp Business API. Primary identity for Indian users.
 Full account      → Optional. Offered AFTER successful order.
 Admin             → bcrypt + RS256 JWT. Separate cookie scope.
 ```
@@ -292,8 +292,7 @@ Print and laminate alias cheatsheet for Sarita's production area.
 | Upstash Redis | ✅ Done | REST URL + token in .env |
 | Cloudflare R2 | ✅ Done | Bucket + API token in .env |
 | Razorpay | ⏳ Pending | Sarita to complete KYC |
-| Firebase Phone Auth | 🔶 Partial | Public config done. Admin SDK blocked by org policy |
-| WATI | ⏳ Pending | Existing account — get credentials |
+| Meta WhatsApp Business API | ⏳ Pending | Single service for OTP + notifications. Replaces Firebase + WATI. |
 | Resend | ⏳ Pending | |
 | Anthropic | ⏳ Pending | |
 | Sentry | ⏳ Pending | |

@@ -1,7 +1,7 @@
 # AGENDA.md — Dronagiri Herbal
 > Current tasks, sprint, and priorities.
 > Update this file at the start and end of every work session.
-> Last updated: 15 May 2026 — 8:00 PM IST
+> Last updated: 20 May 2026
 
 ---
 
@@ -15,15 +15,15 @@
 - [ ] Connect GitHub to Vercel
 
 ### Blocked
-- 🔶 Firebase Admin SDK — org policy blocks key creation. Developer to handle via REST API workaround.
 - ⏳ Razorpay KYC — Sarita to complete independently.
+- ⏳ Meta WhatsApp templates — 13 templates pending Meta approval (24–48h each).
 
 ### Completed today
 - ✅ Neon PostgreSQL — both URLs in .env
 - ✅ Upstash Redis — REST URL + token in .env
 - ✅ Cloudflare R2 — bucket + API token in .env
-- ✅ Firebase project created — web app registered — Phone Auth enabled
-- ✅ Firebase public config in .env
+- ~~✅ Firebase project created — web app registered — Phone Auth enabled~~ (dropped 20 May — Firebase no longer used)
+- ~~✅ Firebase public config in .env~~ (dropped 20 May)
 - ✅ All project MD files created (CLAUDE, MEMORY, AGENDA, DISCUSSION, AUDIT, DISPUTE)
 
 ---
@@ -43,19 +43,19 @@
 
 **Sarita tasks:**
 - [ ] Product photography (2-3 shots per product, natural light)
-- [ ] WhatsApp WATI template texts approval
+- [ ] WhatsApp Meta template texts review (Jaydeep submits to Meta Business Manager)
 - [ ] Razorpay KYC completion
 - [ ] Confirm real prices for all 20 products (currently all ₹299 — placeholder)
 
 **Pending services:**
-- [ ] WATI — get API credentials
-- [ ] Resend — signup + domain verify
+- [ ] Meta WhatsApp Business API — register WhatsApp number, get app + access token, submit templates
+- [ ] Resend — signup + domain verify (dronagiriherbal.in)
 - [ ] Anthropic — get API key + set spend limit
 - [ ] Sentry — setup project
 
 **Domain:**
-- [ ] Point dronagiriherbal.com → Vercel (coordinate with deployment agency)
-- [ ] Old WordPress → old.dronagiriherbal.com
+- [ ] Point dronagiriherbal.in → Vercel (coordinate with deployment agency)
+- [ ] Decide fate of dronagiriherbal.com (kill / 301 to .in / keep as old.*) — tracked in DISPUTE.md
 
 ---
 
@@ -70,7 +70,7 @@
 - [ ] Razorpay integration (test mode first)
 - [ ] Payment verification (HMAC-SHA256)
 - [ ] Order confirmation + tracking page
-- [ ] WhatsApp notifications (WATI templates)
+- [ ] WhatsApp notifications (Meta Business API templates)
 - [ ] Admin panel — orders management
 - [ ] Hair & skin quiz
 
@@ -106,7 +106,7 @@
 ## Definition of Done — Step 1
 
 Step 1 is complete when:
-- [ ] dronagiriherbal.com loads the new Next.js homepage
+- [ ] dronagiriherbal.in loads the new Next.js homepage
 - [ ] All 20 products visible in catalog (with Sarita's photos)
 - [ ] Admin can login at /admin/login
 - [ ] Guest session cookie set on every page load

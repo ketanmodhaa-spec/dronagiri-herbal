@@ -1,21 +1,11 @@
 # DISPUTE.md — Dronagiri Herbal
 > Open issues, unresolved conflicts, and things to revisit.
 > Close entries with resolution when resolved.
-> Last updated: 15 May 2026
+> Last updated: 20 May 2026
 
 ---
 
 ## Open Issues
-
-### [OPEN] — Firebase Admin SDK blocked
-**Opened:** 15 May 2026  
-**Description:** Google Workspace org policy `iam.disableServiceAccountKeyCreation` prevents generating service account key. Needed for server-side OTP verification.  
-**Impact:** Server-side Firebase Admin SDK cannot be used as planned.  
-**Workaround:** Firebase REST API for token verification — `POST https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=[API_KEY]`  
-**Assigned to:** Developer to implement REST API approach  
-**Resolution:** ⏳ Open
-
----
 
 ### [OPEN] — Razorpay KYC pending
 **Opened:** 15 May 2026  
@@ -37,36 +27,39 @@
 ---
 
 ### [OPEN] — DNS migration timing
-**Opened:** 15 May 2026  
-**Description:** dronagiriherbal.com currently points to WordPress (via GoDaddy DNS). Must be migrated to Vercel when new site is ready.  
-**Risk:** Brief downtime during DNS propagation (10–30 minutes).  
-**Plan:** Old WordPress → old.dronagiriherbal.com first, then point apex to Vercel.  
+**Opened:** 15 May 2026 | **Updated:** 20 May 2026 — canonical domain switched to .in  
+**Description:** New site launches on **dronagiriherbal.in** (Vercel). Old WordPress at dronagiriherbal.com must be handled — either redirected to .in or moved to old.dronagiriherbal.com permanently.  
+**Risk:** Brief downtime during DNS propagation (10–30 minutes). SEO impact if .com → .in redirect not configured correctly (301s required, sitemap regen, GSC change-of-address).  
+**Plan:** TBD — pending Jaydeep's decision on .com fate (kill, redirect, or keep as old.*).  
 **Assigned to:** Deployment agency + Jaydeep  
 **Resolution:** ⏳ Open — scheduled for end of Step 1
 
 ---
 
-### [OPEN] — WATI template approval
-**Opened:** 15 May 2026  
-**Description:** 13 WhatsApp message templates need to be submitted to WATI for Meta approval. Each takes 24–48 hours.  
-**Impact:** No WhatsApp notifications until templates approved.  
-**Assigned to:** Developer to write template content → Jaydeep to submit via WATI dashboard  
+### [OPEN] — Meta WhatsApp template approval
+**Opened:** 15 May 2026 (as WATI) | **Updated:** 20 May 2026 — switched to direct Meta Business API  
+**Description:** 13 WhatsApp message templates need to be submitted **directly to Meta Business Manager** for approval. Each takes 24–48 hours.  
+**Impact:** No WhatsApp OTP delivery and no notifications until templates approved.  
+**Assigned to:** Developer to write template content → Jaydeep to submit via Meta Business Manager  
 **Resolution:** ⏳ Open — submit at least 1 week before launch
 
 ---
 
 ### [OPEN] — Google Search Console verification
-**Opened:** 15 May 2026  
-**Description:** URL prefix property attempted for dronagiriherbal.com. Domain property showed "Invalid domain" error.  
-**Current status:** URL prefix method not yet completed.  
-**Next step:** HTML tag method via WordPress header or Next.js layout.tsx  
+**Opened:** 15 May 2026 | **Updated:** 20 May 2026 — domain switched to .in  
+**Description:** URL prefix property attempted for dronagiriherbal.com. Domain property showed "Invalid domain" error. Now redirected at .in — new GSC property needed.  
+**Current status:** URL prefix method not yet completed. Need GSC property for **dronagiriherbal.in** (treat .com as separate/old property).  
+**Next step:** HTML tag method via Next.js layout.tsx (metadata.verification.google).  
 **Resolution:** ⏳ Open
 
 ---
 
 ## Closed Issues
 
-*(Move resolved issues here with date and resolution)*
+### [CLOSED 20 May 2026] — Firebase Admin SDK blocked
+**Opened:** 15 May 2026 | **Closed:** 20 May 2026  
+**Original description:** Google Workspace org policy `iam.disableServiceAccountKeyCreation` prevented service account key creation. Needed for server-side OTP verification.  
+**Resolution:** ✅ Resolved by dropping Firebase entirely. Switched to Meta WhatsApp Business API for OTP — no Firebase Admin SDK dependency at all. See [20 May 2026] entry in MEMORY.md.
 
 ---
 

@@ -54,7 +54,10 @@
 - [ ] Sentry — setup project
 
 **Domain:**
-- [ ] Point dronagiriherbal.in → Vercel (coordinate with deployment agency)
+- [x] Add dronagiriherbal.in to Cloudflare (zone created 20 May 2026)
+- [ ] Update nameservers at GoDaddy → Cloudflare's (propagation: 1–24h)
+- [ ] Add DNS records (A / CNAME) pointing dronagiriherbal.in → Vercel
+- [ ] Attach dronagiriherbal.in as custom domain in Vercel project (SSL auto-issued)
 - [ ] Decide fate of dronagiriherbal.com (kill / 301 to .in / keep as old.*) — tracked in DISPUTE.md
 
 ---

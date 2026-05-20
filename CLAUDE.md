@@ -288,8 +288,8 @@ Print and laminate alias cheatsheet for Sarita's production area.
 
 | Service | Status | Notes |
 |---------|--------|-------|
-| Neon PostgreSQL | ✅ Done | Both URLs in .env |
-| Upstash Redis | ✅ Done | REST URL + token in .env |
+| Neon PostgreSQL | ✅ Done | DATABASE_URL + DIRECT_URL in Doppler (dev + prod). Pooled for runtime, direct for migrations. |
+| Upstash Redis | ✅ Done | REST URL + token in Doppler |
 | Cloudflare R2 | ✅ Done | Bucket + API token in Doppler |
 | Cloudflare DNS | ✅ Done | dronagiriherbal.in zone active. NS migrated from GoDaddy → Cloudflare. DNS records pointing to Vercel. |
 | Razorpay | ⏳ Pending | Sarita to complete KYC |

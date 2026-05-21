@@ -1,11 +1,22 @@
 # DISPUTE.md — Dronagiri Herbal
 > Open issues, unresolved conflicts, and things to revisit.
 > Close entries with resolution when resolved.
-> Last updated: 20 May 2026
+> Last updated: 21 May 2026
 
 ---
 
 ## Open Issues
+
+### [OPEN] — Production Neon branch has no schema
+**Opened:** 21 May 2026
+**Description:** The Neon project has two branches. The init migration (15 tables, commit `2dc02b5`) and the dev seed were applied **only to `br-long-pine`** (endpoint `ep-square-fire`) — a child branch created 21 May. The **primary branch `br-sweet-wildflower`** (endpoint `ep-restless-hill`, created with the project) is empty — no tables. Doppler `dev` points at `br-long-pine` (correct); Doppler `prd` — both `DATABASE_URL` and `DIRECT_URL` — points at the empty primary.
+**Impact:** Production has no schema. A prod deploy today would fail every query with `relation does not exist`. CLAUDE.md's `Neon ✅ Done` overstated this — corrected to ⏳ Partial.
+**Decision (canonical branch):** The **primary branch `br-sweet-wildflower` is the canonical / production branch** — Neon's primary branch is the long-lived, undeletable root and parent of all child branches, so production belongs there. `br-long-pine` is the standing **dev** branch — keep it, treat as protected (not scratch); recommend renaming it `dev` in the Neon console. Staging gets its own child branch off primary when needed.
+**Workaround:** Dev is fully functional on `br-long-pine`; current build work is unaffected.
+**Assigned to:** Developer (Claude Code) — execute before launch.
+**Resolution:** ⏳ Open — pre-launch blocker. Before launch: (1) run `prisma migrate deploy` against the primary branch's `DIRECT_URL`; (2) do **not** run the dev seed on primary — it is placeholder data (₹299, dev-only); Sarita's real catalogue is entered via the admin panel; (3) optionally rename `br-long-pine` → `dev` in Neon; (4) wire `stg` `DATABASE_URL`/`DIRECT_URL` when staging work begins.
+
+---
 
 ### [OPEN] — Razorpay KYC pending
 **Opened:** 15 May 2026  

@@ -1,7 +1,7 @@
 # AGENDA.md — Dronagiri Herbal
 > Current tasks, sprint, and priorities.
 > Update this file at the start and end of every work session.
-> Last updated: 20 May 2026
+> Last updated: 21 May 2026
 
 ---
 
@@ -36,8 +36,8 @@
 
 **Developer tasks:**
 - [ ] Monorepo scaffold (turbo + Next.js + Expo)
-- [ ] Prisma schema push to Neon
-- [ ] Seed database (all 20 products + aliases)
+- [ ] Prisma schema push to Neon — applied to dev branch (`br-long-pine`) only; primary/prod branch still empty — **pre-launch blocker, see DISPUTE.md**
+- [ ] Seed database (24 products + aliases) — seeded + verified on dev branch 21 May 2026 (do NOT seed prod — placeholder data)
 - [ ] Design system — CSS tokens, base components
 - [ ] Guest session middleware (JWT + rate limiting)
 - [ ] Security headers (next.config.ts)

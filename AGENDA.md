@@ -36,7 +36,7 @@
 
 **Developer tasks:**
 - [ ] Monorepo scaffold (turbo + Next.js + Expo)
-- [ ] Prisma schema push to Neon — applied to dev branch (`br-long-pine`) only; primary/prod branch still empty — **pre-launch blocker, see DISPUTE.md**
+- [x] Prisma schema push to Neon — `dev` (`br-long-pine`) + `production` (`br-sweet-wildflower`) branches both migrated — done 21 May 2026
 - [ ] Seed database (24 products + aliases) — seeded + verified on dev branch 21 May 2026 (do NOT seed prod — placeholder data)
 - [ ] Design system — CSS tokens, base components
 - [ ] Guest session middleware (JWT + rate limiting)

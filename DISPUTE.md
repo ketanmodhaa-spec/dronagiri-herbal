@@ -7,17 +7,6 @@
 
 ## Open Issues
 
-### [OPEN] — Production Neon branch has no schema
-**Opened:** 21 May 2026
-**Description:** The Neon project has two branches. The init migration (15 tables, commit `2dc02b5`) and the dev seed were applied **only to `br-long-pine`** (endpoint `ep-square-fire`) — a child branch created 21 May. The **primary branch `br-sweet-wildflower`** (endpoint `ep-restless-hill`, created with the project) is empty — no tables. Doppler `dev` points at `br-long-pine` (correct); Doppler `prd` — both `DATABASE_URL` and `DIRECT_URL` — points at the empty primary.
-**Impact:** Production has no schema. A prod deploy today would fail every query with `relation does not exist`. CLAUDE.md's `Neon ✅ Done` overstated this — corrected to ⏳ Partial.
-**Decision (canonical branch):** The **primary branch `br-sweet-wildflower` is the canonical / production branch** — Neon's primary branch is the long-lived, undeletable root and parent of all child branches, so production belongs there. `br-long-pine` is the standing **dev** branch — keep it, treat as protected (not scratch); recommend renaming it `dev` in the Neon console. Staging gets its own child branch off primary when needed.
-**Workaround:** Dev is fully functional on `br-long-pine`; current build work is unaffected.
-**Assigned to:** Developer (Claude Code) — execute before launch.
-**Resolution:** ⏳ Open — pre-launch blocker. Before launch: (1) run `prisma migrate deploy` against the primary branch's `DIRECT_URL`; (2) do **not** run the dev seed on primary — it is placeholder data (₹299, dev-only); Sarita's real catalogue is entered via the admin panel; (3) optionally rename `br-long-pine` → `dev` in Neon; (4) wire `stg` `DATABASE_URL`/`DIRECT_URL` when staging work begins.
-
----
-
 ### [OPEN] — Razorpay KYC pending
 **Opened:** 15 May 2026  
 **Description:** Razorpay KYC requires Sarita's PAN, GST (24AQDPM2479C2Z1), and bank account. Not started.  
@@ -66,6 +55,14 @@
 ---
 
 ## Closed Issues
+
+### [CLOSED 21 May 2026] — Production Neon branch has no schema
+**Opened:** 21 May 2026 | **Closed:** 21 May 2026
+**Description:** The init migration (15 tables) and the dev seed had been applied only to the `dev` branch (`br-long-pine`, endpoint `ep-square-fire`). The primary/production branch (`br-sweet-wildflower`, endpoint `ep-restless-hill`) was empty — no tables. Doppler `prd` `DATABASE_URL`/`DIRECT_URL` correctly pointed at the production branch, but a prod deploy would have failed every query with `relation does not exist`.
+**Decision (canonical branch):** The primary branch `br-sweet-wildflower` is the canonical / production branch — Neon's primary branch is the long-lived, undeletable root. `br-long-pine` is the standing protected `dev` branch. Staging gets its own child branch off primary when needed. (Both branches were already renamed `production` / `dev` in the Neon console.)
+**Resolution:** ✅ Resolved 21 May 2026 — ran `prisma migrate deploy` (via `doppler run --config prd`) against the production branch's `DIRECT_URL`. Migration `20260521062216_init` applied; all 15 tables + `_prisma_migrations` present; `prisma migrate status` reports "Database schema is up to date". The dev seed was deliberately NOT run on production — it is ₹299 placeholder data; Sarita's real catalogue is entered via the admin panel. Remaining follow-up (not a blocker): wire `stg` `DATABASE_URL`/`DIRECT_URL` when staging work begins.
+
+---
 
 ### [CLOSED 20 May 2026] — Firebase Admin SDK blocked
 **Opened:** 15 May 2026 | **Closed:** 20 May 2026  

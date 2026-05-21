@@ -290,7 +290,7 @@ Print and laminate alias cheatsheet for Sarita's production area.
 
 | Service | Status | Notes |
 |---------|--------|-------|
-| Neon PostgreSQL | ⏳ Partial | Dev branch (`br-long-pine`) migrated + seeded. Prod URLs point to the primary branch (`br-sweet-wildflower`) — schema NOT yet applied. Pre-launch blocker — see DISPUTE.md. Pooled URL for runtime, direct for migrations. |
+| Neon PostgreSQL | ✅ Done | `production` branch (`br-sweet-wildflower`) and `dev` branch (`br-long-pine`) both migrated (`20260521062216_init`). Dev is seeded; production intentionally not — real catalogue via admin panel. Pooled URL for runtime, direct for migrations. |
 | Upstash Redis | ✅ Done | REST URL + token in Doppler |
 | Cloudflare R2 | ✅ Done | Bucket + API token in Doppler |
 | Cloudflare DNS | ✅ Done | dronagiriherbal.in zone active. NS migrated from GoDaddy → Cloudflare. DNS records pointing to Vercel. |

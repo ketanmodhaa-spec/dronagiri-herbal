@@ -38,7 +38,7 @@
 - [ ] Monorepo scaffold (turbo + Next.js + Expo)
 - [x] Prisma schema push to Neon — `dev` (`br-long-pine`) + `production` (`br-sweet-wildflower`) branches both migrated — done 21 May 2026
 - [ ] Seed database (24 products + aliases) — seeded + verified on dev branch 21 May 2026 (do NOT seed prod — placeholder data)
-- [ ] Design system — CSS tokens, base components
+- [x] Design system — CSS tokens, fonts, base UI components + homepage — done 21 May 2026
 - [ ] Guest session middleware (JWT + rate limiting)
 - [ ] Security headers (next.config.ts)
 - [ ] Admin auth (bcrypt + RS256 JWT)

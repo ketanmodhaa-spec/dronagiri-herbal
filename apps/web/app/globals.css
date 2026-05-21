@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Brand design tokens — the single source of truth for colour.
+ * Mirrors the palette in CLAUDE.md. Tailwind maps these into named utilities
+ * (forest.*, gold, stone, cream) in tailwind.config.ts — prefer the utilities
+ * in components; reach for var(--token) only where Tailwind cannot.
+ */
+:root {
+  /* Forest greens */
+  --g900: #1a3d2b; /* deep forest — headings */
+  --g800: #1f5c3a; /* primary buttons */
+  --g700: #2d7a50; /* hover states */
+  --g600: #3a9963; /* borders, accents */
+  --g200: #b8e4cc;
+  --g100: #d8f0e3; /* subtle backgrounds */
+  --g50: #edf8f2; /* page background */
+
+  /* Gold — trust & premium */
+  --gold: #c9a84c;
+  --gold-l: #f5e6c0;
+
+  /* Neutrals */
+  --stone: #3d3d39; /* body text */
+  --stone-l: #6b6b65; /* muted text */
+  --cream: #fdfcf8;
+  --white: #ffffff;
+}
+
+@layer base {
+  body {
+    background-color: var(--cream);
+    color: var(--stone);
+    font-family: var(--font-body), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), Georgia, serif;
+    color: var(--g900);
+  }
+
+  /* Honour anchor-link offsets under the sticky header. */
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+}

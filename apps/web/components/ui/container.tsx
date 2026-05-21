@@ -1,0 +1,15 @@
+import type { ReactNode } from 'react';
+
+import { cn } from '@/lib/cn';
+
+interface ContainerProps {
+  children: ReactNode;
+  className?: string;
+}
+
+/** Centered, max-width page gutter. The one place horizontal padding is set. */
+export function Container({ children, className }: ContainerProps) {
+  return (
+    <div className={cn('mx-auto w-full max-w-6xl px-5 sm:px-8', className)}>{children}</div>
+  );
+}

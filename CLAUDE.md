@@ -1,7 +1,7 @@
 # CLAUDE.md — Dronagiri Herbal Platform
 > This file is read automatically by Claude Code at every session start.
 > Keep it updated. It is the single source of truth for AI context.
-> Last updated: 20 May 2026
+> Last updated: 21 May 2026
 
 ---
 
@@ -298,7 +298,7 @@ Print and laminate alias cheatsheet for Sarita's production area.
 | Meta WhatsApp Business API | ⏳ Pending | Single service for OTP + notifications. Replaces Firebase + WATI. |
 | Resend | ✅ Done | API key in Doppler. Domain verified for dronagiriherbal.in. |
 | Anthropic | ⏳ Pending | |
-| Sentry | ⏳ Pending | |
+| Sentry | ⏳ Pending | SDK integrated (client/server/edge config, instrumentation hook, global-error boundary, source-map upload via withSentryConfig). Awaiting `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_AUTH_TOKEN` in Doppler — until then Sentry.init is a no-op. |
 | Vercel | ✅ Done | Project live. dronagiriherbal.in attached with SSL. |
 
 ---

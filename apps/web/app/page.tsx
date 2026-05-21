@@ -7,6 +7,14 @@ import { ProductCard } from '@/components/ui/product-card';
 import { TrustBadge } from '@/components/ui/trust-badge';
 import { getFeaturedProducts } from '@/lib/products/product-service';
 
+/**
+ * Render per request, never at build time. The featured grid is read live
+ * from the catalogue so products Sarita adds via the admin panel appear
+ * immediately — and the build stays decoupled from the database (no query
+ * during `next build`, immune to Neon scale-to-zero).
+ */
+export const dynamic = 'force-dynamic';
+
 /** Reassurance items shown directly under the hero call-to-action. */
 const TRUST_ITEMS = [
   'KVIC Registered',

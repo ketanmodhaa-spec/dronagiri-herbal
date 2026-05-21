@@ -1,3 +1,14 @@
+// Dronagiri Herbal — data model
+// ──────────────────────────────────────────────────────────────────────────
+// Conventions
+//   • Money: every *Paise field is an integer in paise (₹299 = 29900). No floats.
+//   • IDs: cuid(). Human-facing identifiers (orderNumber, trackingToken) are
+//     separate unique strings generated in application code.
+//   • Deletes: products, categories and coupons are soft-deleted via isActive —
+//     relations that hold history use onDelete: Restrict to enforce that.
+//   • Not modelled here (deliberate): the cart (Redis), OTP challenges (Redis),
+//     and guest sessions (stateless JWT). See packages/db notes.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -6,4 +17,438 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING // created, awaiting online payment or COD confirmation
+  CONFIRMED // paid online, or COD accepted — stock committed
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUND_INITIATED // admin started the refund — awaiting Razorpay webhook confirmation
+  REFUNDED // Razorpay webhook confirmed the refund completed
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  ONLINE // Razorpay — UPI / card / netbanking
+  COD
+}
+
+enum StockMovementReason {
+  SALE // order confirmed — stock leaves
+  RESTOCK // Sarita's WhatsApp RESTOCK command
+  ADJUSTMENT // manual correction by admin
+  RETURN // customer return — stock re-enters
+  CANCELLATION // confirmed order cancelled — stock restored
+}
+
+enum StockMovementSource {
+  WHATSAPP_CMD // Sarita's RESTOCK command via WhatsApp
+  ADMIN_PANEL // manual change in the admin panel
+  ORDER // automatic — driven by an order's lifecycle
+  WEBHOOK // automatic — driven by an inbound webhook (e.g. payment)
+  SYSTEM // automatic — seed, migration, or cron; no human or external trigger
+}
+
+enum NotificationChannel {
+  WHATSAPP
+  SMS
+  EMAIL
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum AdminRole {
+  OWNER // Sarita
+  STAFF
+}
+
+enum CouponType {
+  PERCENT // value = percentage points; maxDiscountPaise caps the discount
+  FLAT // value = paise off
+}
+
+enum AbcClass {
+  A
+  B
+  C
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Catalog
+// ──────────────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  nameGu      String?
+  description String?
+  imageUrl    String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  sku       String  @unique
+  name      String
+  nameGu    String?
+  tagline   String?
+  taglineGu String?
+
+  // Long-form content — rendered as accordions on the product page.
+  // English is required; Gujarati is filled in over time by the admin.
+  description   String  @db.Text
+  descriptionGu String? @db.Text
+  benefits      String? @db.Text
+  benefitsGu    String? @db.Text
+  ingredients   String? @db.Text
+  ingredientsGu String? @db.Text
+  howToUse      String? @db.Text
+  howToUseGu    String? @db.Text
+
+  // Pricing — paise, integer
+  pricePaise   Int
+  comparePaise Int? // MRP / strike-through price
+
+  // Inventory — stockQty is the materialised balance of the StockMovement ledger
+  stockQty          Int @default(0)
+  lowStockThreshold Int @default(10)
+
+  // Logistics & display
+  weightGrams Int?
+  sizeLabel   String? // e.g. "100 ml", "200 g"
+
+  // Merchandising
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  isActive   Boolean  @default(true)
+  isFeatured Boolean  @default(false)
+  sortOrder  Int      @default(0)
+
+  // Intelligence — set by the analytics aggregation cron
+  abcClass AbcClass?
+
+  images     ProductImage[]
+  aliases    ProductAlias[]
+  orderItems OrderItem[]
+  movements  StockMovement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String // Cloudflare R2 object URL
+  alt       String?
+  altGu     String?
+  width     Int?
+  height    Int?
+  sortOrder Int      @default(0) // lowest sortOrder is the hero image
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model ProductAlias {
+  id        String   @id @default(cuid())
+  alias     String   @unique // lowercase short code for WhatsApp restock, e.g. "hpp"
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true) // soft-disable an alias without deleting it
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Customers
+// ──────────────────────────────────────────────────────────────────────────
+
+model Customer {
+  id               String    @id @default(cuid())
+  phone            String    @unique // E.164 — the primary customer identity
+  name             String?
+  email            String? // always optional, never required
+  marketingConsent Boolean   @default(true)
+  lastOrderAt      DateTime? // drives win-back nudges
+  addresses        Address[]
+  orders           Order[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([lastOrderAt])
+}
+
+model Address {
+  id            String   @id @default(cuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label         String? // "Home", "Work"
+  recipientName String
+  phone         String
+  line1         String
+  line2         String?
+  landmark      String?
+  city          String
+  state         String
+  pincode       String
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([customerId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Orders
+// ──────────────────────────────────────────────────────────────────────────
+
+model Order {
+  id                String  @id @default(cuid())
+  orderNumber       String  @unique // human-facing, e.g. "DH-26-00042"
+  trackingTokenHash String  @unique // SHA-256 of the tracking token; raw token is sent to the customer and never stored
+  idempotencyKey    String? @unique // guards against duplicate checkout submits
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  status OrderStatus @default(PENDING)
+
+  // Shipping address — snapshot, immutable once the order is placed
+  shipRecipientName String
+  shipPhone         String
+  shipLine1         String
+  shipLine2         String?
+  shipLandmark      String?
+  shipCity          String
+  shipState         String
+  shipPincode       String
+
+  // Pricing — paise, integer.  totalPaise = subtotalPaise - discountPaise + shippingPaise
+  subtotalPaise Int
+  discountPaise Int @default(0)
+  shippingPaise Int @default(0)
+  totalPaise    Int
+
+  couponId String?
+  coupon   Coupon? @relation(fields: [couponId], references: [id], onDelete: Restrict)
+
+  // Payment
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus @default(PENDING)
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpayRefundId  String?
+
+  // Fulfillment
+  courierName    String?
+  trackingNumber String?
+
+  customerNote String?
+  internalNote String?
+
+  // Lifecycle timestamps
+  paidAt      DateTime?
+  packedAt    DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+  refundedAt  DateTime?
+
+  items     OrderItem[]
+  events    OrderEvent[]
+  movements StockMovement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([couponId])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  // Snapshots — frozen at order time so historical orders never shift
+  productName    String
+  productSlug    String
+  unitPricePaise Int // server-verified price at the time of order
+  quantity       Int
+  lineTotalPaise Int
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Inventory ledger
+// ──────────────────────────────────────────────────────────────────────────
+
+model StockMovement {
+  id           String              @id @default(cuid())
+  productId    String
+  product      Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  delta        Int // signed: negative = stock out, positive = stock in
+  balanceAfter Int // Product.stockQty immediately after this movement
+  reason       StockMovementReason
+  orderId      String?
+  order        Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  source       StockMovementSource // which surface triggered this movement
+  createdBy    String? // the actor: admin id, "system", or Sarita's phone hash
+  note         String?
+  createdAt    DateTime            @default(now())
+
+  @@index([productId])
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Coupons
+// ──────────────────────────────────────────────────────────────────────────
+
+model Coupon {
+  id               String     @id @default(cuid())
+  code             String     @unique // uppercase, e.g. "WELCOME10"
+  description      String?
+  type             CouponType
+  value            Int // PERCENT: percentage points;  FLAT: paise off
+  maxDiscountPaise Int? // cap for PERCENT coupons
+  minOrderPaise    Int        @default(0)
+  usageLimit       Int? // null = unlimited
+  usedCount        Int        @default(0)
+  perCustomerLimit Int?
+  validFrom        DateTime?
+  validUntil       DateTime?
+  isActive         Boolean    @default(true)
+  orders           Order[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Admin
+// ──────────────────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id            String              @id @default(cuid())
+  email         String              @unique
+  passwordHash  String // bcrypt
+  name          String
+  role          AdminRole           @default(STAFF)
+  isActive      Boolean             @default(true)
+  lastLoginAt   DateTime?
+  refreshTokens AdminRefreshToken[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model AdminRefreshToken {
+  id          String    @id @default(cuid())
+  adminUserId String
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique // SHA-256 of the refresh token — raw token is never stored
+  userAgent   String?
+  ipAddress   String?
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([adminUserId])
+  @@index([expiresAt])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Notifications & analytics
+// ──────────────────────────────────────────────────────────────────────────
+
+// Append-only log of every notification attempt. Order fulfillment never
+// blocks on this. orderId / customerId are kept as loose references so the
+// log outlives the records it points at and never blocks a delete.
+model NotificationLog {
+  id                String              @id @default(cuid())
+  channel           NotificationChannel
+  status            NotificationStatus  @default(QUEUED)
+  recipient         String // phone number or email address
+  templateName      String?
+  payload           Json?
+  providerMessageId String?
+  errorMessage      String?
+  orderId           String?
+  customerId        String?
+  sentAt            DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Append-only behavioural event stream that feeds the intelligence layer.
+// phoneHash is a SHA-256 of the phone number — plaintext phone is never
+// stored here (security rule 7).
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  eventType String
+  phoneHash String?
+  sessionId String?
+  productId String?
+  orderId   String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([phoneHash])
+  @@index([productId])
 }

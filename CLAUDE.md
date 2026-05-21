@@ -109,6 +109,8 @@ Admin             → bcrypt + RS256 JWT. Separate cookie scope.
 **Phone OTP is the ONLY verification method for customers.**  
 **Email is always optional — never required.**
 
+**Data model — guest checkout still creates a `Customer`.** `Order.customerId` is required: one identity model, no separate guest table. The checkout route must find-or-create a phone-only `Customer` (no `name`/`email`) *before* inserting the `Order`. A "guest" is simply a `Customer` with no account — the optional post-order account just fills in `name`/`email` on that same row.
+
 ---
 
 ## Brand System

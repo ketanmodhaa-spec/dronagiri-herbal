@@ -1,7 +1,7 @@
 # AUDIT.md — Dronagiri Herbal
 > Security audit log, code review notes, and compliance checklist.
 > Run a full audit before every major milestone.
-> Last updated: 20 May 2026
+> Last updated: 22 May 2026
 
 ---
 
@@ -74,6 +74,22 @@
 ### [15 May 2026] — Initial audit checklist created
 Status: Not yet run — project not built yet  
 Next audit: After Step 1 completion
+
+### [22 May 2026] — Admin authentication verified
+Phase 1 (admin auth) built and verified — 25/25 checks passed in a scripted
+login → refresh → logout → change-password run against the dev database.
+- [x] Admin JWT — RS256 asymmetric keys
+- [x] bcrypt for admin password hashing (cost factor 12)
+- [x] Refresh token rotation on every use
+- [x] Refresh theft detection — reuse of a revoked token revokes the whole token family (SESSION_REVOKED)
+- [x] Login rate limiting — 5 requests / 15 minutes per IP (429 on the 6th)
+- [x] Generic login error — byte-identical 401 for unknown email vs wrong password; bcrypt runs on both paths, so response timing cannot enumerate accounts
+- [x] /me returns only id, email, name, role — no passwordHash, no tokens
+- [x] Change password requires the current password; revokes all sessions
+- [x] HttpOnly cookies, Secure in production; admin cookie scope separate from the customer guest session; refresh cookie path-scoped to /api/admin/auth/refresh
+- [x] Admin pages (/admin/*) gated by the Edge middleware; /api/admin/* routes gated by requireAdmin() in each handler
+**Fix logged:** the admin RS256 keys are stored base64-encoded in Doppler; the key loader now decodes base64, and also accepts a raw PEM or escaped-newline form.
+Next audit: after Phase 2 (catalogue management).
 
 ---
 

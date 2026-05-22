@@ -1,7 +1,7 @@
 # AGENDA.md — Dronagiri Herbal
 > Current tasks, sprint, and priorities.
 > Update this file at the start and end of every work session.
-> Last updated: 21 May 2026
+> Last updated: 22 May 2026
 
 ---
 
@@ -78,6 +78,21 @@
 - [ ] WhatsApp notifications (Meta Business API templates)
 - [ ] Admin panel — orders management
 - [ ] Hair & skin quiz
+
+---
+
+## Legal Pages — added 22 May 2026
+
+### High priority — gates Razorpay KYC
+- [ ] Sarita confirms the ~15 [CONFIRM] items in the legal docs (refund window, return shipping, dispatch time, delivery time, shipping partner, COD coverage, free-shipping threshold, business hours, registered address, etc.)
+- [ ] Lawyer / CA reviews all 5 legal documents
+- [ ] Build 5 legal routes in apps/web (content as markdown/MDX): /terms /privacy /refund-policy /shipping-policy /contact
+- [ ] Wire the footer links (currently dead) to these routes
+- [ ] Confirm refund-policy, shipping-policy and terms are live & public BEFORE submitting Razorpay KYC
+
+### Checkout consent capture — when building checkout
+- [ ] Required checkbox: agree to Terms + Privacy → store on the Order with a timestamp
+- [ ] Optional checkbox: WhatsApp marketing consent → Customer.marketingConsent with a timestamp (enables Step 3 broadcast legally)
 
 ---
 

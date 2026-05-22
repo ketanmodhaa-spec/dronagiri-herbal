@@ -74,6 +74,26 @@
 
 ---
 
+### [OPEN] — Legal pages must be live before Razorpay KYC
+**Opened:** 22 May 2026  
+**Description:** Razorpay requires the Refund Policy, Shipping Policy, Terms, and Contact details to be live and publicly accessible before approving the merchant account. These pages gate payment approval.  
+**Impact:** Cannot complete Razorpay KYC → cannot accept online payments until `/terms`, `/privacy`, `/refund-policy`, `/shipping-policy` and `/contact` are live.  
+**Dependency chain:** Sarita confirms the `[CONFIRM]` items → lawyer reviews → developer builds the 5 routes → pages go live → Razorpay KYC can be submitted.  
+**Assigned to:** Sarita (confirm items) + lawyer (review) + Claude Code (build)  
+**Resolution:** ⏳ Open
+
+---
+
+### [OPEN] — Neon cold-start on scale-to-zero
+**Opened:** 22 May 2026  
+**Description:** The scale-to-zero Neon branch sleeps after idle. The first request after idle is slow (2–5s) or briefly fails (`P1001`). Observed during admin-auth testing — the database woke and worked on retry.  
+**Impact:** Low for admin (Sarita waits a few seconds occasionally). Higher for the public site — a customer hitting a cold start at checkout is bad.  
+**Options:** (1) a retry wrapper on the Prisma client — recommended before public launch; (2) a cron ping to keep the branch warm — defeats the cost saving; (3) accept it.  
+**Assigned to:** Claude Code — before public launch  
+**Resolution:** ⏳ Open — decide before launch
+
+---
+
 ## Closed Issues
 
 ### [CLOSED 21 May 2026] — Production Neon branch has no schema
@@ -88,6 +108,20 @@
 **Opened:** 15 May 2026 | **Closed:** 20 May 2026  
 **Original description:** Google Workspace org policy `iam.disableServiceAccountKeyCreation` prevented service account key creation. Needed for server-side OTP verification.  
 **Resolution:** ✅ Resolved by dropping Firebase entirely. Switched to Meta WhatsApp Business API for OTP — no Firebase Admin SDK dependency at all. See [20 May 2026] entry in MEMORY.md.
+
+---
+
+### [CLOSED 22 May 2026] — Production admin account not seeded
+**Opened:** 22 May 2026 | **Closed:** 22 May 2026
+**Description:** Sarita's admin account existed only on the Neon `dev` branch; the production branch was unseeded, so there was no admin account to sign in with on the live site.
+**Resolution:** ✅ Resolved 22 May 2026 — ran `doppler run --project dronagiriherbal-in --config prd -- pnpm --filter @dronagiri/db db:ensure-admin`. The owner account `store@dronagiriherbal.in` (role OWNER) was created on the production branch with the password from Doppler `prd` → `ADMIN_SEED_PASSWORD`. Sarita changes it on first login via the change-password screen. The `ensure-admin` script is idempotent and never overwrites an existing password, so the run is safe to repeat.
+
+---
+
+### [CLOSED 22 May 2026] — Untracked apps/brand/ folder
+**Opened:** 22 May 2026 | **Closed:** 22 May 2026
+**Description:** An untracked `apps/brand/` folder appeared in the repo; its origin was unknown.
+**Resolution:** ✅ Resolved 22 May 2026 — identified as `apps/brand/Dronigiri logo.cdr`, the brand logo in CorelDRAW format. It is a legitimate brand asset and has been committed to the repo. Minor follow-up: the filename is misspelled "Dronigiri" — worth renaming to "Dronagiri" at some point.
 
 ---
 

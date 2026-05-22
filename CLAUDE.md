@@ -1,7 +1,7 @@
 # CLAUDE.md — Dronagiri Herbal Platform
 > This file is read automatically by Claude Code at every session start.
 > Keep it updated. It is the single source of truth for AI context.
-> Last updated: 21 May 2026
+> Last updated: 22 May 2026
 
 ---
 
@@ -299,7 +299,16 @@ Print and laminate alias cheatsheet for Sarita's production area.
 | Resend | ✅ Done | API key in Doppler. Domain verified for dronagiriherbal.in. |
 | Anthropic | ⏳ Pending | |
 | Sentry | ⏳ Pending | SDK integrated (client/server/edge config, instrumentation hook, global-error boundary, source-map upload via withSentryConfig). Awaiting `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_AUTH_TOKEN` in Doppler — until then Sentry.init is a no-op. |
-| Vercel | ✅ Done | Project live. dronagiriherbal.in attached with SSL. |
+| Vercel | ✅ Done | Project live. dronagiriherbal.in attached with SSL. Production branch is `dev` — see Build & Deploy. |
+
+---
+
+## Build & Deploy
+
+- **Vercel production branch is `dev`.** Pushing to `dev` deploys to production (`dronagiriherbal.in`); `main` deploys as Preview. Configured under Vercel → Settings → Environments → Production. Merge `dev` → `main` and switch this back if the branch model changes.
+- **`packages/db` must keep `postinstall: prisma generate`.** pnpm 10 blocks dependency lifecycle scripts, so `@prisma/client` never self-generates on Vercel — without this the build fails with `product implicitly has an 'any' type`.
+- **`app/page.tsx` is `force-dynamic`** — the build never queries the DB, and catalogue changes appear without a redeploy.
+- Secrets live in Doppler (`dronagiriherbal-in` → configs `dev` / `stg` / `prd`), synced into Vercel. Store every value **raw — never wrap it in quotes**; Doppler keeps quotes as literal characters and breaks the value.
 
 ---
 

@@ -19,13 +19,14 @@ function getRedis(): Redis {
 let adminLoginLimiter: Ratelimit | undefined;
 
 /**
- * Admin login limiter — 5 attempts per 10 minutes, keyed by client IP.
- * Brute-force protection for the one unauthenticated admin endpoint.
+ * Admin login limiter — 5 attempts per 15 minutes, keyed by client IP
+ * (the policy in AUDIT.md). Brute-force protection for the one
+ * unauthenticated admin endpoint.
  */
 export function getAdminLoginLimiter(): Ratelimit {
   adminLoginLimiter ??= new Ratelimit({
     redis: getRedis(),
-    limiter: Ratelimit.slidingWindow(5, '10 m'),
+    limiter: Ratelimit.slidingWindow(5, '15 m'),
     prefix: 'rl:admin-login',
     analytics: false,
   });

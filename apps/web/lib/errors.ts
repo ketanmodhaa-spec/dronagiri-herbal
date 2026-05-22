@@ -41,6 +41,13 @@ export class ValidationError extends AppError {
   }
 }
 
+/** 404 — the requested resource does not exist. */
+export class NotFoundError extends AppError {
+  constructor(message = 'Not found', code = 'NOT_FOUND') {
+    super(code, message, 404);
+  }
+}
+
 /** 429 — too many attempts; the caller should slow down. */
 export class RateLimitError extends AppError {
   constructor(

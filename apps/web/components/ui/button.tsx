@@ -14,6 +14,8 @@ interface ButtonProps {
   href?: string;
   type?: 'button' | 'submit';
   disabled?: boolean;
+  /** Click handler — ignored when `href` is set (the button renders as a link). */
+  onClick?: () => void;
   className?: string;
   'aria-label'?: string;
 }
@@ -43,6 +45,7 @@ export function Button({
   href,
   type = 'button',
   disabled = false,
+  onClick,
   className,
   'aria-label': ariaLabel,
 }: ButtonProps) {
@@ -57,7 +60,13 @@ export function Button({
   }
 
   return (
-    <button type={type} disabled={disabled} aria-label={ariaLabel} className={classes}>
+    <button
+      type={type}
+      disabled={disabled}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={classes}
+    >
       {children}
     </button>
   );

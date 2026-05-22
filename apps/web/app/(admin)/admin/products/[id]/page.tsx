@@ -5,8 +5,10 @@ import { notFound, redirect } from 'next/navigation';
 import type { Product } from '@dronagiri/db';
 
 import { ProductForm } from '@/components/admin/product-form';
+import { ProductImageManager } from '@/components/admin/product-image-manager';
 import { StockEditor } from '@/components/admin/stock-editor';
 import { listCategoryOptions } from '@/lib/admin/admin-category-service';
+import { listProductImages } from '@/lib/admin/admin-image-service';
 import { getProductForAdmin } from '@/lib/admin/admin-product-service';
 import { getAdminOrNull } from '@/lib/auth/require-admin';
 import { NotFoundError } from '@/lib/errors';
@@ -28,6 +30,7 @@ export default async function EditProductPage({ params }: { params: { id: string
     throw error;
   }
   const categories = await listCategoryOptions();
+  const images = await listProductImages(product.id);
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-12">
@@ -40,6 +43,7 @@ export default async function EditProductPage({ params }: { params: { id: string
 
       <div className="space-y-8">
         <ProductForm mode="edit" product={product} categories={categories} />
+        <ProductImageManager productId={product.id} images={images} />
         <StockEditor
           productId={product.id}
           currentStock={product.stockQty}

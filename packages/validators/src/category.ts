@@ -18,6 +18,7 @@ const categoryFields = {
     .max(120)
     .regex(SLUG_REGEX, 'Slug may use only lowercase letters, numbers and hyphens'),
   description: z.string().trim().max(500).optional(),
+  imageUrl: z.string().trim().max(500).optional(),
   sortOrder: z.number().int().min(0).max(100_000).default(0),
   isActive: z.boolean().default(true),
 };

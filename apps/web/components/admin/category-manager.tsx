@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
 import type { AdminCategoryListItem } from '@/lib/admin/admin-category-service';
+import { ImageUploadField } from '@/components/admin/image-upload-field';
 import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 import { TextField } from '@/components/ui/text-field';
@@ -87,6 +88,7 @@ function CategoryForm({ mode, category, onDone }: CategoryFormProps) {
   const [description, setDescription] = useState(category?.description ?? '');
   const [sortOrder, setSortOrder] = useState(String(category?.sortOrder ?? 0));
   const [isActive, setIsActive] = useState(category?.isActive ?? true);
+  const [imageUrl, setImageUrl] = useState(category?.imageUrl ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -100,6 +102,7 @@ function CategoryForm({ mode, category, onDone }: CategoryFormProps) {
       nameGu: nameGu.trim(),
       slug: slug.trim(),
       description: description.trim(),
+      imageUrl: imageUrl.trim(),
       sortOrder: sortOrder.trim() ? Number(sortOrder) : undefined,
       isActive,
     };
@@ -173,6 +176,36 @@ function CategoryForm({ mode, category, onDone }: CategoryFormProps) {
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
+      <div className="space-y-2">
+        <span className="block text-sm font-medium text-forest-900">Image</span>
+        {mode === 'edit' && category ? (
+          <>
+            {imageUrl && (
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt=""
+                  className="h-16 w-16 rounded-lg bg-forest-50 object-cover"
+                />
+                <Button type="button" size="sm" variant="ghost" onClick={() => setImageUrl('')}>
+                  Remove
+                </Button>
+              </div>
+            )}
+            <ImageUploadField
+              scope="category"
+              targetId={category.id}
+              onUploaded={(result) => setImageUrl(result.publicUrl)}
+              disabled={submitting}
+            />
+          </>
+        ) : (
+          <p className="text-xs text-stone">
+            You can add an image after the category is created.
+          </p>
+        )}
+      </div>
       <CheckboxField
         label="Active"
         checked={isActive}

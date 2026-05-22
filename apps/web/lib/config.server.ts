@@ -61,4 +61,20 @@ export const serverConfig = {
       return required('UPSTASH_REDIS_REST_TOKEN');
     },
   },
+
+  /** Cloudflare R2 (S3-compatible) — product and category image storage. */
+  r2: {
+    get accessKeyId(): string {
+      return required('CLOUDFLARE_R2_ACCESS_KEY_ID');
+    },
+    get secretAccessKey(): string {
+      return required('CLOUDFLARE_R2_SECRET_ACCESS_KEY');
+    },
+    get bucket(): string {
+      return required('CLOUDFLARE_R2_BUCKET_NAME');
+    },
+    get endpoint(): string {
+      return required('CLOUDFLARE_R2_ENDPOINT');
+    },
+  },
 };

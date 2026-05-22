@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1052.0",
+    "@aws-sdk/s3-request-presigner": "^3.1052.0",
     "@dronagiri/db": "workspace:*",
     "@dronagiri/validators": "workspace:^",
     "@prisma/client": "^5.14.0",

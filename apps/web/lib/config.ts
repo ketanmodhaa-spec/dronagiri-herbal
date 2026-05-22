@@ -12,7 +12,12 @@ const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN ?? '';
 const sentryEnvironment =
   process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? process.env.NODE_ENV ?? 'development';
 
+/** Public base URL for Cloudflare R2 objects — trailing slash stripped. */
+const cdnUrl = (process.env.NEXT_PUBLIC_CDN_URL ?? '').replace(/\/+$/, '');
+
 export const config = {
+  /** Base URL uploaded images are served from. Empty until R2's public URL is set. */
+  cdnUrl,
   sentry: {
     dsn: sentryDsn,
     /** With no DSN configured, Sentry.init becomes a no-op. */

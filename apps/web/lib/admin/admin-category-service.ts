@@ -16,6 +16,7 @@ export interface AdminCategoryListItem {
   nameGu: string | null;
   slug: string;
   description: string | null;
+  imageUrl: string | null;
   sortOrder: number;
   isActive: boolean;
   productCount: number;
@@ -50,6 +51,7 @@ function toCategoryData(input: AdminCategoryUpdate) {
     nameGu: orNull(input.nameGu),
     slug: input.slug,
     description: orNull(input.description),
+    imageUrl: orNull(input.imageUrl),
     sortOrder: input.sortOrder,
     isActive: input.isActive,
   };
@@ -65,6 +67,7 @@ export async function listCategoriesForAdmin(): Promise<AdminCategoryListItem[]>
       nameGu: true,
       slug: true,
       description: true,
+      imageUrl: true,
       sortOrder: true,
       isActive: true,
       _count: { select: { products: true } },
@@ -76,6 +79,7 @@ export async function listCategoriesForAdmin(): Promise<AdminCategoryListItem[]>
     nameGu: row.nameGu,
     slug: row.slug,
     description: row.description,
+    imageUrl: row.imageUrl,
     sortOrder: row.sortOrder,
     isActive: row.isActive,
     productCount: row._count.products,

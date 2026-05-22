@@ -15,5 +15,6 @@ export * from './checkout';
 export * from './admin';
 export * from './product';
 export * from './category';
+export * from './image';
 export * from './order';
 export * from './coupon';

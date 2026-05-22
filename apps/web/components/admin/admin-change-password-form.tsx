@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { TextField } from '@/components/ui/text-field';
+import { PasswordField } from '@/components/ui/password-field';
 
 /** Change-password form for a signed-in admin. The current password is required. */
 export function AdminChangePasswordForm() {
@@ -51,20 +51,18 @@ export function AdminChangePasswordForm() {
           {error}
         </p>
       )}
-      <TextField
+      <PasswordField
         label="Current password"
         name="currentPassword"
-        type="password"
         autoComplete="current-password"
         required
         value={currentPassword}
         onChange={(event) => setCurrentPassword(event.target.value)}
         disabled={submitting}
       />
-      <TextField
+      <PasswordField
         label="New password"
         name="newPassword"
-        type="password"
         autoComplete="new-password"
         required
         minLength={10}

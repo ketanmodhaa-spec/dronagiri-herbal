@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { PasswordField } from '@/components/ui/password-field';
 import { TextField } from '@/components/ui/text-field';
 
 /** Phone-first admin sign-in form. Posts to the login API; never trusts the client. */
@@ -61,10 +62,9 @@ export function AdminLoginForm() {
         onChange={(event) => setEmail(event.target.value)}
         disabled={submitting}
       />
-      <TextField
+      <PasswordField
         label="Password"
         name="password"
-        type="password"
         autoComplete="current-password"
         required
         value={password}

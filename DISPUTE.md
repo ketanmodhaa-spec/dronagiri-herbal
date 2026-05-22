@@ -1,7 +1,7 @@
 # DISPUTE.md — Dronagiri Herbal
 > Open issues, unresolved conflicts, and things to revisit.
 > Close entries with resolution when resolved.
-> Last updated: 21 May 2026
+> Last updated: 22 May 2026
 
 ---
 
@@ -51,6 +51,26 @@
 **Current status:** URL prefix method not yet completed. Need GSC property for **dronagiriherbal.in** (treat .com as separate/old property).  
 **Next step:** HTML tag method via Next.js layout.tsx (metadata.verification.google).  
 **Resolution:** ⏳ Open
+
+---
+
+### [OPEN] — R2 orphan image cleanup
+**Opened:** 22 May 2026  
+**Description:** Phase 2 product images upload direct-to-R2 via presigned URL (presign → upload → confirm). If a client uploads the object to R2 but never reaches the confirm step (tab closed, network drop), the R2 object has no `ProductImage` row pointing at it — a storage orphan.  
+**Impact:** Minor — admin-only surface, rare; wasted R2 storage only, no correctness issue.  
+**Workaround:** None needed short-term.  
+**Assigned to:** Developer — Step 3 line item.  
+**Resolution:** ⏳ Open — add a weekly orphan-sweep cron that lists R2 objects with no matching `ProductImage` row and deletes them.
+
+---
+
+### [OPEN] — Admin image-presign endpoint not rate-limited
+**Opened:** 22 May 2026  
+**Description:** `POST /api/admin/products/:id/images/presign` sits behind `requireAdmin()` but is not rate-limited. A runaway client loop (bug, not attack) could generate presigned URLs unbounded.  
+**Impact:** Low — authenticated-admin only; no data risk, just churn.  
+**Workaround:** None needed.  
+**Assigned to:** Developer.  
+**Resolution:** ⏳ Open — apply the existing Upstash limiter to the presign route with a generous per-admin cap.
 
 ---
 

@@ -84,7 +84,13 @@ export async function confirmProductImage(
     throw new ValidationError('That upload does not belong to this product.', 'BAD_OBJECT_KEY');
   }
 
-  const head = await headObject(input.objectKey);
+  // HEAD the object — retry once after a short pause, in case the write is a
+  // moment behind, so a valid upload is never rejected and deleted by mistake.
+  let head = await headObject(input.objectKey);
+  if (!head) {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    head = await headObject(input.objectKey);
+  }
   if (!head) {
     throw new ValidationError(
       'The upload could not be found. Please try again.',

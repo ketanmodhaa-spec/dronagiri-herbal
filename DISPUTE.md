@@ -64,16 +64,6 @@
 
 ---
 
-### [OPEN] — Admin image-presign endpoint not rate-limited
-**Opened:** 22 May 2026  
-**Description:** `POST /api/admin/products/:id/images/presign` sits behind `requireAdmin()` but is not rate-limited. A runaway client loop (bug, not attack) could generate presigned URLs unbounded.  
-**Impact:** Low — authenticated-admin only; no data risk, just churn.  
-**Workaround:** None needed.  
-**Assigned to:** Developer.  
-**Resolution:** ⏳ Open — apply the existing Upstash limiter to the presign route with a generous per-admin cap.
-
----
-
 ### [OPEN] — Legal pages must be live before Razorpay KYC
 **Opened:** 22 May 2026  
 **Description:** Razorpay requires the Refund Policy, Shipping Policy, Terms, and Contact details to be live and publicly accessible before approving the merchant account. These pages gate payment approval.  
@@ -122,6 +112,13 @@
 **Opened:** 22 May 2026 | **Closed:** 22 May 2026
 **Description:** An untracked `apps/brand/` folder appeared in the repo; its origin was unknown.
 **Resolution:** ✅ Resolved 22 May 2026 — identified as `apps/brand/Dronigiri logo.cdr`, the brand logo in CorelDRAW format. It is a legitimate brand asset and has been committed to the repo. Minor follow-up: the filename is misspelled "Dronigiri" — worth renaming to "Dronagiri" at some point.
+
+---
+
+### [CLOSED 22 May 2026] — Admin image-presign endpoint not rate-limited
+**Opened:** 22 May 2026 | **Closed:** 22 May 2026
+**Description:** `POST /api/admin/uploads/presign` sat behind `requireAdmin()` but had no rate limit — a runaway client loop could request presigned URLs unbounded.
+**Resolution:** ✅ Resolved 22 May 2026 — added an Upstash sliding-window limiter (60 presigns / 10 min per client IP) on the presign route, alongside the existing admin-login limiter. Surfaced and fixed during the Phase 2b pre-flight review.
 
 ---
 

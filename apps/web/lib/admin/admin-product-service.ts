@@ -14,7 +14,6 @@ import {
 import type { AdminProductCreate, AdminProductUpdate } from '@dronagiri/validators';
 
 import { NotFoundError, ValidationError } from '@/lib/errors';
-import { recordStockMovement } from '@/lib/inventory/stock-service';
 
 /** A row in the admin product list. */
 export interface AdminProductListItem {
@@ -128,31 +127,38 @@ export async function getProductForAdmin(id: string): Promise<Product> {
 }
 
 /**
- * Create a product. Opening stock, when given, is recorded through the shared
- * stock service as the product's first ledger movement.
+ * Create a product. The product row and its opening-stock ledger entry are
+ * written together in a single atomic insert — a new product can never exist
+ * without the movement that explains its stock.
  */
 export async function createProduct(
   input: AdminProductCreate,
   adminId: string,
 ): Promise<Product> {
-  let product: Product;
+  const opening = input.openingStock;
   try {
-    product = await prisma.product.create({ data: { ...toProductData(input), stockQty: 0 } });
+    return await prisma.product.create({
+      data: {
+        ...toProductData(input),
+        stockQty: opening,
+        movements:
+          opening > 0
+            ? {
+                create: {
+                  delta: opening,
+                  balanceAfter: opening,
+                  reason: StockMovementReason.ADJUSTMENT,
+                  source: StockMovementSource.ADMIN_PANEL,
+                  createdBy: adminId,
+                  note: 'Opening stock',
+                },
+              }
+            : undefined,
+      },
+    });
   } catch (error) {
     rethrowWriteError(error);
   }
-
-  if (input.openingStock > 0) {
-    await recordStockMovement({
-      productId: product.id,
-      delta: input.openingStock,
-      reason: StockMovementReason.ADJUSTMENT,
-      source: StockMovementSource.ADMIN_PANEL,
-      createdBy: adminId,
-      note: 'Opening stock',
-    });
-  }
-  return product;
 }
 
 /** Update a product. Stock is untouched here — it moves only via the stock service. */

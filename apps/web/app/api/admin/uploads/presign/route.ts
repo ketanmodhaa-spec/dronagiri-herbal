@@ -10,8 +10,9 @@ import { imagePresignSchema } from '@dronagiri/validators';
 
 import { presignImageUpload } from '@/lib/admin/admin-image-service';
 import { requireAdmin } from '@/lib/auth/require-admin';
-import { ValidationError } from '@/lib/errors';
+import { RateLimitError, ValidationError } from '@/lib/errors';
 import { errorResponse, jsonData } from '@/lib/http';
+import { getImagePresignLimiter } from '@/lib/ratelimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,6 +20,14 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     await requireAdmin();
+
+    const forwarded = req.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    const { success } = await getImagePresignLimiter().limit(ip);
+    if (!success) {
+      throw new RateLimitError();
+    }
+
     const body: unknown = await req.json().catch(() => null);
     const parsed = imagePresignSchema.safeParse(body);
     if (!parsed.success) {

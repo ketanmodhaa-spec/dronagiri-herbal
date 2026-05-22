@@ -32,3 +32,20 @@ export function getAdminLoginLimiter(): Ratelimit {
   });
   return adminLoginLimiter;
 }
+
+let imagePresignLimiter: Ratelimit | undefined;
+
+/**
+ * Admin image-presign limiter — 60 presigns per 10 minutes, keyed by client IP.
+ * Generous enough for a real photo-upload session, tight enough to stop a
+ * runaway client loop.
+ */
+export function getImagePresignLimiter(): Ratelimit {
+  imagePresignLimiter ??= new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(60, '10 m'),
+    prefix: 'rl:admin-presign',
+    analytics: false,
+  });
+  return imagePresignLimiter;
+}

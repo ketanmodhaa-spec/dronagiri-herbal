@@ -86,8 +86,8 @@
 ### High priority — gates Razorpay KYC
 - [ ] Sarita confirms the ~15 [CONFIRM] items in the legal docs (refund window, return shipping, dispatch time, delivery time, shipping partner, COD coverage, free-shipping threshold, business hours, registered address, etc.)
 - [ ] Lawyer / CA reviews all 5 legal documents
-- [ ] Build 5 legal routes in apps/web (content as markdown/MDX): /terms /privacy /refund-policy /shipping-policy /contact
-- [ ] Wire the footer links (currently dead) to these routes
+- [x] Build 5 legal routes in apps/web (content as markdown/MDX): /terms /privacy /refund-policy /shipping-policy /contact — done 23 May 2026
+- [x] Wire the footer links (currently dead) to these routes — done 23 May 2026
 - [ ] Confirm refund-policy, shipping-policy and terms are live & public BEFORE submitting Razorpay KYC
 
 ### Checkout consent capture — when building checkout

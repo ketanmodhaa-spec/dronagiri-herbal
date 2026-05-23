@@ -17,6 +17,15 @@ const CERTIFICATIONS = [
   'Trademark ® Registered',
 ] as const;
 
+/** Policy pages — also referenced by Razorpay during KYC review. */
+const POLICY_LINKS = [
+  { label: 'Terms & Conditions', href: '/terms' },
+  { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Refund & Returns', href: '/refund-policy' },
+  { label: 'Shipping', href: '/shipping-policy' },
+  { label: 'Contact', href: '/contact' },
+] as const;
+
 export function SiteFooter() {
   return (
     <footer id="contact" className="bg-forest-900 text-forest-50">
@@ -83,9 +92,20 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 Dronagiri Herbal. All rights reserved.</p>
-          <p>Dronagiri Herbal® is a registered trademark · Made in Ahmedabad 🇮🇳</p>
+        <div className="mt-12 border-t border-white/10 pt-6">
+          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/70">
+            {POLICY_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="transition-colors hover:text-gold">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex flex-col gap-2 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
+            <p>© 2026 Dronagiri Herbal. All rights reserved.</p>
+            <p>Dronagiri Herbal® is a registered trademark · Made in Ahmedabad 🇮🇳</p>
+          </div>
         </div>
       </Container>
     </footer>

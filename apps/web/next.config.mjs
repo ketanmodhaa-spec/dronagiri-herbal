@@ -5,6 +5,14 @@ const nextConfig = {
   // The shared @dronagiri/db package ships TypeScript source — Next must
   // compile it rather than treat it as a pre-built node_modules dependency.
   transpilePackages: ['@dronagiri/db'],
+  images: {
+    // Product photography lives on R2 behind our own CDN domain — whitelist
+    // it so next/image can optimise the assets. Anything not in this list
+    // is refused at request time (we never want to proxy arbitrary URLs).
+    remotePatterns: [
+      { protocol: 'https', hostname: 'cdn.dronagiriherbal.in' },
+    ],
+  },
   experimental: {
     // Required on Next.js 14 so instrumentation.ts runs (becomes default in Next 15).
     instrumentationHook: true,

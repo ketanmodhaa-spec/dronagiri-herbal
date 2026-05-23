@@ -1,14 +1,13 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 
+import { ProductImageZoom } from '@/components/shop/product-image-zoom';
 import { SiteFooter } from '@/components/shop/site-footer';
 import { SiteHeader } from '@/components/shop/site-header';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
-import { LeafIcon } from '@/components/ui/icons';
 import { TrustBadge } from '@/components/ui/trust-badge';
 import { formatPrice } from '@/lib/format';
 import { getProductBySlug } from '@/lib/products/product-service';
@@ -147,24 +146,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {/* ── Top half — image + primary info ───────────────────────────── */}
           <div className="mt-6 grid gap-10 md:grid-cols-2 md:gap-14">
-            {/* Image well */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-forest-100 to-forest-200">
-              {primaryImage ? (
-                <Image
-                  src={primaryImage.url}
-                  alt={primaryImage.alt ?? product.name}
-                  width={primaryImage.width}
-                  height={primaryImage.height}
-                  priority
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className="aspect-square h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex aspect-square items-center justify-center">
-                  <LeafIcon className="h-24 w-24 text-forest-600" />
-                </div>
-              )}
-            </div>
+            {/* Image well — click-to-zoom lightbox for label inspection */}
+            <ProductImageZoom image={primaryImage ?? null} productName={product.name} />
 
             {/* Primary info */}
             <div className="flex flex-col">

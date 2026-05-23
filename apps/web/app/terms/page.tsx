@@ -6,7 +6,7 @@ import { loadLegal } from '@/lib/content/legal';
 const content = loadLegal('terms');
 const lastUpdated = '23 May 2026';
 /** Flip to `false` once the lawyer has signed off and the [CONFIRM] items are filled in. */
-const draft = true;
+const draft = false;
 
 export const metadata: Metadata = {
   title: 'Terms & Conditions',

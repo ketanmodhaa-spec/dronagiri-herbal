@@ -5,7 +5,7 @@ import { loadLegal } from '@/lib/content/legal';
 
 const content = loadLegal('refund-policy');
 const lastUpdated = '23 May 2026';
-const draft = true;
+const draft = false;
 
 export const metadata: Metadata = {
   title: 'Refund & Return Policy',

@@ -1,4 +1,4 @@
-Dronagiri Herbal ("we", "us") respects your privacy and is committed to protecting your personal data. This policy explains what we collect, why, and your rights — in line with the Information Technology Act, 2000 and the Digital Personal Data Protection Act, 2023 (DPDP Act). [CONFIRM DPDP compliance with lawyer]
+Dronagiri Herbal ("we", "us") respects your privacy and is committed to protecting your personal data. This policy explains what we collect, why, and your rights — in line with the Information Technology Act, 2000 and the Digital Personal Data Protection Act, 2023 (DPDP Act).
 
 ## Information We Collect
 
@@ -64,7 +64,7 @@ To exercise any of these rights, contact us at store@dronagiriherbal.in.
 
 ## Data Retention
 
-We retain your order data for as long as required for tax, accounting, and legal purposes (typically [CONFIRM — usually 8 years for GST records in India]). Marketing consent data is retained until you withdraw consent.
+We retain your order data for as long as required for tax, accounting, and legal purposes (typically 8 years, in line with GST record-keeping requirements). Marketing consent data is retained until you withdraw consent.
 
 ## Children's Privacy
 
@@ -74,10 +74,10 @@ Our Website is not directed at children under 18. We do not knowingly collect da
 
 In accordance with the IT Act and DPDP Act, our Grievance Officer is:
 
-- **Name:** Sarita Modha [CONFIRM — or a designated person]
+- **Name:** Sarita Modha
 - **Email:** store@dronagiriherbal.in
 - **Phone:** +91 94290 29840
-- **Response time:** We aim to respond within [CONFIRM — typically 30 days]
+- **Response time:** We aim to respond within 30 days
 
 ## Changes to This Policy
 

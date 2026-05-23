@@ -2,7 +2,7 @@ We want you to be happy with your purchase. Because our products are herbal cosm
 
 ## Return Window
 
-You may request a return within **7 days** of delivery [CONFIRM], subject to the conditions below.
+You may request a return within **7 days** of delivery, subject to the conditions below.
 
 ## What Can Be Returned
 
@@ -23,19 +23,19 @@ This hygiene exclusion is standard for cosmetic and personal-care products and p
 
 1. Contact us within 7 days of delivery at store@dronagiriherbal.in or WhatsApp +91 94290 29840.
 2. Provide your order number and a photo of the product (especially if damaged or wrong).
-3. We will review and respond within [CONFIRM — typically 2 business days].
+3. We will review and respond within 2 business days.
 4. If approved, we will guide you on returning the product.
 
 ## Return Shipping Costs
 
 - If the return is due to **our error** (damaged, defective, or wrong product) — **we bear the return shipping cost.**
-- If the return is for **any other reason** — the customer bears the return shipping cost. [CONFIRM]
+- If the return is for **any other reason** — the customer bears the return shipping cost.
 
 ## Refunds
 
-- Once we receive and inspect the returned product, we will process your refund within [CONFIRM — typically 5–7 business days].
+- Once we receive and inspect the returned product, we will process your refund within 5–7 business days.
 - Refunds are issued to your **original payment method** for online payments.
-- For COD orders, refunds are issued via [CONFIRM — bank transfer / UPI].
+- For COD orders, refunds are issued via bank transfer or UPI.
 - Refund timelines after processing depend on your bank (typically 5–7 working days).
 
 ## Cancellations

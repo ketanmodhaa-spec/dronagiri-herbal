@@ -5,7 +5,7 @@ import { loadLegal } from '@/lib/content/legal';
 
 const content = loadLegal('privacy');
 const lastUpdated = '23 May 2026';
-const draft = true;
+const draft = false;
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',

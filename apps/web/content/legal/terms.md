@@ -4,7 +4,7 @@ Welcome to Dronagiri Herbal. These Terms & Conditions ("Terms") govern your use 
 
 Dronagiri Herbal is a proprietorship business owned and operated by Sarita Modha, based in Ahmedabad, Gujarat, India.
 
-- **Registered Office:** [CONFIRM full registered address]
+- **Registered Office:** Ahmedabad, Gujarat, India
 - **Email:** store@dronagiriherbal.in
 - **Phone:** +91 94290 29840
 - **UDYAM Registration:** UDYAM-GJ-01-0019327
@@ -54,7 +54,7 @@ All content on this Website — including the Dronagiri Herbal name, logo (a reg
 
 ## Governing Law & Jurisdiction
 
-These Terms are governed by the laws of India. Any dispute shall be subject to the exclusive jurisdiction of the courts of Ahmedabad, Gujarat. [CONFIRM jurisdiction with lawyer]
+These Terms are governed by the laws of India. Any dispute shall be subject to the exclusive jurisdiction of the courts of Ahmedabad, Gujarat.
 
 ## Changes to Terms
 

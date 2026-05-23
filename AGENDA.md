@@ -84,8 +84,8 @@
 ## Legal Pages — added 22 May 2026
 
 ### High priority — gates Razorpay KYC
-- [ ] Sarita confirms the ~15 [CONFIRM] items in the legal docs (refund window, return shipping, dispatch time, delivery time, shipping partner, COD coverage, free-shipping threshold, business hours, registered address, etc.)
-- [ ] Lawyer / CA reviews all 5 legal documents
+- [x] Sarita confirms the ~15 [CONFIRM] items in the legal docs — done 23 May 2026 (7-day refund window, return-shipping rules, 2–4 day dispatch, 5–10 day delivery, courier partners, COD across India + no fee, ₹499 free-ship threshold + ₹49 flat, business hours Mon–Sat 10 AM – 6 PM IST, registered office Ahmedabad)
+- [x] Lawyer / CA reviews all 5 legal documents — done 23 May 2026
 - [x] Build 5 legal routes in apps/web (content as markdown/MDX): /terms /privacy /refund-policy /shipping-policy /contact — done 23 May 2026
 - [x] Wire the footer links (currently dead) to these routes — done 23 May 2026
 - [ ] Confirm refund-policy, shipping-policy and terms are live & public BEFORE submitting Razorpay KYC

@@ -211,6 +211,7 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
           <div>
             <TextField
               label="URL slug"
+              hint="Used in the product's web link. Lowercase letters and dashes only."
               value={form.slug}
               onChange={(e) => {
                 setSlugLocked(true);
@@ -227,6 +228,7 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
           </div>
           <TextField
             label="SKU"
+            hint="Short code you'll type in WhatsApp to restock — e.g. HPP, JH, ASH."
             value={form.sku}
             onChange={(e) => set('sku', e.target.value)}
             required

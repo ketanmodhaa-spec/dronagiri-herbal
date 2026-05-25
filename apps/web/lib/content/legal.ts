@@ -10,7 +10,13 @@ import { join } from 'node:path';
 
 const LEGAL_DIR = join(process.cwd(), 'content', 'legal');
 
-export type LegalSlug = 'terms' | 'privacy' | 'refund-policy' | 'shipping-policy' | 'contact';
+export type LegalSlug =
+  | 'terms'
+  | 'privacy'
+  | 'refund-policy'
+  | 'shipping-policy'
+  | 'contact'
+  | 'data-deletion';
 
 export function loadLegal(slug: LegalSlug): string {
   return readFileSync(join(LEGAL_DIR, `${slug}.md`), 'utf8');

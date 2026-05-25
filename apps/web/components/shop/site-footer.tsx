@@ -27,6 +27,7 @@ const POLICY_LINKS = [
   { label: 'Privacy Policy', href: '/privacy' },
   { label: 'Refund & Returns', href: '/refund-policy' },
   { label: 'Shipping', href: '/shipping-policy' },
+  { label: 'Data Deletion', href: '/data-deletion' },
   { label: 'Contact', href: '/contact' },
 ] as const;
 

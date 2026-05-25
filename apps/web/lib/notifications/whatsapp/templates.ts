@@ -15,9 +15,13 @@
  *   - `UTILITY` — transactional (orders, refunds). Linked to a real event.
  *   - `MARKETING` — promotional, requires customer marketing-consent flag.
  *
- * **Language code**: Meta uses BCP-47 (`en_US`, `gu`, `hi`). We default to
- * `en_US` so Meta picks the English-base body; we localise per template
- * when Gujarati/Hindi variants are submitted.
+ * **Language code**: Meta uses BCP-47-ish identifiers (`en`, `en_US`, `gu`,
+ * `hi`). We standardise on `en` here because Meta's WhatsApp Manager UI
+ * shows plain "English" as the default for AUTH templates; picking that
+ * gives the language code `en`, and code + Meta have to match exactly or
+ * the send is rejected with "template not found". When we submit Gujarati
+ * or Hindi variants later we add separate template entries with `gu` /
+ * `hi` rather than swapping the language in place.
  */
 
 /** Meta parameter primitive — typed as text by default; media types come later. */
@@ -55,7 +59,7 @@ function defineTemplate<P extends Record<string, string>>(
 export const otpLoginTemplate = defineTemplate<{ code: string }>({
   name: 'otp_login',
   category: 'AUTHENTICATION',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [{ type: 'text', text: p.code }],
 });
 
@@ -70,7 +74,7 @@ export const orderPlacedTemplate = defineTemplate<{
 }>({
   name: 'order_placed',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.orderNumber },
@@ -87,7 +91,7 @@ export const orderConfirmedTemplate = defineTemplate<{
 }>({
   name: 'order_confirmed',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.orderNumber },
@@ -102,7 +106,7 @@ export const orderPackedTemplate = defineTemplate<{
 }>({
   name: 'order_packed',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.orderNumber },
@@ -119,7 +123,7 @@ export const orderShippedTemplate = defineTemplate<{
 }>({
   name: 'order_shipped',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.orderNumber },
@@ -136,7 +140,7 @@ export const orderDeliveredTemplate = defineTemplate<{
 }>({
   name: 'order_delivered',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.orderNumber },
@@ -151,7 +155,7 @@ export const orderCancelledTemplate = defineTemplate<{
 }>({
   name: 'order_cancelled',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.orderNumber },
@@ -169,7 +173,7 @@ export const refundInitiatedTemplate = defineTemplate<{
 }>({
   name: 'refund_initiated',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.orderNumber },
@@ -185,7 +189,7 @@ export const refundCompletedTemplate = defineTemplate<{
 }>({
   name: 'refund_completed',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.orderNumber },
@@ -203,7 +207,7 @@ export const restockAlertTemplate = defineTemplate<{
 }>({
   name: 'restock_alert',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.productName },
     { type: 'text', text: p.currentStock },
@@ -219,7 +223,7 @@ export const dailySummaryTemplate = defineTemplate<{
 }>({
   name: 'daily_summary',
   category: 'UTILITY',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.ordersCount },
     { type: 'text', text: p.revenueRupees },
@@ -236,7 +240,7 @@ export const repurchaseNudgeTemplate = defineTemplate<{
 }>({
   name: 'repurchase_nudge',
   category: 'MARKETING',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [
     { type: 'text', text: p.customerFirstName },
     { type: 'text', text: p.productName },
@@ -249,7 +253,7 @@ export const winbackNudgeTemplate = defineTemplate<{
 }>({
   name: 'winback_nudge',
   category: 'MARKETING',
-  language: 'en_US',
+  language: 'en',
   build: (p) => [{ type: 'text', text: p.customerFirstName }],
 });
 

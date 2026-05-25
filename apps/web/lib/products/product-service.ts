@@ -82,6 +82,8 @@ export interface ProductDetailView {
   sku: string;
   name: string;
   nameGu: string | null;
+  /** Used by `getRelatedProducts` to find siblings — kept off the rendered page. */
+  categoryId: string;
   categoryName: string;
   tagline: string | null;
   taglineGu: string | null;
@@ -99,6 +101,47 @@ export interface ProductDetailView {
   stockQty: number;
   lowStockThreshold: number;
   images: ProductImageView[];
+}
+
+/**
+ * Sibling products in the same category — used by the "You might also like"
+ * strip at the bottom of `/products/[slug]`. The current product is excluded;
+ * the rest are sorted by the same featured-then-admin-order rule the
+ * homepage uses, so the two surfaces never disagree about priority.
+ */
+export async function getRelatedProducts(
+  productId: string,
+  categoryId: string,
+  limit = 4,
+): Promise<ProductCardData[]> {
+  const products = await prisma.product.findMany({
+    where: { isActive: true, categoryId, id: { not: productId } },
+    orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }],
+    take: limit,
+    select: {
+      slug: true,
+      name: true,
+      pricePaise: true,
+      comparePaise: true,
+      sizeLabel: true,
+      category: { select: { name: true } },
+      images: {
+        orderBy: { sortOrder: 'asc' },
+        take: 1,
+        select: { url: true, alt: true, width: true, height: true },
+      },
+    },
+  });
+
+  return products.map((product) => ({
+    slug: product.slug,
+    name: product.name,
+    pricePaise: product.pricePaise,
+    comparePaise: product.comparePaise,
+    sizeLabel: product.sizeLabel,
+    categoryName: product.category.name,
+    image: imageRowToCardImage(product.images[0]),
+  }));
 }
 
 /** Lightweight catalogue row for the sitemap — every active product, no joins. */
@@ -206,6 +249,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailView 
       stockQty: true,
       lowStockThreshold: true,
       isActive: true,
+      categoryId: true,
       category: { select: { name: true } },
       images: {
         orderBy: { sortOrder: 'asc' },
@@ -229,6 +273,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailView 
     sku: product.sku,
     name: product.name,
     nameGu: product.nameGu,
+    categoryId: product.categoryId,
     categoryName: product.category.name,
     tagline: product.tagline,
     taglineGu: product.taglineGu,

@@ -10,9 +10,10 @@ import { SiteFooter } from '@/components/shop/site-footer';
 import { SiteHeader } from '@/components/shop/site-header';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
+import { ProductCard } from '@/components/ui/product-card';
 import { TrustBadge } from '@/components/ui/trust-badge';
 import { formatPrice } from '@/lib/format';
-import { getProductBySlug } from '@/lib/products/product-service';
+import { getProductBySlug, getRelatedProducts } from '@/lib/products/product-service';
 import { breadcrumbJsonLd, productJsonLd } from '@/lib/seo/json-ld';
 import { SITE_URL, absoluteUrl } from '@/lib/seo/site';
 
@@ -142,6 +143,10 @@ const TRUST_ITEMS = ['WHO GMP Certified', '100% Ayurvedic', 'Cash on Delivery'] 
 export default async function ProductPage({ params }: ProductPageProps) {
   const product = await fetchProduct(params.slug);
   if (!product) notFound();
+
+  // Related-products query runs in parallel with the rest of the render —
+  // it's a separate Prisma round-trip but cheap (single category, take 4).
+  const relatedProducts = await getRelatedProducts(product.id, product.categoryId, 4);
 
   const primaryImage = product.images[0];
   const onSale =
@@ -305,6 +310,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </section>
             )}
           </div>
+
+          {/* ── Related products ──────────────────────────────────────────── */}
+          {relatedProducts.length > 0 && (
+            <section className="mt-20" aria-labelledby="related-heading">
+              <div className="flex flex-col items-center text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+                  Also from our {product.categoryName.toLowerCase()} shelf
+                </p>
+                <h2
+                  id="related-heading"
+                  className="mt-2 font-display text-2xl font-semibold text-forest-900 sm:text-3xl"
+                >
+                  You might also like
+                </h2>
+              </div>
+
+              <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+                {relatedProducts.map((related) => (
+                  <ProductCard key={related.slug} product={related} />
+                ))}
+              </div>
+            </section>
+          )}
         </Container>
       </main>
 

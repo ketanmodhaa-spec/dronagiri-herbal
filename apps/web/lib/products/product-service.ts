@@ -78,6 +78,25 @@ export interface ProductDetailView {
   images: ProductImageView[];
 }
 
+/** Lightweight catalogue row for the sitemap — every active product, no joins. */
+export interface ProductSitemapEntry {
+  slug: string;
+  updatedAt: Date;
+}
+
+/**
+ * Every active product, returned as the minimum sitemap.xml needs. Sitemap
+ * generation runs on a daily revalidate, so a fresh query per refresh is
+ * cheap; no caching layer beyond Vercel's CDN.
+ */
+export async function listActiveProductsForSitemap(): Promise<ProductSitemapEntry[]> {
+  return prisma.product.findMany({
+    where: { isActive: true },
+    orderBy: { updatedAt: 'desc' },
+    select: { slug: true, updatedAt: true },
+  });
+}
+
 /**
  * Fetch one product by slug for the public detail page. Inactive products and
  * missing slugs both return `null` — callers turn that into a 404 via

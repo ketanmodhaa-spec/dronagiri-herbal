@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import { LegalPage } from '@/components/shop/legal-page';
 import { loadLegal } from '@/lib/content/legal';
+import { absoluteUrl } from '@/lib/seo/site';
 
 const content = loadLegal('terms');
 const lastUpdated = '23 May 2026';
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
   title: 'Terms & Conditions',
   description:
     'The terms governing your use of dronagiriherbal.in and purchases from Dronagiri Herbal.',
+  alternates: { canonical: absoluteUrl('/terms') },
   robots: draft ? { index: false, follow: true } : { index: true, follow: true },
 };
 

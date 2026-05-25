@@ -1,3 +1,5 @@
+import type { Metadata } from 'next';
+
 import { SiteFooter } from '@/components/shop/site-footer';
 import { SiteHeader } from '@/components/shop/site-header';
 import { Button } from '@/components/ui/button';
@@ -6,6 +8,7 @@ import { ArrowRightIcon, LeafIcon } from '@/components/ui/icons';
 import { ProductCard } from '@/components/ui/product-card';
 import { TrustBadge } from '@/components/ui/trust-badge';
 import { getFeaturedProducts } from '@/lib/products/product-service';
+import { SITE_URL } from '@/lib/seo/site';
 
 /**
  * Render per request, never at build time. The featured grid is read live
@@ -14,6 +17,11 @@ import { getFeaturedProducts } from '@/lib/products/product-service';
  * during `next build`, immune to Neon scale-to-zero).
  */
 export const dynamic = 'force-dynamic';
+
+/** The homepage is the canonical root — make that explicit for crawlers. */
+export const metadata: Metadata = {
+  alternates: { canonical: SITE_URL },
+};
 
 /** Reassurance items shown directly under the hero call-to-action. */
 const TRUST_ITEMS = [

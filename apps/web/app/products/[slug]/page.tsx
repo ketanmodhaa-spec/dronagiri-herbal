@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+import { JsonLd } from '@/components/seo/json-ld';
 import { ProductImageZoom } from '@/components/shop/product-image-zoom';
 import { SiteFooter } from '@/components/shop/site-footer';
 import { SiteHeader } from '@/components/shop/site-header';
@@ -11,6 +13,8 @@ import { Container } from '@/components/ui/container';
 import { TrustBadge } from '@/components/ui/trust-badge';
 import { formatPrice } from '@/lib/format';
 import { getProductBySlug } from '@/lib/products/product-service';
+import { breadcrumbJsonLd, productJsonLd } from '@/lib/seo/json-ld';
+import { SITE_URL, absoluteUrl } from '@/lib/seo/site';
 
 /**
  * Render per request: catalogue changes from the admin panel appear without
@@ -22,9 +26,16 @@ interface ProductPageProps {
   params: { slug: string };
 }
 
+/**
+ * Cache the product fetch within one request. Next calls `generateMetadata`
+ * and the page component separately; without this wrapper we'd query Prisma
+ * twice for every render. `cache()` is per-request, not per-process.
+ */
+const fetchProduct = cache(getProductBySlug);
+
 /** SEO + social-share metadata. Inactive products fall back to a generic title. */
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const product = await getProductBySlug(params.slug);
+  const product = await fetchProduct(params.slug);
   if (!product) {
     return { title: 'Product not found', robots: { index: false, follow: true } };
   }
@@ -36,14 +47,25 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     .trim()
     .slice(0, 160);
 
+  const canonical = absoluteUrl(`/products/${product.slug}`);
+  const ogImage = product.images[0]?.url;
+
   return {
-    title: `${product.name} — Dronagiri Herbal`,
+    title: product.name,
     description: blurb,
+    alternates: { canonical },
     openGraph: {
       title: product.name,
       description: blurb,
-      images: product.images[0] ? [{ url: product.images[0].url }] : undefined,
+      url: canonical,
+      images: ogImage ? [{ url: ogImage }] : undefined,
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description: blurb,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -118,15 +140,50 @@ function StockBadge({ stockQty, lowStockThreshold }: { stockQty: number; lowStoc
 const TRUST_ITEMS = ['WHO GMP Certified', '100% Ayurvedic', 'Cash on Delivery'] as const;
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const product = await getProductBySlug(params.slug);
+  const product = await fetchProduct(params.slug);
   if (!product) notFound();
 
   const primaryImage = product.images[0];
   const onSale =
     product.comparePaise !== null && product.comparePaise > product.pricePaise;
+  const canonical = absoluteUrl(`/products/${product.slug}`);
+
+  // The shorter blurb used in OG/Twitter is also the cleanest text for the
+  // Product JSON-LD description — markdown-stripped, single-sentence.
+  const seoDescription = (product.tagline ?? product.description)
+    .replace(/[#*_>`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 250);
+
+  // Price-valid-until needs an explicit date; end-of-next-year keeps it
+  // valid through long crawl cycles without lying about price stability.
+  const priceValidUntil = new Date(new Date().getFullYear() + 1, 11, 31)
+    .toISOString()
+    .slice(0, 10);
+
+  const productLd = productJsonLd({
+    url: canonical,
+    name: product.name,
+    description: seoDescription,
+    sku: product.sku,
+    category: product.categoryName,
+    imageUrls: product.images.map((image) => image.url),
+    priceRupees: product.pricePaise / 100,
+    inStock: product.stockQty > 0,
+    priceValidUntil,
+  });
+
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: 'Home', url: SITE_URL },
+    { name: 'Shop', url: `${SITE_URL}/#featured` },
+    { name: product.name },
+  ]);
 
   return (
     <>
+      <JsonLd data={productLd} />
+      <JsonLd data={breadcrumbLd} />
       <SiteHeader />
 
       <main className="bg-cream pb-20 pt-10 md:pt-12">

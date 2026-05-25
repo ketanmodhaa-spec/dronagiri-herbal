@@ -1,7 +1,7 @@
 # CLAUDE.md — Dronagiri Herbal Platform
 > This file is read automatically by Claude Code at every session start.
 > Keep it updated. It is the single source of truth for AI context.
-> Last updated: 22 May 2026
+> Last updated: 25 May 2026
 
 ---
 
@@ -295,7 +295,7 @@ Print and laminate alias cheatsheet for Sarita's production area.
 | Cloudflare R2 | ✅ Done | Bucket + API token in Doppler |
 | Cloudflare DNS | ✅ Done | dronagiriherbal.in zone active. NS migrated from GoDaddy → Cloudflare. DNS records pointing to Vercel. |
 | Razorpay | ⏳ Pending | Sarita to complete KYC |
-| Meta WhatsApp Business API | ⏳ Pending | Single service for OTP + notifications. Replaces Firebase + WATI. |
+| Meta WhatsApp Business API | ⏳ Pending approval | **Code scaffolding shipped (25 May)** — feature-gated send client, 13 typed templates, Redis-backed OTP service, signature-verified webhook receiver at `/api/webhooks/whatsapp`. Webhook is always live so Meta can verify the URL before approving templates. Outbound sends gated by `ENABLE_WHATSAPP=true`; until then sends log intent to `NotificationLog` and no-op. Doppler vars needed for webhook verification (now): `WHATSAPP_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_WEBHOOK_APP_SECRET`. Doppler vars needed to flip outbound on: `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `ENABLE_WHATSAPP`. |
 | Resend | ✅ Done | API key in Doppler. Domain verified for dronagiriherbal.in. |
 | Anthropic | ⏳ Pending | |
 | Sentry | ⏳ Pending | SDK integrated (client/server/edge config, instrumentation hook, global-error boundary, source-map upload via withSentryConfig). Awaiting `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_AUTH_TOKEN` in Doppler — until then Sentry.init is a no-op. |

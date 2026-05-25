@@ -1,7 +1,7 @@
 # AGENDA.md — Dronagiri Herbal
 > Current tasks, sprint, and priorities.
 > Update this file at the start and end of every work session.
-> Last updated: 22 May 2026
+> Last updated: 25 May 2026
 
 ---
 
@@ -18,7 +18,7 @@
 
 ### Blocked
 - ⏳ Razorpay KYC — Sarita to complete independently.
-- ⏳ Meta WhatsApp templates — 13 templates pending Meta approval (24–48h each).
+- ⏳ Meta WhatsApp templates — 13 templates pending Meta approval (24–48h each). **Scaffolding shipped 25 May; webhook URL `/api/webhooks/whatsapp` is live and ready for Meta to verify. Setting the two webhook Doppler vars and pasting the URL into Meta Business Manager unblocks template submission today.**
 
 ### Completed today
 - ✅ Neon PostgreSQL — both URLs in .env

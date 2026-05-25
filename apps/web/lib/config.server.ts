@@ -77,4 +77,41 @@ export const serverConfig = {
       return required('CLOUDFLARE_R2_ENDPOINT');
     },
   },
+
+  /**
+   * Meta WhatsApp Business API — both OTP and outbound notifications.
+   *
+   * Outbound sends are gated by `enabled`: when false, the send client logs
+   * intent to NotificationLog and returns early so the rest of the app keeps
+   * working unchanged. The webhook receiver is *always* live regardless —
+   * Meta verifies the webhook URL before allowing template submission.
+   *
+   * `webhookVerifyToken` and `webhookAppSecret` are therefore the only two
+   * variables required to make the webhook work; the rest become required
+   * the moment `ENABLE_WHATSAPP=true`.
+   */
+  whatsapp: {
+    /** Master feature flag. Only `'true'` enables outbound; anything else off. */
+    get enabled(): boolean {
+      return process.env.ENABLE_WHATSAPP === 'true';
+    },
+    /** Long-lived system-user access token issued by Meta. */
+    get accessToken(): string {
+      return required('WHATSAPP_ACCESS_TOKEN');
+    },
+    /** Phone-number ID Meta assigns to the WABA — addresses outbound sends. */
+    get phoneNumberId(): string {
+      return required('WHATSAPP_PHONE_NUMBER_ID');
+    },
+    /** Verify token sent back in the GET handshake — set the same value in Meta. */
+    get webhookVerifyToken(): string {
+      return required('WHATSAPP_WEBHOOK_VERIFY_TOKEN');
+    },
+    /** App secret used to HMAC-sign incoming webhooks; we verify against it. */
+    get webhookAppSecret(): string {
+      return required('WHATSAPP_WEBHOOK_APP_SECRET');
+    },
+    /** Meta Graph API base URL — pinned to a stable version. */
+    graphApiBase: 'https://graph.facebook.com/v20.0',
+  },
 };

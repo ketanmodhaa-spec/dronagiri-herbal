@@ -1,7 +1,7 @@
 # AUDIT.md — Dronagiri Herbal
 > Security audit log, code review notes, and compliance checklist.
 > Run a full audit before every major milestone.
-> Last updated: 22 May 2026
+> Last updated: 25 May 2026
 
 ---
 
@@ -90,6 +90,33 @@ login → refresh → logout → change-password run against the dev database.
 - [x] Admin pages (/admin/*) gated by the Edge middleware; /api/admin/* routes gated by requireAdmin() in each handler
 **Fix logged:** the admin RS256 keys are stored base64-encoded in Doppler; the key loader now decodes base64, and also accepts a raw PEM or escaped-newline form.
 Next audit: after Phase 2 (catalogue management).
+
+### [25 May 2026] — WhatsApp scaffolding behind feature flag
+Stage 1 of WhatsApp Business API integration shipped — every outbound message goes through a feature-gated client, every inbound webhook is signature-verified.
+- [x] **Outbound send client.** All sends route through `lib/notifications/whatsapp/client.ts`. When `ENABLE_WHATSAPP !== 'true'`, the client logs intent to `NotificationLog` (status `QUEUED`, error message `WhatsApp disabled — call recorded but not sent`) and skips the network call — the rest of the app keeps working.
+- [x] **Phone normalisation.** `to` is reduced to digits and length-checked (10–15 digits) before either the disabled-path log or the live send; an invalid number lands in `NotificationLog` with status `FAILED` and never hits Meta.
+- [x] **Retry policy.** Exactly one retry on 5xx with a 500 ms gap; 4xx fails fast (permanent error). Both attempt's last error message is stored on the log row.
+- [x] **Typed templates.** All 13 templates in AGENDA carry their parameter shape; `sendWhatsAppTemplate(...)` is generic over that shape so a missing or misspelled param is a compile error.
+- [x] **NotificationLog coverage.** Every code path (disabled, invalid phone, send success, send failure) writes exactly one row. `providerMessageId` is set only on success; `sentAt` is set only when the send returned a `wamid`.
+- [x] **OTP service.** 6-digit codes generated via `randomInt`, stored as SHA-256 hex in Redis with a 5-minute TTL; never returned by `issueOtp`; only delivered through the WhatsApp template send. Verification uses `timingSafeEqual` on fixed-length hex digests. Single-use: a successful verify deletes the code. Max 5 attempts per code via a Redis `INCR` with the same TTL; on the 5th wrong code the OTP is deleted.
+- [x] **OTP issue rate limit.** 3 issues per phone per 10 minutes via `getOtpIssueLimiter()`. Keyed on the normalised phone, not the IP, so a roaming user is not punished.
+- [x] **Webhook signature verification.** `verifyWhatsAppSignature(rawBody, header, appSecret)` does HMAC-SHA256 against the *exact* request body (never the re-serialised JSON), regex-guards the hex portion, requires equal lengths before `timingSafeEqual`, and rejects any non-`sha256=` header value.
+- [x] **Webhook always live.** GET handshake compares `hub.verify_token` against `WHATSAPP_WEBHOOK_VERIFY_TOKEN` and echoes `hub.challenge` only on match — works even when the outbound flag is off. Meta requires a verified webhook URL before approving template submissions; this code is what unblocks the rest of the WhatsApp work.
+- [x] **Webhook never throws.** Processing errors are logged via console (Sentry auto-captures) but the route still returns 200 — Meta retries 4xx/5xx with backoff and the retry storm would be worse than a missed status event.
+- [x] **Status updates are write-only against `providerMessageId`.** `updateMany` is used so a status for an unknown message (replay, testing) silently no-ops rather than throwing.
+
+**Doppler variables required for the webhook to verify (do this first):**
+- `WHATSAPP_WEBHOOK_VERIFY_TOKEN` — any random string, used as the GET-handshake shared secret
+- `WHATSAPP_WEBHOOK_APP_SECRET` — Meta App Secret, used to HMAC-verify POSTs
+
+**Doppler variables required to flip `ENABLE_WHATSAPP=true`:**
+- `WHATSAPP_ACCESS_TOKEN` — long-lived system-user token from Meta Business
+- `WHATSAPP_PHONE_NUMBER_ID` — the WABA phone-number ID Meta issues
+- `ENABLE_WHATSAPP` — set to the literal string `true` (anything else keeps the flag off)
+
+Stage 2 — not yet written, parked for after Meta approves templates: RESTOCK / STOCK / ORDERS / HELP command parser (incoming webhook hands text messages to a real handler), order-state-transition notification hooks (call `sendWhatsAppTemplate` from the order machine once checkout exists), marketing broadcast scheduler.
+
+Next audit: after Meta approves templates and `ENABLE_WHATSAPP=true` lands in production.
 
 ---
 

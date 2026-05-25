@@ -1,20 +1,14 @@
 /**
  * Upstash-backed rate limiting.
  *
- * One Redis client and each limiter are created lazily and cached — a route
- * that never rate-limits never opens a connection. Limiters use a sliding
- * window, so a burst straddling a window boundary cannot double the allowance.
+ * Each limiter is created lazily and cached — a route that never rate-limits
+ * never builds one. Limiters use a sliding window, so a burst straddling a
+ * window boundary cannot double the allowance. The underlying Redis client
+ * is the shared one from `lib/redis.ts`.
  */
 import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
 
-import { serverConfig } from '@/lib/config.server';
-
-let redis: Redis | undefined;
-function getRedis(): Redis {
-  redis ??= new Redis({ url: serverConfig.redis.url, token: serverConfig.redis.token });
-  return redis;
-}
+import { getRedis } from '@/lib/redis';
 
 let adminLoginLimiter: Ratelimit | undefined;
 
@@ -48,4 +42,21 @@ export function getImagePresignLimiter(): Ratelimit {
     analytics: false,
   });
   return imagePresignLimiter;
+}
+
+let otpIssueLimiter: Ratelimit | undefined;
+
+/**
+ * OTP issue limiter — 3 sends per 10 minutes, keyed by phone number.
+ * Tight enough to keep an attacker from grinding through codes, generous
+ * enough that a legitimate user's typo + retry doesn't lock them out.
+ */
+export function getOtpIssueLimiter(): Ratelimit {
+  otpIssueLimiter ??= new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(3, '10 m'),
+    prefix: 'rl:otp-issue',
+    analytics: false,
+  });
+  return otpIssueLimiter;
 }

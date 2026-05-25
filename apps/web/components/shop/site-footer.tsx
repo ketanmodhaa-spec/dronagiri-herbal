@@ -3,9 +3,13 @@ import Link from 'next/link';
 import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 
+/**
+ * Footer explore links. Anchors are prefixed with `/` so they always work
+ * from product detail pages, the quiz, or anywhere else off the homepage.
+ */
 const EXPLORE_LINKS = [
-  { label: 'Shop the Collection', href: '#featured' },
-  { label: 'Our Story', href: '#story' },
+  { label: 'Shop the Collection', href: '/#featured' },
+  { label: 'Our Story', href: '/#story' },
   { label: 'Find My Product', href: '/quiz' },
 ] as const;
 

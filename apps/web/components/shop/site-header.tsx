@@ -4,11 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 
-/** On-page anchors — the storefront's catalogue and quiz routes land in Step 2. */
+/**
+ * Top-level nav links. Anchors are prefixed with `/` so they resolve from
+ * any page on the site — clicking "Shop" from a product detail page takes
+ * the visitor home to the featured grid, not to a dead fragment.
+ */
 const NAV_LINKS = [
-  { label: 'Shop', href: '#featured' },
-  { label: 'Our Story', href: '#story' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Shop', href: '/#featured' },
+  { label: 'Our Story', href: '/#story' },
+  { label: 'Contact', href: '/contact' },
 ] as const;
 
 /** Sticky storefront header — brand mark, section links, and the quiz CTA. */

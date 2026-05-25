@@ -84,6 +84,54 @@ export interface ProductSitemapEntry {
   updatedAt: Date;
 }
 
+/** Active-product shape the quiz recommender reads. Trimmed to what it scores on. */
+export interface QuizProductRow {
+  slug: string;
+  name: string;
+  tagline: string | null;
+  pricePaise: number;
+  comparePaise: number | null;
+  sizeLabel: string | null;
+  categoryName: string;
+  isFeatured: boolean;
+  sortOrder: number;
+}
+
+/**
+ * Every active product with the fields the quiz needs. Server-fetched on
+ * `/quiz` page load so a new product Sarita adds becomes recommendable on
+ * the next request — no cache, no redeploy.
+ */
+export async function listActiveProductsForQuiz(): Promise<QuizProductRow[]> {
+  const products = await prisma.product.findMany({
+    where: { isActive: true },
+    orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }],
+    select: {
+      slug: true,
+      name: true,
+      tagline: true,
+      pricePaise: true,
+      comparePaise: true,
+      sizeLabel: true,
+      isFeatured: true,
+      sortOrder: true,
+      category: { select: { name: true } },
+    },
+  });
+
+  return products.map((product) => ({
+    slug: product.slug,
+    name: product.name,
+    tagline: product.tagline,
+    pricePaise: product.pricePaise,
+    comparePaise: product.comparePaise,
+    sizeLabel: product.sizeLabel,
+    categoryName: product.category.name,
+    isFeatured: product.isFeatured,
+    sortOrder: product.sortOrder,
+  }));
+}
+
 /**
  * Every active product, returned as the minimum sitemap.xml needs. Sitemap
  * generation runs on a daily revalidate, so a fresh query per refresh is

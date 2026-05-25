@@ -39,6 +39,14 @@ export interface QuizAnswers {
   routine: RoutineCommitment;
 }
 
+/** Primary image for a recommendation card — kept in sync with ProductCardImage. */
+export interface QuizProductImage {
+  url: string;
+  alt: string | null;
+  width: number;
+  height: number;
+}
+
 /**
  * The shape the recommender needs from a Product. Carries only the fields we
  * read — the page composes this from full Product rows at request time.
@@ -53,6 +61,8 @@ export interface QuizProduct {
   categoryName: string;
   isFeatured: boolean;
   sortOrder: number;
+  /** First admin-uploaded image, or null if none — shown on the recommendation card. */
+  image: QuizProductImage | null;
 }
 
 /** A single product the quiz recommends, plus the human reason it was picked. */

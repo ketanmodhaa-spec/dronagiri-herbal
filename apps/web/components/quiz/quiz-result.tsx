@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -66,8 +67,21 @@ export function QuizResult({ recommendations, focusLabel, onRestart }: QuizResul
               className="overflow-hidden rounded-2xl bg-white ring-1 ring-forest-100"
             >
               <div className="grid items-stretch gap-0 sm:grid-cols-[180px_1fr]">
-                <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-forest-100 to-forest-200 sm:aspect-auto">
-                  <LeafIcon className="h-14 w-14 text-forest-600" />
+                <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-forest-100 to-forest-200 sm:aspect-auto">
+                  {product.image ? (
+                    <Image
+                      src={product.image.url}
+                      alt={product.image.alt ?? product.name}
+                      width={product.image.width}
+                      height={product.image.height}
+                      sizes="(min-width: 640px) 180px, 100vw"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <LeafIcon className="h-14 w-14 text-forest-600" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2 p-5">

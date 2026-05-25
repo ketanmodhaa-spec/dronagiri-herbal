@@ -9,6 +9,22 @@ import { prisma } from '@dronagiri/db';
 
 import type { ProductCardData } from '@/components/ui/product-card';
 
+/** Prisma image row → the slimmer shape ProductCard wants. Null when no image yet. */
+function imageRowToCardImage(
+  image: { url: string; alt: string | null; width: number | null; height: number | null } | undefined,
+): ProductCardData['image'] {
+  if (!image) return null;
+  // Dimensions are nullable in the schema but the admin upload pipeline always
+  // captures them; the 1000-px fallback keeps next/image from rejecting legacy
+  // or hand-inserted rows that pre-date that capture.
+  return {
+    url: image.url,
+    alt: image.alt,
+    width: image.width ?? 1000,
+    height: image.height ?? 1000,
+  };
+}
+
 /**
  * Products for the homepage featured grid. Curated (`isFeatured`) products
  * lead; the rest fill the grid in catalogue order, capped at `limit`.
@@ -25,6 +41,12 @@ export async function getFeaturedProducts(limit = 8): Promise<ProductCardData[]>
       comparePaise: true,
       sizeLabel: true,
       category: { select: { name: true } },
+      // First image in admin order — that's the primary card image.
+      images: {
+        orderBy: { sortOrder: 'asc' },
+        take: 1,
+        select: { url: true, alt: true, width: true, height: true },
+      },
     },
   });
 
@@ -35,6 +57,7 @@ export async function getFeaturedProducts(limit = 8): Promise<ProductCardData[]>
     comparePaise: product.comparePaise,
     sizeLabel: product.sizeLabel,
     categoryName: product.category.name,
+    image: imageRowToCardImage(product.images[0]),
   }));
 }
 
@@ -95,6 +118,8 @@ export interface QuizProductRow {
   categoryName: string;
   isFeatured: boolean;
   sortOrder: number;
+  /** First admin-uploaded image — shown on the recommendation card. */
+  image: ProductCardData['image'];
 }
 
 /**
@@ -116,6 +141,11 @@ export async function listActiveProductsForQuiz(): Promise<QuizProductRow[]> {
       isFeatured: true,
       sortOrder: true,
       category: { select: { name: true } },
+      images: {
+        orderBy: { sortOrder: 'asc' },
+        take: 1,
+        select: { url: true, alt: true, width: true, height: true },
+      },
     },
   });
 
@@ -129,6 +159,7 @@ export async function listActiveProductsForQuiz(): Promise<QuizProductRow[]> {
     categoryName: product.category.name,
     isFeatured: product.isFeatured,
     sortOrder: product.sortOrder,
+    image: imageRowToCardImage(product.images[0]),
   }));
 }
 

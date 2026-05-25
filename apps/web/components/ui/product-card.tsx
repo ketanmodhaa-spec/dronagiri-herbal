@@ -1,7 +1,16 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { LeafIcon } from '@/components/ui/icons';
 import { formatPrice } from '@/lib/format';
+
+/** Primary image as the card needs it — URL + dimensions + accessible alt. */
+export interface ProductCardImage {
+  url: string;
+  alt: string | null;
+  width: number;
+  height: number;
+}
 
 /**
  * The fields a card needs to render — deliberately a plain shape, not the
@@ -14,23 +23,42 @@ export interface ProductCardData {
   comparePaise: number | null;
   sizeLabel: string | null;
   categoryName: string | null;
+  /** First image in admin-defined order, or `null` if none uploaded yet. */
+  image: ProductCardImage | null;
 }
 
 /**
- * Catalogue tile. Product photography is not in yet (see DISPUTE.md), so the
- * image well renders a branded placeholder; it becomes a real image in Step 2.
+ * Catalogue tile used on the homepage featured grid, the `/shop` index, the
+ * quiz result, and related-products strips. When the product has an uploaded
+ * photo we render it; otherwise the same branded LeafIcon-on-green
+ * placeholder a card always had stays — products without images are still
+ * visible, just without imagery.
  */
 export function ProductCard({ product }: { product: ProductCardData }) {
   const onSale =
     product.comparePaise !== null && product.comparePaise > product.pricePaise;
+  const image = product.image;
 
   return (
     <Link
       href={`/products/${product.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-forest-100 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:ring-forest-200"
     >
-      <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-forest-100 to-forest-200">
-        <LeafIcon className="h-16 w-16 text-forest-600 transition-transform duration-300 group-hover:scale-110" />
+      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-forest-100 to-forest-200">
+        {image ? (
+          <Image
+            src={image.url}
+            alt={image.alt ?? product.name}
+            width={image.width}
+            height={image.height}
+            sizes="(min-width: 768px) 25vw, 50vw"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <LeafIcon className="h-16 w-16 text-forest-600 transition-transform duration-300 group-hover:scale-110" />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1 p-4">

@@ -144,6 +144,68 @@ export async function getRelatedProducts(
   }));
 }
 
+/**
+ * One category and the active products belonging to it — the shape `/shop`
+ * renders. Empty categories are filtered out at the query level so the page
+ * never has to handle "section with zero products."
+ */
+export interface ShopCategorySection {
+  id: string;
+  name: string;
+  products: ProductCardData[];
+}
+
+/**
+ * Every active category that has at least one active product, with those
+ * products attached as card-shaped rows. Categories run in admin-defined
+ * order; products within each category follow the same priority rule as
+ * the homepage (featured → sortOrder → name).
+ *
+ * One DB round-trip (Prisma flattens the nested `select` into a single
+ * SQL query); the resulting `categories.length × products.length` is
+ * small for a single-founder catalogue.
+ */
+export async function listShopCategoriesWithProducts(): Promise<ShopCategorySection[]> {
+  const categories = await prisma.category.findMany({
+    where: { isActive: true, products: { some: { isActive: true } } },
+    orderBy: { sortOrder: 'asc' },
+    select: {
+      id: true,
+      name: true,
+      products: {
+        where: { isActive: true },
+        orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }],
+        select: {
+          slug: true,
+          name: true,
+          pricePaise: true,
+          comparePaise: true,
+          sizeLabel: true,
+          images: {
+            orderBy: { sortOrder: 'asc' },
+            take: 1,
+            select: { url: true, alt: true, width: true, height: true },
+          },
+        },
+      },
+    },
+  });
+
+  return categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    products: category.products.map((product) => ({
+      slug: product.slug,
+      name: product.name,
+      pricePaise: product.pricePaise,
+      comparePaise: product.comparePaise,
+      sizeLabel: product.sizeLabel,
+      categoryName: category.name,
+      image: imageRowToCardImage(product.images[0]),
+    })),
+  }));
+}
+
 /** Lightweight catalogue row for the sitemap — every active product, no joins. */
 export interface ProductSitemapEntry {
   slug: string;

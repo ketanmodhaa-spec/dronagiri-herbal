@@ -20,6 +20,7 @@ const STATIC_PAGES: Array<{
   priority: number;
 }> = [
   { path: '/', changeFrequency: 'weekly', priority: 1.0 },
+  { path: '/shop', changeFrequency: 'weekly', priority: 0.9 },
   { path: '/quiz', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/contact', changeFrequency: 'yearly', priority: 0.4 },
   { path: '/terms', changeFrequency: 'yearly', priority: 0.3 },

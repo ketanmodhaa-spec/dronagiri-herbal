@@ -181,7 +181,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const breadcrumbLd = breadcrumbJsonLd([
     { name: 'Home', url: SITE_URL },
-    { name: 'Shop', url: `${SITE_URL}/#featured` },
+    { name: 'Shop', url: `${SITE_URL}/shop` },
     { name: product.name },
   ]);
 
@@ -199,7 +199,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               Home
             </Link>
             <span className="mx-2 text-stone-light">/</span>
-            <Link href="/#featured" className="hover:text-forest-800">
+            <Link href="/shop" className="hover:text-forest-800">
               Shop
             </Link>
             <span className="mx-2 text-stone-light">/</span>

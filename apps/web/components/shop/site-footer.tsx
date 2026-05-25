@@ -4,11 +4,12 @@ import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 
 /**
- * Footer explore links. Anchors are prefixed with `/` so they always work
- * from product detail pages, the quiz, or anywhere else off the homepage.
+ * Footer explore links. "Shop the Collection" lands on the dedicated /shop
+ * index; "Our Story" stays a homepage anchor since there's no separate
+ * About page yet.
  */
 const EXPLORE_LINKS = [
-  { label: 'Shop the Collection', href: '/#featured' },
+  { label: 'Shop the Collection', href: '/shop' },
   { label: 'Our Story', href: '/#story' },
   { label: 'Find My Product', href: '/quiz' },
 ] as const;

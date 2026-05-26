@@ -5,13 +5,12 @@ import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 
 /**
- * Top-level nav links. "Shop" points at the dedicated catalogue index;
- * "Our Story" is still the homepage's brand-story section. Both anchors
- * are full paths so they resolve from any page on the site.
+ * Top-level nav links. Each one is a full path so the header works
+ * identically from any page — no homepage-only anchors hiding here.
  */
 const NAV_LINKS = [
   { label: 'Shop', href: '/shop' },
-  { label: 'Our Story', href: '/#story' },
+  { label: 'Our Story', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ] as const;
 

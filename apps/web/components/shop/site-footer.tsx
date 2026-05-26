@@ -3,14 +3,10 @@ import Link from 'next/link';
 import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 
-/**
- * Footer explore links. "Shop the Collection" lands on the dedicated /shop
- * index; "Our Story" stays a homepage anchor since there's no separate
- * About page yet.
- */
+/** Footer explore links — every target is a full page, no homepage anchors. */
 const EXPLORE_LINKS = [
   { label: 'Shop the Collection', href: '/shop' },
-  { label: 'Our Story', href: '/#story' },
+  { label: 'Our Story', href: '/about' },
   { label: 'Find My Product', href: '/quiz' },
 ] as const;
 

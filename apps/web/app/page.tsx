@@ -178,6 +178,13 @@ export default async function HomePage() {
                     <TrustBadge key={credential}>{credential}</TrustBadge>
                   ))}
                 </div>
+
+                <div className="mt-8">
+                  <Button href="/about" variant="secondary" size="md">
+                    Read the full story
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </Container>

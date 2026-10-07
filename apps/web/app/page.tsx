@@ -29,7 +29,7 @@ const TRUST_ITEMS = [
   'WHO GMP Certified',
   '100% Ayurvedic',
   'Cash on Delivery',
-  'Free Shipping',
+  'Free Shipping above ₹499',
 ] as const;
 
 /** Credentials surfaced alongside the founder's story. */
@@ -85,7 +85,7 @@ export default async function HomePage() {
         <section id="featured" className="bg-cream py-16 md:py-24">
           <Container>
             <div className="flex flex-col items-center text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
                 The Collection
               </p>
               <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">
@@ -151,7 +151,7 @@ export default async function HomePage() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
                   Our Story
                 </p>
                 <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">

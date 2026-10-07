@@ -6,7 +6,7 @@ import { SiteHeader } from '@/components/shop/site-header';
 import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 import { listActiveProductsForQuiz } from '@/lib/products/product-service';
-import { absoluteUrl } from '@/lib/seo/site';
+import { DEFAULT_OG_IMAGE, absoluteUrl } from '@/lib/seo/site';
 
 /**
  * The quiz is read-live from the catalogue (so new products become
@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     description:
       'Answer a few questions about your hair and skin, and we will suggest where to start.',
     url: absoluteUrl('/quiz'),
+    images: [DEFAULT_OG_IMAGE],
   },
 };
 

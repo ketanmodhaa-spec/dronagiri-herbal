@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { CookieSettingsButton } from '@/components/analytics/cookie-settings-button';
 import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 
@@ -103,6 +104,9 @@ export function SiteFooter() {
                 </Link>
               </li>
             ))}
+            <li>
+              <CookieSettingsButton className="transition-colors hover:text-gold" />
+            </li>
           </ul>
           <div className="mt-4 flex flex-col gap-2 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
             <p>© 2026 Dronagiri Herbal. All rights reserved.</p>

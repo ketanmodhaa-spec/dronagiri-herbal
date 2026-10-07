@@ -24,7 +24,7 @@ export function QuizResult({ recommendations, focusLabel, onRestart }: QuizResul
   if (recommendations.length === 0) {
     return (
       <div className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
           Your match
         </p>
         <h2 className="mt-3 font-display text-2xl font-semibold text-forest-900 sm:text-3xl">
@@ -49,7 +49,7 @@ export function QuizResult({ recommendations, focusLabel, onRestart }: QuizResul
 
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
         Your match
       </p>
       <h2 className="mt-3 font-display text-2xl font-semibold text-forest-900 sm:text-3xl">
@@ -85,7 +85,7 @@ export function QuizResult({ recommendations, focusLabel, onRestart }: QuizResul
                 </div>
 
                 <div className="flex flex-col gap-2 p-5">
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-gold">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-gold-dark">
                     {product.categoryName}
                   </p>
                   <h3 className="font-display text-xl font-semibold text-forest-900">

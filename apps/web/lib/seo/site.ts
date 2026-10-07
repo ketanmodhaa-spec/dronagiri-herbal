@@ -15,7 +15,19 @@ export const SITE_NAME = 'Dronagiri Herbal';
 export const SITE_TAGLINE = 'Sanjivani for Hair & Skin Care';
 export const SITE_DESCRIPTION =
   'Handcrafted Ayurvedic hair and skin care from Ahmedabad. 100% natural, ' +
-  'WHO-GMP certified, KVIC registered. Cash on delivery and free shipping across India.';
+  'WHO-GMP certified, KVIC registered. Cash on delivery across India; free shipping above ₹499.';
+
+/**
+ * Sitewide share card (app/opengraph-image.png). A page that sets its own
+ * `openGraph` replaces the root one wholesale — images included — so such
+ * pages must list this explicitly or WhatsApp/Facebook previews go blank.
+ */
+export const DEFAULT_OG_IMAGE = {
+  url: '/opengraph-image.png',
+  width: 1200,
+  height: 630,
+  alt: 'Dronagiri Herbal — Sanjivani for Hair & Skin Care',
+} as const;
 
 /** Telephone number in E.164 — schema.org `ContactPoint.telephone` expects this. */
 export const BRAND_PHONE = '+919429029840';

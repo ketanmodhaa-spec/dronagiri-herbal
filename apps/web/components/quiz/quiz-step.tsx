@@ -29,7 +29,7 @@ export function QuizStep<V extends string>({
 }: QuizStepProps<V>) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
         Question {stepNumber} of {totalSteps}
       </p>
       <h2 className="mt-3 font-display text-2xl font-semibold text-forest-900 sm:text-3xl">

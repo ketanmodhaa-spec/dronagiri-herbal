@@ -40,7 +40,7 @@
 - [ ] Seed database (24 products + aliases) — seeded + verified on dev branch 21 May 2026 (do NOT seed prod — placeholder data)
 - [x] Design system — CSS tokens, fonts, base UI components + homepage — done 21 May 2026
 - [ ] Guest session middleware (JWT + rate limiting)
-- [ ] Security headers (next.config.ts)
+- [x] Security headers (next.config.mjs) — done 7 Oct 2026
 - [ ] Admin auth (bcrypt + RS256 JWT)
 
 **Sarita tasks:**
@@ -93,6 +93,20 @@
 ### Checkout consent capture — when building checkout
 - [ ] Required checkbox: agree to Terms + Privacy → store on the Order with a timestamp
 - [ ] Optional checkbox: WhatsApp marketing consent → Customer.marketingConsent with a timestamp (enables Step 3 broadcast legally)
+
+---
+
+## Site Audit Follow-ups — 7 Oct 2026
+
+Fixed in code (audit of dronagiriherbal.in): shipping claim now says "free shipping above ₹499" to match the policy; GA4 (G-W8GDHYY8RT) behind a cookie-consent banner; favicon + Apple icon; site-wide share image; security headers; permanent redirects for /privacy-policy, /refund, /returns, /shipping, /terms-and-conditions, /contact-us, /about-us, /products; gold label text darkened for contrast; sitemap no longer stamps every page with today's date.
+
+Still open:
+- [ ] **Shipping decision (Sarita)** — keep ₹49 under ₹499, or make all shipping free? If free, update `content/legal/shipping-policy.md`, `SITE_DESCRIPTION` in `apps/web/lib/seo/site.ts` and the homepage trust badge together.
+- [ ] **www redirect → 308** — Vercel → Settings → Domains → www.dronagiriherbal.in → Edit → redirect to dronagiriherbal.in with **308 Permanent**. Currently 307 (dashboard setting, not code).
+- [ ] **Admin two-factor login** — login is already rate-limited (5 attempts / 15 min / IP); no second factor yet. Decide TOTP (authenticator app) vs WhatsApp OTP once Meta is approved.
+- [ ] **GA4 purchase tracking** — add `purchase` event when checkout ships (`lib/analytics/gtag.ts`). `view_item` already fires on product pages.
+- [ ] **Meta Pixel** — needs a Pixel ID and a privacy-policy line naming Meta before it goes in; reuse the existing consent banner.
+- [ ] **GA4 admin** — in GA, mark `purchase` as a key event and link Search Console.
 
 ---
 

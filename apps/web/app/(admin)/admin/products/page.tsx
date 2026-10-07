@@ -61,7 +61,7 @@ export default async function AdminProductsPage() {
               </span>
               <span className="flex w-28 justify-end gap-1">
                 {product.isFeatured && (
-                  <span className="rounded-full bg-forest-100 px-2 py-0.5 text-xs text-gold">
+                  <span className="rounded-full bg-forest-100 px-2 py-0.5 text-xs text-gold-dark">
                     Featured
                   </span>
                 )}

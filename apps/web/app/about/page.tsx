@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { ArrowRightIcon, LeafIcon } from '@/components/ui/icons';
 import { TrustBadge } from '@/components/ui/trust-badge';
-import { absoluteUrl } from '@/lib/seo/site';
+import { DEFAULT_OG_IMAGE, absoluteUrl } from '@/lib/seo/site';
 
 /**
  * Brand-story page. Pure server-rendered static content — no DB calls, no
@@ -28,6 +28,7 @@ export const metadata: Metadata = {
     title: 'The Dronagiri Herbal Story',
     description: PAGE_DESCRIPTION,
     url: absoluteUrl('/about'),
+    images: [DEFAULT_OG_IMAGE],
   },
 };
 
@@ -111,7 +112,7 @@ export default function AboutPage() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
                   In her own words
                 </p>
                 <blockquote className="mt-3 border-l-2 border-gold pl-5 font-display text-xl italic leading-relaxed text-forest-900 sm:text-2xl">
@@ -146,7 +147,7 @@ export default function AboutPage() {
         <section className="bg-white py-16 md:py-24">
           <Container>
             <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
                 What makes us different
               </p>
               <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">
@@ -177,7 +178,7 @@ export default function AboutPage() {
         <section className="bg-cream py-16 md:py-24">
           <Container>
             <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
                 Registrations
               </p>
               <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">

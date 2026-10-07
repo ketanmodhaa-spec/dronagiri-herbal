@@ -157,7 +157,7 @@ function ProductImageRow({ productId, image, isHero }: ProductImageRowProps) {
       />
       <div className="flex-1 space-y-2">
         {isHero && (
-          <span className="inline-block rounded-full bg-forest-100 px-2 py-0.5 text-xs text-gold">
+          <span className="inline-block rounded-full bg-forest-100 px-2 py-0.5 text-xs text-gold-dark">
             Hero image
           </span>
         )}

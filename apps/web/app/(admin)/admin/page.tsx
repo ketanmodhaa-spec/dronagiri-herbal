@@ -18,7 +18,7 @@ export default async function AdminDashboardPage() {
     <main className="mx-auto max-w-2xl px-5 py-12">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">Admin</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">Admin</p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-forest-900">
             Welcome, {admin.name}
           </h1>

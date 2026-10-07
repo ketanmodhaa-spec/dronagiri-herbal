@@ -21,6 +21,7 @@
   /* Gold — trust & premium */
   --gold: #c9a84c;
   --gold-l: #f5e6c0;
+  --gold-d: #7d6219; /* gold text on light backgrounds — AA contrast (5.6:1 on cream) */
 
   /* Neutrals */
   --stone: #3d3d39; /* body text */

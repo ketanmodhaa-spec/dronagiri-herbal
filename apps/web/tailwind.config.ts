@@ -22,6 +22,7 @@ const config: Config = {
         gold: {
           DEFAULT: 'var(--gold)',
           light: 'var(--gold-l)',
+          dark: 'var(--gold-d)',
         },
         stone: {
           DEFAULT: 'var(--stone)',

@@ -6,7 +6,7 @@ import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 import { ProductCard } from '@/components/ui/product-card';
 import { listShopCategoriesWithProducts } from '@/lib/products/product-service';
-import { absoluteUrl } from '@/lib/seo/site';
+import { DEFAULT_OG_IMAGE, absoluteUrl } from '@/lib/seo/site';
 
 /**
  * Catalogue read live per request so admin additions appear without a
@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     description:
       'Handcrafted Ayurvedic hair and skin care, organised by category. Made in small batches in Ahmedabad.',
     url: absoluteUrl('/shop'),
+    images: [DEFAULT_OG_IMAGE],
   },
 };
 

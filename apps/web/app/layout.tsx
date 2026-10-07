@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Playfair_Display } from 'next/font/google';
 
+import { Analytics } from '@/components/analytics/analytics';
 import { JsonLd } from '@/components/seo/json-ld';
 import { organizationJsonLd } from '@/lib/seo/json-ld';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SITE_TAGLINE } from '@/lib/seo/site';
@@ -73,6 +74,7 @@ export default function RootLayout({
             from any URL it lands on, not just the homepage. */}
         <JsonLd data={organizationJsonLd()} />
         {children}
+        <Analytics />
       </body>
     </html>
   );

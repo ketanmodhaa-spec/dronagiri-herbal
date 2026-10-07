@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+import { TrackViewItem } from '@/components/analytics/track-view-item';
 import { JsonLd } from '@/components/seo/json-ld';
 import { ProductImageZoom } from '@/components/shop/product-image-zoom';
 import { SiteFooter } from '@/components/shop/site-footer';
@@ -15,7 +16,7 @@ import { TrustBadge } from '@/components/ui/trust-badge';
 import { formatPrice } from '@/lib/format';
 import { getProductBySlug, getRelatedProducts } from '@/lib/products/product-service';
 import { breadcrumbJsonLd, productJsonLd } from '@/lib/seo/json-ld';
-import { SITE_URL, absoluteUrl } from '@/lib/seo/site';
+import { DEFAULT_OG_IMAGE, SITE_URL, absoluteUrl } from '@/lib/seo/site';
 
 /**
  * Render per request: catalogue changes from the admin panel appear without
@@ -59,14 +60,14 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       title: product.name,
       description: blurb,
       url: canonical,
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      images: [ogImage ? { url: ogImage } : DEFAULT_OG_IMAGE],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: product.name,
       description: blurb,
-      images: ogImage ? [ogImage] : undefined,
+      images: [ogImage ?? DEFAULT_OG_IMAGE.url],
     },
   };
 }
@@ -189,6 +190,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <>
       <JsonLd data={productLd} />
       <JsonLd data={breadcrumbLd} />
+      <TrackViewItem
+        sku={product.sku}
+        name={product.name}
+        category={product.categoryName}
+        pricePaise={product.pricePaise}
+      />
       <SiteHeader />
 
       <main className="bg-cream pb-20 pt-10 md:pt-12">
@@ -213,7 +220,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {/* Primary info */}
             <div className="flex flex-col">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
                 {product.categoryName}
               </p>
               <h1 className="mt-2 font-display text-3xl font-semibold leading-tight text-forest-900 sm:text-4xl">
@@ -315,7 +322,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           {relatedProducts.length > 0 && (
             <section className="mt-20" aria-labelledby="related-heading">
               <div className="flex flex-col items-center text-center">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark">
                   Also from our {product.categoryName.toLowerCase()} shelf
                 </p>
                 <h2

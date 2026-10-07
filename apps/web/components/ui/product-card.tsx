@@ -63,7 +63,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
       <div className="flex flex-1 flex-col gap-1 p-4">
         {product.categoryName && (
-          <p className="text-[11px] font-medium uppercase tracking-wider text-gold">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-gold-dark">
             {product.categoryName}
           </p>
         )}

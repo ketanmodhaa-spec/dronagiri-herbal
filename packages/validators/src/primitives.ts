@@ -13,8 +13,12 @@ export const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
 /** Indian postal PIN code: exactly 6 digits. */
 export const INDIAN_PINCODE_REGEX = /^\d{6}$/;
 
-/** Largest quantity allowed on a single cart/order line. Stock is still re-checked server-side. */
-export const MAX_LINE_QUANTITY = 99;
+/**
+ * Largest quantity allowed on a single cart/order line — the authoritative cap
+ * on bulk adds and bot-driven quantity inflation. Stock is still re-checked
+ * server-side, so the effective limit is min(this, stock).
+ */
+export const MAX_LINE_QUANTITY = 5;
 
 /** Largest number of distinct lines a single checkout may contain. */
 export const MAX_CART_LINES = 50;

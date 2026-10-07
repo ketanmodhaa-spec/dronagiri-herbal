@@ -1,7 +1,7 @@
 # DISPUTE.md — Dronagiri Herbal
 > Open issues, unresolved conflicts, and things to revisit.
 > Close entries with resolution when resolved.
-> Last updated: 22 May 2026
+> Last updated: 7 Oct 2026
 
 ---
 
@@ -81,6 +81,43 @@
 **Options:** (1) a retry wrapper on the Prisma client — recommended before public launch; (2) a cron ping to keep the branch warm — defeats the cost saving; (3) accept it.  
 **Assigned to:** Claude Code — before public launch  
 **Resolution:** ⏳ Open — decide before launch
+
+---
+
+### [OPEN] — Price change between cart and checkout
+**Opened:** 7 Oct 2026
+**Description:** The Phase 3 cart stores a display-only price snapshot per line (`priceSnapshotForBadgeOnly`) so the drawer can show a "Price updated" badge. Totals are always computed from live DB prices. Phase 4 must decide what happens when Sarita changes a price *after* the customer has seen the cart but *before* they pay — e.g. the customer reviews ₹299, opens checkout, price becomes ₹349 mid-flow.
+**Impact:** Charging a price the customer did not see is a trust and consumer-law problem; silently honouring the old price is a revenue leak and violates "price always fetched server-side".
+**Options:** (1) Checkout recomputes from DB and, if any line differs from what the checkout page rendered, blocks payment and re-shows the cart with the badge — customer must confirm again (recommended). (2) Price-lock for N minutes once checkout opens. (3) Accept silently.
+**Assigned to:** Claude Code — Phase 4 checkout design
+**Resolution:** ⏳ Open — decide in Phase 4 plan, before Razorpay order creation is built
+
+---
+
+### [OPEN] — Free-shipping threshold as an admin setting
+**Opened:** 7 Oct 2026
+**Description:** Phase 3 reads the free-shipping threshold from one code constant (`lib/shipping.ts`, ₹499 = 49900 paise, matching the live shipping policy). Changing it needs a deploy. Sarita should be able to change it from the admin panel; the same value also appears in `content/legal/shipping-policy.md`, `SITE_DESCRIPTION` and the homepage trust badge, which must stay in sync.
+**Impact:** Low until Sarita wants to change it — then a developer is required (violates mandate 2, owner-operated).
+**Workaround:** Constant in code; Sarita's shipping decision (AGENDA, 7 Oct) still pending.
+**Assigned to:** Claude Code — post-Phase 3 (needs a small `StoreSetting` table + admin form; legal page text must render from the same value)
+**Resolution:** ⏳ Open
+
+---
+
+### [OPEN] — Guest session first-visit verification
+**Opened:** 7 Oct 2026
+**Description:** The guest session middleware mints the `dh_guest_session` cookie on the *response*, so a route handler serving that same first request cannot read it. For the cart, a first-ever `POST /api/cart/items` would find no session. Phase 3 fixes this by forwarding the session id to the handler on a request header (stripping any client-supplied copy). Live behaviour on production has not yet been verified end to end.
+**Impact:** Without the fix, a visitor whose very first request is an add-to-cart loses that add.
+**Test matrix items (must pass before Phase 3 ships):**
+- **First:** clean browser profile (no cookies) deep-links straight to a product page, e.g. `/products/hibiscus-shampoo` from a WhatsApp/Instagram link → response sets `dh_guest_session`, and the very first tap on Add to cart succeeds; reload shows the item still in the cart
+- Fresh client, `GET /` → response sets `dh_guest_session` (HttpOnly, Secure, SameSite=Lax, Max-Age=604800)
+- Fresh client, first request is `POST /api/cart/items` → item is added AND cookie is set; the next `GET /api/cart` with that cookie returns the item
+- Client sends a forged `x-guest-session-id` header → ignored; cart is keyed only to the verified cookie
+- Tampered / expired / wrong-key cookie → replaced with a fresh session, never accepted
+- Token within 2 days of expiry → re-issued with the same session id; cart survives
+**Progress (7 Oct 2026):** Cookie half verified on production with cookie-less `curl` — both `GET /` and the deep link `GET /products/hibiscus-shampoo` return `200` with `Set-Cookie: dh_guest_session=…; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=lax`; JWT payload carries only `sub` (UUID), `iat`, `exp`. The add-to-cart half of the first item needs the Phase 3 cart.
+**Assigned to:** Claude Code — Phase 3
+**Resolution:** ⏳ Open
 
 ---
 

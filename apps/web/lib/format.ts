@@ -17,3 +17,15 @@ export function formatPrice(paise: number): string {
       });
   return `₹${grouped}`;
 }
+
+/**
+ * `formatPriceExact(29900)` → `"₹299.00"`. Always two decimals — for tax
+ * documents, where every figure must show its paise.
+ */
+export function formatPriceExact(paise: number): string {
+  const grouped = (paise / 100).toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `₹${grouped}`;
+}

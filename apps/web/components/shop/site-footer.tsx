@@ -9,6 +9,7 @@ const EXPLORE_LINKS = [
   { label: 'Shop the Collection', href: '/shop' },
   { label: 'Our Story', href: '/about' },
   { label: 'Find My Product', href: '/quiz' },
+  { label: 'Become a Distributor / Dealer', href: '/become-a-distributor' },
 ] as const;
 
 /** Official registrations — kept verbatim from CLAUDE.md's project identity. */

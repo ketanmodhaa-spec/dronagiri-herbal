@@ -13,6 +13,7 @@ import { config } from '@/lib/config';
 const NAV_LINKS = [
   { label: 'Shop', href: '/shop' },
   { label: 'Our Story', href: '/about' },
+  { label: 'Become a Distributor', href: '/become-a-distributor' },
   { label: 'Contact', href: '/contact' },
 ] as const;
 

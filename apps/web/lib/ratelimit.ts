@@ -44,6 +44,23 @@ export function getImagePresignLimiter(): Ratelimit {
   return imagePresignLimiter;
 }
 
+let partnerEnquiryLimiter: Ratelimit | undefined;
+
+/**
+ * Partner enquiry limiter — 3 submissions per hour, keyed by client IP. A real
+ * enquirer submits once; this stops a bot from flooding Sarita's lead list
+ * and inbox.
+ */
+export function getPartnerEnquiryLimiter(): Ratelimit {
+  partnerEnquiryLimiter ??= new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(3, '1 h'),
+    prefix: 'rl:partner-enquiry',
+    analytics: false,
+  });
+  return partnerEnquiryLimiter;
+}
+
 let cartMutationLimiter: Ratelimit | undefined;
 
 /**

@@ -189,6 +189,24 @@ export default async function HomePage() {
             </div>
           </Container>
         </section>
+
+        {/* ── B2B: distributors & dealers ──────────────────────────────── */}
+        <section className="border-t border-forest-100 bg-forest-50 py-10">
+          <Container className="flex flex-col items-center justify-between gap-5 text-center md:flex-row md:text-left">
+            <div>
+              <p className="font-display text-2xl font-semibold text-forest-900">
+                Interested? Become a distributor or dealer
+              </p>
+              <p className="mt-1 text-sm text-stone">
+                Bring Dronagiri Herbal to your town — as a distributor, stockist, dealer or sales agent.
+              </p>
+            </div>
+            <Button href="/become-a-distributor" size="md" className="shrink-0">
+              Partner with us
+              <ArrowRightIcon className="h-4 w-4" />
+            </Button>
+          </Container>
+        </section>
       </main>
 
       <SiteFooter />

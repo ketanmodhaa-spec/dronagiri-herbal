@@ -34,6 +34,7 @@ const STATIC_PAGES: Array<{
   { path: '/shop', changeFrequency: 'weekly', priority: 0.9, showsCatalogue: true },
   { path: '/about', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/quiz', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/become-a-distributor', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/contact', changeFrequency: 'yearly', priority: 0.4 },
   { path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { AdminSignOutButton } from '@/components/admin/admin-sign-out-button';
 import { getAdminOrNull } from '@/lib/auth/require-admin';
+import { countNewPartnerEnquiries } from '@/lib/partners/partner-enquiry-service';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
@@ -13,6 +14,7 @@ export default async function AdminDashboardPage() {
   if (!admin) {
     redirect('/admin/login');
   }
+  const newEnquiries = await countNewPartnerEnquiries();
 
   return (
     <main className="mx-auto max-w-2xl px-5 py-12">
@@ -41,6 +43,20 @@ export default async function AdminDashboardPage() {
         >
           <p className="font-display text-lg font-semibold text-forest-900">Categories</p>
           <p className="mt-1 text-sm text-stone">Organise the catalogue into categories.</p>
+        </Link>
+        <Link
+          href="/admin/enquiries"
+          className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50"
+        >
+          <p className="flex items-center gap-2 font-display text-lg font-semibold text-forest-900">
+            Distributor enquiries
+            {newEnquiries > 0 && (
+              <span className="rounded-full bg-gold px-2 py-0.5 font-body text-xs font-semibold text-forest-900">
+                {newEnquiries} new
+              </span>
+            )}
+          </p>
+          <p className="mt-1 text-sm text-stone">Distributor, dealer and sales-agent leads to call back.</p>
         </Link>
       </section>
 

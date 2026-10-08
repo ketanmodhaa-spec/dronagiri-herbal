@@ -62,6 +62,19 @@ export const serverConfig = {
     },
   },
 
+  /** Resend — transactional email from the verified dronagiriherbal.in domain. */
+  email: {
+    get resendApiKey(): string {
+      return required('RESEND_API_KEY');
+    },
+    /** `Dronagiri Herbal <orders@dronagiriherbal.in>` — the From header on every email. */
+    get from(): string {
+      return `${required('EMAIL_FROM_NAME')} <${required('EMAIL_FROM')}>`;
+    },
+    /** Where alerts for Sarita land — the public store inbox. */
+    ownerInbox: 'store@dronagiriherbal.in',
+  },
+
   shipping: {
     /**
      * Order subtotal, in paise, at which shipping becomes free (₹499 = 49900).

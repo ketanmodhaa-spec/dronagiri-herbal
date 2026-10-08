@@ -334,7 +334,8 @@ export function PartnerEnquiryForm() {
         .
       </p>
 
-      <Button type="submit" size="lg" disabled={submitting} className="w-full sm:w-auto">
+      {/* Greyed out until consent is ticked; the server still enforces consent. */}
+      <Button type="submit" size="lg" disabled={submitting || !consent} className="w-full sm:w-auto">
         {submitting ? 'Sending…' : 'Send enquiry'}
       </Button>
     </form>

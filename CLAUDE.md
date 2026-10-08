@@ -42,7 +42,7 @@ WhatsApp:    Meta WhatsApp Business API (direct — both OTP and notifications)
 OTP:         Meta WhatsApp Business API (replaces Firebase Phone Auth)
 Email:       Resend
 AI:          Anthropic Claude API (DronaBot)
-Hosting:     Vercel (Pro)
+Hosting:     Vercel (Hobby until full-store launch → Pro)
 Monitoring:  Sentry
 Analytics:   GA4 — property G-W8GDHYY8RT (DO NOT recreate)
 ```
@@ -299,7 +299,7 @@ Print and laminate alias cheatsheet for Sarita's production area.
 | Resend | ✅ Done | API key in Doppler. Domain verified for dronagiriherbal.in. |
 | Anthropic | ⏳ Pending | |
 | Sentry | ⏳ Pending | SDK integrated (client/server/edge config, instrumentation hook, global-error boundary, source-map upload via withSentryConfig). Awaiting `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_AUTH_TOKEN` in Doppler — until then Sentry.init is a no-op. |
-| Vercel | ✅ Done | Project live. dronagiriherbal.in attached with SSL. Production branch is `dev` — see Build & Deploy. |
+| Vercel | ✅ Done | Project live (account "dronagiriherbal's projects"). dronagiriherbal.in attached with SSL. Production branch is `dev` — see Build & Deploy. **On Hobby temporarily (8 Oct 2026)** — upgrade to Pro just before the full store goes live (orders, payment, fulfilment). Hobby is non-commercial-use only and limits crons, so `vercel.json` crons stay empty until then. |
 
 ---
 

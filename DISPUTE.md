@@ -1,11 +1,21 @@
 # DISPUTE.md — Dronagiri Herbal
 > Open issues, unresolved conflicts, and things to revisit.
 > Close entries with resolution when resolved.
-> Last updated: 7 Oct 2026
+> Last updated: 8 Oct 2026
 
 ---
 
 ## Open Issues
+
+### [OPEN] — WhatsApp webhook verify token changed by accident
+**Opened:** 8 Oct 2026
+**Description:** `WHATSAPP_WEBHOOK_VERIFY_TOKEN` in Doppler was changed by mistake on 8 Oct 2026. The webhook at `/api/webhooks/whatsapp` answers Meta's `GET` verification handshake only when `hub.verify_token` matches this value, so it no longer matches whatever was entered in Meta Business Manager (if anything was).
+**Impact:** None while the webhook is already verified — Meta only sends the handshake when the callback URL is saved. Incoming event `POST`s are authenticated by `WHATSAPP_WEBHOOK_APP_SECRET`, which was not touched. It bites the next time the callback URL is saved or re-verified in Meta: verification fails.
+**Workaround:** None needed yet.
+**Assigned to:** Jaydeep — before the next Meta webhook setup/re-verification
+**Resolution:** ⏳ Open — set the same value in Doppler (`dev` / `prd`) and in Meta → WhatsApp → Configuration → Webhook "Verify token", then re-verify.
+
+---
 
 ### [OPEN] — Razorpay KYC pending
 **Opened:** 15 May 2026  
@@ -96,9 +106,9 @@
 
 ### [OPEN] — Free-shipping threshold as an admin setting
 **Opened:** 7 Oct 2026
-**Description:** Phase 3 reads the free-shipping threshold from one code constant (`lib/shipping.ts`, ₹499 = 49900 paise, matching the live shipping policy). Changing it needs a deploy. Sarita should be able to change it from the admin panel; the same value also appears in `content/legal/shipping-policy.md`, `SITE_DESCRIPTION` and the homepage trust badge, which must stay in sync.
+**Description:** Phase 3 reads the free-shipping threshold from the `FREE_SHIPPING_THRESHOLD_PAISE` env var via `lib/config.server.ts` (₹499 = 49900 paise, matching the live shipping policy; set in Doppler `dev` / `stg` / `prd`). Changing it needs a Doppler edit and a redeploy. Sarita should be able to change it from the admin panel; the same value also appears in `content/legal/shipping-policy.md`, `SITE_DESCRIPTION` and the homepage trust badge, which must stay in sync.
 **Impact:** Low until Sarita wants to change it — then a developer is required (violates mandate 2, owner-operated).
-**Workaround:** Constant in code; Sarita's shipping decision (AGENDA, 7 Oct) still pending.
+**Workaround:** Doppler env var; Sarita's shipping decision (AGENDA, 7 Oct) still pending.
 **Assigned to:** Claude Code — post-Phase 3 (needs a small `StoreSetting` table + admin form; legal page text must render from the same value)
 **Resolution:** ⏳ Open
 
@@ -116,12 +126,22 @@
 - Tampered / expired / wrong-key cookie → replaced with a fresh session, never accepted
 - Token within 2 days of expiry → re-issued with the same session id; cart survives
 **Progress (7 Oct 2026):** Cookie half verified on production with cookie-less `curl` — both `GET /` and the deep link `GET /products/hibiscus-shampoo` return `200` with `Set-Cookie: dh_guest_session=…; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=lax`; JWT payload carries only `sub` (UUID), `iat`, `exp`. The add-to-cart half of the first item needs the Phase 3 cart.
+**Progress (8 Oct 2026):** Full matrix passes locally (22/22, `next dev` on the Neon `dev` branch + new Upstash DB, `NEXT_PUBLIC_ENABLE_CART=true`): deep link → first add-to-cart succeeds and persists; cold `POST /api/cart/items` adds the item and sets the cookie; forged `x-guest-session-id` ignored with and without a cookie; tampered / wrong-key / expired / `alg=none` cookies replaced with a fresh empty session; near-expiry token re-issued with the same id and the cart survives; fresh tokens not re-issued. Also checked: a body carrying a price is rejected (400), 1 + 5 clamps to 5 with a `MAX_PER_LINE` notice, unknown product → 404, DELETE removes the line. Remaining: repeat the deep-link + first-add check on production once the cart flag is turned on there (Phase 4).
 **Assigned to:** Claude Code — Phase 3
 **Resolution:** ⏳ Open
 
 ---
 
 ## Closed Issues
+
+### [CLOSED 8 Oct 2026] — Upstash Redis database replaced
+**Opened:** 8 Oct 2026 | **Closed:** 8 Oct 2026
+**Description:** The original Upstash database (`live-hyena-132712`) disappeared — its hostname no longer resolves. Every Redis call failed, so production admin login returned HTTP 500 (the login rate limiter runs first), and the presign limiter and cart could not work. A new database `rare-skunk-212768` was created and its REST URL + token set in Doppler `dev` and `prd`; both answer `PONG` (verified 8 Oct). `stg` has no Upstash vars.
+**Impact:** Production admin login was down (HTTP 500) until the redeploy.
+**Assigned to:** Jaydeep — redeploy production; then find out why the old database vanished (free-tier inactivity?) so it does not recur.
+**Resolution:** ✅ Resolved 8 Oct 2026 — production redeployed (Vercel, same commit `53593f8`) with the new Upstash values; `POST /api/admin/auth/login` with an empty body now returns 400 `INVALID_REQUEST` instead of 500. Follow-up (not a blocker): find out why `live-hyena` was removed (free-tier inactivity?) so it does not recur.
+
+---
 
 ### [CLOSED 21 May 2026] — Production Neon branch has no schema
 **Opened:** 21 May 2026 | **Closed:** 21 May 2026

@@ -102,17 +102,6 @@
 
 ---
 
-### [OPEN] — Neon cold-start on scale-to-zero
-**Opened:** 22 May 2026  
-**Description:** The scale-to-zero Neon branch sleeps after idle. The first request after idle is slow (2–5s) or briefly fails (`P1001`). Observed during admin-auth testing — the database woke and worked on retry.  
-**Impact:** Low for admin (Sarita waits a few seconds occasionally). Higher for the public site — a customer hitting a cold start at checkout is bad.  
-**Options:** (1) a retry wrapper on the Prisma client — recommended before public launch; (2) a cron ping to keep the branch warm — defeats the cost saving; (3) accept it.  
-**Assigned to:** Claude Code — before public launch  
-**Update (8 Oct 2026):** Seen again testing the distributor enquiry form — the first `POST /api/partner-enquiries` after idle returned 500 (`Can't reach database server`), the retry succeeded. That form is the first *public* database write, so this now affects real visitors as soon as it deploys; option (1) should land with or right after it.  
-**Resolution:** ⏳ Open — decide before launch
-
----
-
 ### [OPEN] — Price change between cart and checkout
 **Opened:** 7 Oct 2026
 **Description:** The Phase 3 cart stores a display-only price snapshot per line (`priceSnapshotForBadgeOnly`) so the drawer can show a "Price updated" badge. Totals are always computed from live DB prices. Phase 4 must decide what happens when Sarita changes a price *after* the customer has seen the cart but *before* they pay — e.g. the customer reviews ₹299, opens checkout, price becomes ₹349 mid-flow.
@@ -153,6 +142,17 @@
 ---
 
 ## Closed Issues
+
+### [CLOSED 8 Oct 2026] — Neon cold-start on scale-to-zero
+**Opened:** 22 May 2026 | **Closed:** 8 Oct 2026  
+**Description:** The scale-to-zero Neon branch sleeps after idle. The first request after idle is slow (2–5s) or briefly fails (`P1001`). Observed during admin-auth testing — the database woke and worked on retry.  
+**Impact:** Low for admin (Sarita waits a few seconds occasionally). Higher for the public site — a customer hitting a cold start at checkout is bad.  
+**Options:** (1) a retry wrapper on the Prisma client — recommended before public launch; (2) a cron ping to keep the branch warm — defeats the cost saving; (3) accept it.  
+**Assigned to:** Claude Code — before public launch  
+**Update (8 Oct 2026):** Seen again testing the distributor enquiry form — the first `POST /api/partner-enquiries` after idle returned 500 (`Can't reach database server`), the retry succeeded. That form is the first *public* database write, so this now affects real visitors as soon as it deploys; option (1) should land with or right after it.  
+**Resolution:** ✅ Resolved 8 Oct 2026 — option (1), in the shared client `packages/db/src/index.ts`: (a) `connect_timeout=15` is added to the connection URL in code (Prisma's default 5 s was shorter than a wake-up); (b) operations that fail because the server could not be reached (`PrismaClientInitializationError`, `P1001`, `P1002` — the query never ran) are retried twice (0.5 s, 1.5 s), so retries are safe even for writes; any other error is thrown at once. Verified: a naturally suspended `dev` compute answered the first query in 4.2 s; with an unreachable host, single queries and batch transactions fail cleanly after 3 attempts with no hang. Interactive `$transaction` callbacks are not retried — they rely on (a).
+
+---
 
 ### [CLOSED 8 Oct 2026] — Upstash Redis database replaced
 **Opened:** 8 Oct 2026 | **Closed:** 8 Oct 2026

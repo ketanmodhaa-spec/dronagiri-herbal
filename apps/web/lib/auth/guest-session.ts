@@ -19,6 +19,21 @@ export const GUEST_SESSION_COOKIE = 'dh_guest_session';
 /** Guest session lifetime: 7 days, per the security rules in CLAUDE.md. */
 export const GUEST_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 
+/**
+ * A session this close to expiry is re-issued with the same id, so an active
+ * shopper's session — and the cart hanging off it — renews instead of lapsing
+ * a fixed 7 days after their first visit.
+ */
+export const GUEST_SESSION_RENEW_WITHIN_SECONDS = 2 * 24 * 60 * 60;
+
+/**
+ * Request header carrying the verified session id from the middleware to route
+ * handlers. The middleware always overwrites it, so a client-supplied value
+ * never reaches a handler. It exists because a cookie minted on the response
+ * is invisible to the handler serving that same first request.
+ */
+export const GUEST_SESSION_ID_HEADER = 'x-guest-session-id';
+
 const ALGORITHM = 'HS256';
 
 const secretKey = new TextEncoder().encode(serverConfig.guestSession.secret);
@@ -40,14 +55,21 @@ export const guestSessionCookieOptions = {
 export interface GuestSession {
   /** Random, opaque session id — the handle for the cart and analytics. */
   sessionId: string;
+  /** Token expiry, in Unix seconds. */
+  expiresAt: number;
 }
 
-/** Mint a signed guest session token carrying a fresh, random session id. */
-export async function createGuestSessionToken(): Promise<string> {
+/**
+ * Mint a signed guest session token. A new visitor gets a fresh random id;
+ * renewing an existing session passes its id so the cart stays attached.
+ */
+export async function createGuestSessionToken(
+  sessionId: string = crypto.randomUUID(),
+): Promise<string> {
   const issuedAt = Math.floor(Date.now() / 1000);
   return new SignJWT({})
     .setProtectedHeader({ alg: ALGORITHM })
-    .setSubject(crypto.randomUUID())
+    .setSubject(sessionId)
     .setIssuedAt(issuedAt)
     .setExpirationTime(issuedAt + GUEST_SESSION_TTL_SECONDS)
     .sign(secretKey);
@@ -65,7 +87,8 @@ export async function verifyGuestSessionToken(
   try {
     const { payload } = await jwtVerify(token, secretKey, { algorithms: [ALGORITHM] });
     if (typeof payload.sub !== 'string' || payload.sub.length === 0) return null;
-    return { sessionId: payload.sub };
+    if (typeof payload.exp !== 'number') return null;
+    return { sessionId: payload.sub, expiresAt: payload.exp };
   } catch {
     // Any failure — bad signature, expiry, malformed token — means "no session".
     return null;

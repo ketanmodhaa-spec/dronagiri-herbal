@@ -17,7 +17,7 @@
 - [ ] COD orders stock decremented immediately on placement
 
 ### Authentication
-- [ ] Guest session JWT — HS256, HttpOnly, Secure, SameSite=Strict
+- [x] Guest session JWT — HS256, HttpOnly, Secure, SameSite=Lax *(Lax by ruling, 7 Oct 2026: Strict drops the cookie on WhatsApp/Instagram deep links; the guest session is not CSRF-sensitive. Re-evaluate when Phase 4 adds state-changing checkout flows.)*
 - [ ] Admin JWT — RS256 asymmetric keys
 - [ ] JTI revocation list in Redis (logout invalidates token immediately)
 - [ ] Admin token scope limited to /admin path

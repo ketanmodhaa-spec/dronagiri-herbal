@@ -11,7 +11,7 @@ import { imagePresignSchema } from '@dronagiri/validators';
 import { presignImageUpload } from '@/lib/admin/admin-image-service';
 import { requireAdmin } from '@/lib/auth/require-admin';
 import { RateLimitError, ValidationError } from '@/lib/errors';
-import { errorResponse, jsonData } from '@/lib/http';
+import { clientIp, errorResponse, jsonData } from '@/lib/http';
 import { getImagePresignLimiter } from '@/lib/ratelimit';
 
 export const runtime = 'nodejs';
@@ -21,9 +21,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     await requireAdmin();
 
-    const forwarded = req.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
-    const { success } = await getImagePresignLimiter().limit(ip);
+    const { success } = await getImagePresignLimiter().limit(clientIp(req) ?? 'unknown');
     if (!success) {
       throw new RateLimitError();
     }

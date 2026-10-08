@@ -6,6 +6,16 @@ import { NextResponse } from 'next/server';
 
 import { AppError } from '@/lib/errors';
 
+/**
+ * The client's IP address — the first entry of `x-forwarded-for`, which
+ * Vercel's edge sets and overwrites. Null when the header is absent (local dev).
+ */
+export function clientIp(req: Request): string | null {
+  const forwarded = req.headers.get('x-forwarded-for');
+  const first = forwarded?.split(',')[0]?.trim();
+  return first ? first : null;
+}
+
 /** Success envelope — `{ "data": ... }`. */
 export function jsonData<T>(data: T, init?: ResponseInit): NextResponse {
   return NextResponse.json({ data }, init);

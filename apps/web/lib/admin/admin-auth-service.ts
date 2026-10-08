@@ -17,6 +17,7 @@ import {
   type AdminClaims,
 } from '@/lib/auth/admin-session';
 import { AuthError } from '@/lib/errors';
+import { clientIp } from '@/lib/http';
 
 /** bcrypt cost factor — matches the catalogue seed and the ensure-admin script. */
 const BCRYPT_ROUNDS = 12;
@@ -55,9 +56,8 @@ export interface SessionContext {
 
 /** Derive the session context from an incoming request. */
 export function sessionContextFromRequest(req: NextRequest): SessionContext {
-  const forwarded = req.headers.get('x-forwarded-for');
   return {
-    ipAddress: forwarded ? forwarded.split(',')[0].trim() : null,
+    ipAddress: clientIp(req),
     userAgent: req.headers.get('user-agent'),
   };
 }

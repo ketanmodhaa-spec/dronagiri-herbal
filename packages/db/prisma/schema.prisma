@@ -452,3 +452,66 @@ model AnalyticsEvent {
   @@index([phoneHash])
   @@index([productId])
 }
+
+// ─── B2B partner enquiries ──────────────────────────────────────────────────
+
+enum PartnerType {
+  DISTRIBUTOR // district / state distributor
+  STOCKIST // holds stock for an area, supplies retailers
+  RETAILER // shop, pharmacy, salon or parlour selling to consumers
+  SALES_AGENT // local sales person / representative
+}
+
+enum PartnerBackground {
+  NEW_TO_BUSINESS
+  RETAIL_SHOP
+  FMCG_DISTRIBUTION
+  AYURVEDA_OR_COSMETICS
+  SALON_OR_PARLOUR
+  OTHER
+}
+
+enum PartnerInvestment {
+  UNDER_50K
+  FROM_50K_TO_2L
+  FROM_2L_TO_5L
+  ABOVE_5L
+}
+
+enum PartnerEnquiryStatus {
+  NEW // not yet contacted
+  CONTACTED // first call / WhatsApp done
+  IN_DISCUSSION // terms, territory or first order being discussed
+  APPOINTED // now a partner
+  NOT_SUITABLE // closed without appointment
+}
+
+// "Become a distributor / dealer" form submissions — a lead list Sarita works
+// through from the admin panel. Phone is stored in plaintext because the whole
+// point is to call the person back; it never feeds analytics.
+model PartnerEnquiry {
+  id           String             @id @default(cuid())
+  partnerType  PartnerType
+  name         String
+  phone        String // 10-digit Indian mobile, as entered
+  email        String?
+  businessName String?
+  city         String
+  stateCode    String // GST state code, e.g. "10" Bihar, "08" Rajasthan
+  pincode      String?
+  gstin        String?
+  background   PartnerBackground?
+  investment   PartnerInvestment?
+  message      String?
+
+  status       PartnerEnquiryStatus @default(NEW)
+  internalNote String? // Sarita's notes — never shown to the enquirer
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([phone])
+  @@index([stateCode])
+}

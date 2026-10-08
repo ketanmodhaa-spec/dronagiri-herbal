@@ -7,6 +7,24 @@
 
 ## Open Issues
 
+### [OPEN] — Privacy Policy should name B2B enquiry data
+**Opened:** 8 Oct 2026
+**Description:** The new `/become-a-distributor` form collects name, phone, optional email, business name, location, GSTIN and an investment range, stored in `PartnerEnquiry` and emailed to store@dronagiriherbal.in. The form has an explicit consent checkbox and links the Privacy Policy, but the lawyer-reviewed policy (`content/legal/privacy.md`) only describes customer data.
+**Impact:** Low (consent is captured at the form), but under the DPDP Act the policy should list this purpose.
+**Assigned to:** Jaydeep → lawyer — add one paragraph: "Business / distributor enquiries: what we collect, why (to respond and evaluate the partnership), how long we keep it."
+**Resolution:** ⏳ Open
+
+---
+
+### [OPEN] — GST tax invoice: facts needed before real invoices issue
+**Opened:** 8 Oct 2026
+**Description:** The invoice PDF design is built (`apps/web/lib/invoice/` — Amazon-style A4, CGST+SGST for Gujarat, IGST elsewhere, GST-inclusive prices, totals reconcile to the paisa). GSTIN `24AQDPM2479C2Z1` (checksum valid; Gujarat; proprietor PAN `AQDPM2479C`). Before a real invoice can be issued we need: (1) legal name + principal place of business exactly as on the GST certificate (REG-06); (2) regular vs composition registration (composition must issue a "Bill of Supply" and cannot sell inter-state); (3) HSN code + GST rate per product, confirmed by Sarita's CA — rates for several hair-care items changed in September 2025; (4) GST rate to apply to the shipping charge (CA); (5) Sarita's signature image for the Authorised Signatory box, or CA confirmation that a computer-generated note suffices; (6) sign-off on numbering `DH2627-00001` (per financial year, restarts 1 April, ≤16 chars).
+**Other decisions taken 8 Oct 2026:** Regular GST scheme (pan-India selling) — the invoice stays a Tax Invoice with CGST/SGST/IGST; item (2) above closes once the GST portal's "Search Taxpayer" shows Taxpayer Type = Regular (if it shows Composition, Sarita's CA files CMP-04 before launch). COD allowed up to ₹2,000 order value. Invoice delivered as one PDF via WhatsApp document, email attachment, customer download and printed copy in the parcel.
+**Assigned to:** Jaydeep / Sarita / CA
+**Resolution:** ⏳ Open
+
+---
+
 ### [OPEN] — WhatsApp webhook verify token changed by accident
 **Opened:** 8 Oct 2026
 **Description:** `WHATSAPP_WEBHOOK_VERIFY_TOKEN` in Doppler was changed by mistake on 8 Oct 2026. The webhook at `/api/webhooks/whatsapp` answers Meta's `GET` verification handshake only when `hub.verify_token` matches this value, so it no longer matches whatever was entered in Meta Business Manager (if anything was).
@@ -90,6 +108,7 @@
 **Impact:** Low for admin (Sarita waits a few seconds occasionally). Higher for the public site — a customer hitting a cold start at checkout is bad.  
 **Options:** (1) a retry wrapper on the Prisma client — recommended before public launch; (2) a cron ping to keep the branch warm — defeats the cost saving; (3) accept it.  
 **Assigned to:** Claude Code — before public launch  
+**Update (8 Oct 2026):** Seen again testing the distributor enquiry form — the first `POST /api/partner-enquiries` after idle returned 500 (`Can't reach database server`), the retry succeeded. That form is the first *public* database write, so this now affects real visitors as soon as it deploys; option (1) should land with or right after it.  
 **Resolution:** ⏳ Open — decide before launch
 
 ---
@@ -100,7 +119,8 @@
 **Impact:** Charging a price the customer did not see is a trust and consumer-law problem; silently honouring the old price is a revenue leak and violates "price always fetched server-side".
 **Options:** (1) Checkout recomputes from DB and, if any line differs from what the checkout page rendered, blocks payment and re-shows the cart with the badge — customer must confirm again (recommended). (2) Price-lock for N minutes once checkout opens. (3) Accept silently.
 **Assigned to:** Claude Code — Phase 4 checkout design
-**Resolution:** ⏳ Open — decide in Phase 4 plan, before Razorpay order creation is built
+**Decision (8 Oct 2026, Jaydeep):** Option 1. Checkout recomputes every line from the DB; if any price differs from what the checkout page showed, payment is blocked and the cart re-opens with the "Price updated" badge for the customer to confirm. Never charge a price the customer did not see.
+**Resolution:** ⏳ Decided — implement in Phase 4 checkout
 
 ---
 

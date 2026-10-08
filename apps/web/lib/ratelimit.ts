@@ -44,6 +44,23 @@ export function getImagePresignLimiter(): Ratelimit {
   return imagePresignLimiter;
 }
 
+let cartMutationLimiter: Ratelimit | undefined;
+
+/**
+ * Cart mutation limiter — 30 adds/updates/removes per minute, keyed on the
+ * compound `sessionId:ip`. Applied to every cart write before validation;
+ * reads are not limited. Far above what a real shopper does in a minute.
+ */
+export function getCartMutationLimiter(): Ratelimit {
+  cartMutationLimiter ??= new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(30, '1 m'),
+    prefix: 'rl:cart',
+    analytics: false,
+  });
+  return cartMutationLimiter;
+}
+
 let otpIssueLimiter: Ratelimit | undefined;
 
 /**

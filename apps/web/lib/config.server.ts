@@ -62,6 +62,22 @@ export const serverConfig = {
     },
   },
 
+  shipping: {
+    /**
+     * Order subtotal, in paise, at which shipping becomes free (₹499 = 49900).
+     * Must match the published shipping policy. Moves to an admin-editable
+     * setting later — see DISPUTE.md.
+     */
+    get freeThresholdPaise(): number {
+      const raw = required('FREE_SHIPPING_THRESHOLD_PAISE');
+      const value = Number(raw);
+      if (!Number.isSafeInteger(value) || value <= 0) {
+        throw new Error('FREE_SHIPPING_THRESHOLD_PAISE must be a positive whole number of paise.');
+      }
+      return value;
+    },
+  },
+
   /** Cloudflare R2 (S3-compatible) — product and category image storage. */
   r2: {
     get accessKeyId(): string {

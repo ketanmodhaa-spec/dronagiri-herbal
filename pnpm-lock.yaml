@@ -26,6 +26,9 @@ importers:
       '@dronagiri/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@dronagiri/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@dronagiri/validators':
         specifier: workspace:^
         version: link:../../packages/validators

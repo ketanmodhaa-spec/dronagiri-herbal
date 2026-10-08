@@ -18,6 +18,14 @@ const cdnUrl = (process.env.NEXT_PUBLIC_CDN_URL ?? '').replace(/\/+$/, '');
 export const config = {
   /** Base URL uploaded images are served from. Empty until R2's public URL is set. */
   cdnUrl,
+  cart: {
+    /**
+     * Cart feature flag. Only the literal `'true'` turns the cart on — the
+     * storefront UI and the `/api/cart*` routes both honour it. Stays off in
+     * production until checkout, payment and the legal chain ship (Phase 4).
+     */
+    enabled: process.env.NEXT_PUBLIC_ENABLE_CART === 'true',
+  },
   sentry: {
     dsn: sentryDsn,
     /** With no DSN configured, Sentry.init becomes a no-op. */

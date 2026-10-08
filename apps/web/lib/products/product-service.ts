@@ -206,6 +206,58 @@ export async function listShopCategoriesWithProducts(): Promise<ShopCategorySect
   }));
 }
 
+/**
+ * A product as the cart needs it — live price and stock, plus what a cart line
+ * displays. `isActive` is included (not filtered on) so the cart can name a
+ * product that was withdrawn while it sat in someone's cart.
+ */
+export interface CartProductRow {
+  id: string;
+  slug: string;
+  name: string;
+  sizeLabel: string | null;
+  pricePaise: number;
+  stockQty: number;
+  isActive: boolean;
+  image: ProductCardData['image'];
+}
+
+/**
+ * Live catalogue rows for a set of product ids — one query, never cached.
+ * Ids with no matching product are simply absent from the result.
+ */
+export async function getProductsForCart(ids: string[]): Promise<CartProductRow[]> {
+  if (ids.length === 0) return [];
+  const products = await prisma.product.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      sizeLabel: true,
+      pricePaise: true,
+      stockQty: true,
+      isActive: true,
+      images: {
+        orderBy: { sortOrder: 'asc' },
+        take: 1,
+        select: { url: true, alt: true, width: true, height: true },
+      },
+    },
+  });
+
+  return products.map((product) => ({
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    sizeLabel: product.sizeLabel,
+    pricePaise: product.pricePaise,
+    stockQty: product.stockQty,
+    isActive: product.isActive,
+    image: imageRowToCardImage(product.images[0]),
+  }));
+}
+
 /** Lightweight catalogue row for the sitemap — every active product, no joins. */
 export interface ProductSitemapEntry {
   slug: string;

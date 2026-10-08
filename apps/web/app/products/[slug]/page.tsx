@@ -4,7 +4,10 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+import { MAX_LINE_QUANTITY } from '@dronagiri/validators';
+
 import { TrackViewItem } from '@/components/analytics/track-view-item';
+import { AddToCartButton } from '@/components/cart/add-to-cart-button';
 import { JsonLd } from '@/components/seo/json-ld';
 import { ProductImageZoom } from '@/components/shop/product-image-zoom';
 import { SiteFooter } from '@/components/shop/site-footer';
@@ -13,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { ProductCard } from '@/components/ui/product-card';
 import { TrustBadge } from '@/components/ui/trust-badge';
+import { config } from '@/lib/config';
 import { formatPrice } from '@/lib/format';
 import { getProductBySlug, getRelatedProducts } from '@/lib/products/product-service';
 import { breadcrumbJsonLd, productJsonLd } from '@/lib/seo/json-ld';
@@ -112,7 +116,7 @@ function MarkdownProse({ children }: { children: string }) {
 
 /**
  * Stock badge — three states driven by `stockQty` against `lowStockThreshold`.
- * Out-of-stock is the only state that gates the (future) add-to-cart action.
+ * Out-of-stock is the only state that gates the add-to-cart action.
  */
 function StockBadge({ stockQty, lowStockThreshold }: { stockQty: number; lowStockThreshold: number }) {
   if (stockQty === 0) {
@@ -256,22 +260,33 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 />
               </div>
 
-              {/* Add-to-cart — disabled until checkout ships. Honest copy beats a teaser. */}
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button size="lg" disabled>
-                  Add to cart
-                </Button>
-                <span className="text-sm text-stone">
-                  Online ordering opens soon. To buy now, message{' '}
-                  <a
-                    className="font-medium text-forest-700 underline underline-offset-2 hover:text-forest-800"
-                    href="https://wa.me/919429029840"
-                  >
-                    +91 94290 29840
-                  </a>{' '}
-                  on WhatsApp.
-                </span>
-              </div>
+              {/* Add-to-cart behind the cart flag; until then, honest copy beats a teaser. */}
+              {config.cart.enabled ? (
+                <div className="mt-8">
+                  <AddToCartButton
+                    productId={product.id}
+                    productName={product.name}
+                    stockQty={product.stockQty}
+                    maxPerLine={MAX_LINE_QUANTITY}
+                  />
+                </div>
+              ) : (
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button size="lg" disabled>
+                    Add to cart
+                  </Button>
+                  <span className="text-sm text-stone">
+                    Online ordering opens soon. To buy now, message{' '}
+                    <a
+                      className="font-medium text-forest-700 underline underline-offset-2 hover:text-forest-800"
+                      href="https://wa.me/919429029840"
+                    >
+                      +91 94290 29840
+                    </a>{' '}
+                    on WhatsApp.
+                  </span>
+                </div>
+              )}
 
               <div className="mt-8 flex flex-wrap gap-2.5">
                 {TRUST_ITEMS.map((item) => (

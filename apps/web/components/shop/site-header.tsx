@@ -1,8 +1,10 @@
 import Link from 'next/link';
 
+import { CartIconBadge } from '@/components/cart/cart-icon-badge';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
+import { config } from '@/lib/config';
 
 /**
  * Top-level nav links. Each one is a full path so the header works
@@ -14,7 +16,7 @@ const NAV_LINKS = [
   { label: 'Contact', href: '/contact' },
 ] as const;
 
-/** Sticky storefront header — brand mark, section links, and the quiz CTA. */
+/** Sticky storefront header — brand mark, section links, the quiz CTA and (when enabled) the cart. */
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-forest-100 bg-white">
@@ -49,9 +51,12 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <Button href="/quiz" size="sm">
-          Find My Product
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button href="/quiz" size="sm">
+            Find My Product
+          </Button>
+          {config.cart.enabled && <CartIconBadge />}
+        </div>
       </Container>
     </header>
   );

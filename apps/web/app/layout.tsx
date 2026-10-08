@@ -2,7 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Playfair_Display } from 'next/font/google';
 
 import { Analytics } from '@/components/analytics/analytics';
+import { CartDrawer } from '@/components/cart/cart-drawer';
+import { CartProvider } from '@/components/cart/cart-provider';
 import { JsonLd } from '@/components/seo/json-ld';
+import { ToastProvider } from '@/components/ui/toast';
+import { config } from '@/lib/config';
 import { organizationJsonLd } from '@/lib/seo/json-ld';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SITE_TAGLINE } from '@/lib/seo/site';
 
@@ -73,7 +77,17 @@ export default function RootLayout({
         {/* Organization JSON-LD on every page — Google re-asserts the publisher
             from any URL it lands on, not just the homepage. */}
         <JsonLd data={organizationJsonLd()} />
-        {children}
+        {/* The cart (and the toasts it raises) exist only while the cart flag is on. */}
+        {config.cart.enabled ? (
+          <ToastProvider>
+            <CartProvider>
+              {children}
+              <CartDrawer />
+            </CartProvider>
+          </ToastProvider>
+        ) : (
+          children
+        )}
         <Analytics />
       </body>
     </html>

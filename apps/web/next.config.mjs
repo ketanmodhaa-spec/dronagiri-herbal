@@ -66,6 +66,11 @@ const nextConfig = {
     // Prisma's query engine is a native binary — keep the client out of the
     // server bundle so it loads from disk at runtime.
     serverComponentsExternalPackages: ['@prisma/client'],
+    // PDF fonts and logo are read from disk at runtime (lib/pdf/brand-assets.ts),
+    // which file tracing cannot see — ship them with every route that renders a PDF.
+    outputFileTracingIncludes: {
+      '/api/admin/reports/export': ['./lib/pdf/assets/**'],
+    },
   },
 };
 

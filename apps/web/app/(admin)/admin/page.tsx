@@ -53,6 +53,17 @@ export default async function AdminDashboardPage() {
           </p>
           <p className="mt-1 text-sm text-stone">Pack, ship, cancel, refund and replace.</p>
         </Link>
+        {admin.role === 'OWNER' && (
+          <Link
+            href="/admin/reports"
+            className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50 sm:col-span-2"
+          >
+            <p className="font-display text-lg font-semibold text-forest-900">Reports</p>
+            <p className="mt-1 text-sm text-stone">
+              Sales, money received and refunds — daily, weekly, monthly. Download as Excel or PDF.
+            </p>
+          </Link>
+        )}
         <Link
           href="/admin/products"
           className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50"

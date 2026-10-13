@@ -75,6 +75,13 @@
 Status: Not yet run — project not built yet  
 Next audit: After Step 1 completion
 
+### [13 Oct 2026] — Sales reports verified
+`/admin/reports` and `GET /api/admin/reports/export` (Owner only; 401 when signed out, 400 for a bad format or a reversed range).
+- [x] Period boundaries are IST midnight. Checked at 01:30 IST, on a Sunday, on 1 Jan and on 31 Mar: weeks run Mon–Sun, the financial year Apr–Mar, and 18:29Z / 18:30Z fall on the correct IST days.
+- [x] Figures on the dev test data match the hand calculation: 2 orders ₹598, 1 cancelled, received ₹598, refunded ₹250 (two failed refunds excluded), net ₹348, 1 free replacement. Units come from the ledger.
+- [x] Excel: six sheets, amounts are numeric rupees with ₹ format, times shifted to IST, frozen and filterable headers. PDF: summary cards; day rows (empty days omitted) or month rows for periods over 62 days; products; refunds.
+- [x] PDF fonts and logo are included in the route's file trace (`outputFileTracingIncludes`), so they ship to Vercel.
+
 ### [13 Oct 2026] — Admin orders, refunds and replacements verified (test mode)
 Migration `20261013090000_orders_refunds_replacements` adds the Refund table, `Order.attentionReason`, replacement links, `OrderEvent.createdBy`, the order-number counter and a unique `Order.razorpayOrderId`. It is applied to dev only. **Production must be migrated before this code deploys.** Tested through the admin API, logged in as the dev owner, against Razorpay test mode:
 - [x] Status steps run in order only: pack → ship (courier + AWB validated) → deliver. Out-of-order steps get a 409 with a plain explanation, and so does a held order until its attention is cleared.

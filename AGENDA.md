@@ -114,6 +114,8 @@ Still open:
 
 ### Step 3 — Intelligence & AI
 
+- [x] Sales reports — done 13 Oct 2026: `/admin/reports` (Owner only), presets today → financial year + custom range, Excel (6 sheets) and PDF download. Still to add once on Vercel Pro: emailed daily / weekly / monthly reports via cron; GST sheet once invoices are live.
+
 - [ ] WhatsApp restock command system
 - [ ] DronaBot (Claude API streaming)
 - [ ] Analytics event system

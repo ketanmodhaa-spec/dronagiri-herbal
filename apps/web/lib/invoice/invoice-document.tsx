@@ -10,39 +10,14 @@
  *
  * Pure layout: every figure arrives pre-computed on `Invoice`.
  */
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-
-import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { stateName } from '@dronagiri/validators';
 
 import { formatPriceExact } from '@/lib/format';
+import { PDF_FONT_FAMILY, PDF_LOGO as LOGO } from '@/lib/pdf/brand-assets';
 
 import { formatRate } from './invoice-math';
 import { INVOICE_COPY_LABEL, type Invoice, type InvoiceParty } from './invoice-model';
-
-/*
- * Assets are read into memory and handed to react-pdf as data, not paths:
- * react-pdf treats a Windows path (`D:\…`) as a URL and tries to fetch it.
- * Data works the same in local dev and on Vercel.
- */
-const ASSET_DIR = path.join(process.cwd(), 'lib', 'invoice', 'assets');
-
-function fontDataUrl(file: string): string {
-  return `data:font/ttf;base64,${readFileSync(path.join(ASSET_DIR, file)).toString('base64')}`;
-}
-
-Font.register({
-  family: 'DM Sans',
-  fonts: [
-    { src: fontDataUrl('DMSans-Regular.ttf'), fontWeight: 400 },
-    { src: fontDataUrl('DMSans-Bold.ttf'), fontWeight: 700 },
-  ],
-});
-// Never hyphenate — a split GSTIN, order number or amount is worse than a wrap.
-Font.registerHyphenationCallback((word) => [word]);
-
-const LOGO = { data: readFileSync(path.join(ASSET_DIR, 'logo.jpg')), format: 'jpg' as const };
 
 const RULE = 0.5;
 const INK = '#000000';
@@ -67,7 +42,7 @@ const styles = StyleSheet.create({
     paddingTop: 26,
     paddingBottom: 30,
     paddingHorizontal: 28,
-    fontFamily: 'DM Sans',
+    fontFamily: PDF_FONT_FAMILY,
     fontSize: 7.5,
     lineHeight: 1.3,
     color: INK,

@@ -13,7 +13,12 @@
  * Shared on purpose: the admin panel calls it now; the WhatsApp RESTOCK
  * command will call the very same functions later. Node runtime only.
  */
-import { prisma, type StockMovementReason, type StockMovementSource } from '@dronagiri/db';
+import {
+  prisma,
+  type DbTransaction,
+  type StockMovementReason,
+  type StockMovementSource,
+} from '@dronagiri/db';
 
 import { AppError } from '@/lib/errors';
 
@@ -39,57 +44,102 @@ interface MovementMeta {
   /** The actor: an admin id, a hashed phone number, or 'system'. */
   createdBy: string;
   note?: string | null;
+  /** The order behind an order-driven movement (SALE, CANCELLATION, RETURN). */
+  orderId?: string | null;
 }
 
 type StockTarget = { mode: 'delta'; delta: number } | { mode: 'absolute'; count: number };
 
 /**
- * The locked core. Reads the current balance under a row lock, resolves the
- * target into a signed delta, guards against negative stock, then writes the
- * movement and the new balance in one transaction. A net-zero change writes
- * no ledger entry.
+ * The locked core, run inside the caller's transaction. Reads the current
+ * balance under a row lock, resolves the target into a signed delta, guards
+ * against negative stock, then writes the movement and the new balance. A
+ * net-zero change writes no ledger entry.
  */
+async function applyStockChangeInTx(
+  tx: DbTransaction,
+  productId: string,
+  target: StockTarget,
+  meta: MovementMeta,
+): Promise<StockResult> {
+  const locked = await tx.$queryRaw<{ stockQty: number }[]>`
+    SELECT "stockQty" FROM "Product" WHERE "id" = ${productId} FOR UPDATE
+  `;
+  if (locked.length === 0) {
+    throw new StockError('Product not found.', 'PRODUCT_NOT_FOUND');
+  }
+
+  const previousQty = locked[0].stockQty;
+  const newQty = target.mode === 'delta' ? previousQty + target.delta : target.count;
+  const delta = newQty - previousQty;
+
+  if (newQty < 0) {
+    throw new StockError(
+      `Stock cannot go below zero — current ${previousQty}, change ${delta}.`,
+      'STOCK_NEGATIVE',
+    );
+  }
+
+  if (delta !== 0) {
+    await tx.stockMovement.create({
+      data: {
+        productId,
+        delta,
+        balanceAfter: newQty,
+        reason: meta.reason,
+        source: meta.source,
+        createdBy: meta.createdBy,
+        note: meta.note ?? null,
+        orderId: meta.orderId ?? null,
+      },
+    });
+    await tx.product.update({ where: { id: productId }, data: { stockQty: newQty } });
+  }
+
+  return { productId, previousQty, delta, newQty };
+}
+
+/** A single stock change in its own transaction. */
 async function applyStockChange(
   productId: string,
   target: StockTarget,
   meta: MovementMeta,
 ): Promise<StockResult> {
-  return prisma.$transaction(async (tx) => {
-    const locked = await tx.$queryRaw<{ stockQty: number }[]>`
-      SELECT "stockQty" FROM "Product" WHERE "id" = ${productId} FOR UPDATE
-    `;
-    if (locked.length === 0) {
-      throw new StockError('Product not found.', 'PRODUCT_NOT_FOUND');
-    }
+  return prisma.$transaction((tx) => applyStockChangeInTx(tx, productId, target, meta));
+}
 
-    const previousQty = locked[0].stockQty;
-    const newQty = target.mode === 'delta' ? previousQty + target.delta : target.count;
-    const delta = newQty - previousQty;
-
-    if (newQty < 0) {
-      throw new StockError(
-        `Stock cannot go below zero — current ${previousQty}, change ${delta}.`,
-        'STOCK_NEGATIVE',
-      );
-    }
-
-    if (delta !== 0) {
-      await tx.stockMovement.create({
-        data: {
-          productId,
-          delta,
-          balanceAfter: newQty,
-          reason: meta.reason,
-          source: meta.source,
-          createdBy: meta.createdBy,
-          note: meta.note ?? null,
-        },
-      });
-      await tx.product.update({ where: { id: productId }, data: { stockQty: newQty } });
-    }
-
-    return { productId, previousQty, delta, newQty };
-  });
+/**
+ * Apply a signed delta inside a transaction the caller already holds — for
+ * changes that must commit or roll back together with other writes, such as
+ * an order's SALE movements alongside its payment confirmation.
+ */
+export async function recordStockMovementInTx(
+  tx: DbTransaction,
+  args: {
+    productId: string;
+    delta: number;
+    reason: StockMovementReason;
+    source: StockMovementSource;
+    createdBy: string;
+    note?: string | null;
+    orderId?: string | null;
+  },
+): Promise<StockResult> {
+  if (!Number.isInteger(args.delta)) {
+    throw new StockError('Stock change must be a whole number.');
+  }
+  return applyStockChangeInTx(
+    tx,
+    args.productId,
+    { mode: 'delta', delta: args.delta },
+    {
+      reason: args.reason,
+      source: args.source,
+      createdBy: args.createdBy,
+      note: args.note,
+      orderId: args.orderId,
+    },
+  );
 }
 
 /**

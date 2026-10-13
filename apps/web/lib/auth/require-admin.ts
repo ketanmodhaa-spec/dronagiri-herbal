@@ -12,7 +12,7 @@ import {
   verifyAdminAccessToken,
   type AdminClaims,
 } from '@/lib/auth/admin-session';
-import { AuthError } from '@/lib/errors';
+import { AuthError, ForbiddenError } from '@/lib/errors';
 
 /** Return the current admin, or null — the non-throwing variant. */
 export async function getAdminOrNull(): Promise<AdminClaims | null> {
@@ -25,6 +25,15 @@ export async function requireAdmin(): Promise<AdminClaims> {
   const admin = await getAdminOrNull();
   if (!admin) {
     throw new AuthError('Please sign in to continue.');
+  }
+  return admin;
+}
+
+/** Return the current admin if they are the owner — money moves only on the owner's say. */
+export async function requireOwner(): Promise<AdminClaims> {
+  const admin = await requireAdmin();
+  if (admin.role !== 'OWNER') {
+    throw new ForbiddenError('Only the owner account can refund or cancel paid orders.');
   }
   return admin;
 }

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { AdminSignOutButton } from '@/components/admin/admin-sign-out-button';
 import { getAdminOrNull } from '@/lib/auth/require-admin';
+import { countOrdersForBadges } from '@/lib/orders/admin-order-service';
 import { countNewPartnerEnquiries } from '@/lib/partners/partner-enquiry-service';
 
 export const metadata: Metadata = { title: 'Dashboard' };
@@ -14,7 +15,10 @@ export default async function AdminDashboardPage() {
   if (!admin) {
     redirect('/admin/login');
   }
-  const newEnquiries = await countNewPartnerEnquiries();
+  const [newEnquiries, orderBadges] = await Promise.all([
+    countNewPartnerEnquiries(),
+    countOrdersForBadges(),
+  ]);
 
   return (
     <main className="mx-auto max-w-2xl px-5 py-12">
@@ -30,6 +34,25 @@ export default async function AdminDashboardPage() {
       </header>
 
       <section className="mt-8 grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/admin/orders"
+          className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50 sm:col-span-2"
+        >
+          <p className="flex flex-wrap items-center gap-2 font-display text-lg font-semibold text-forest-900">
+            Orders
+            {orderBadges.attention > 0 && (
+              <span className="rounded-full bg-red-600 px-2 py-0.5 font-body text-xs font-semibold text-white">
+                {orderBadges.attention} need attention
+              </span>
+            )}
+            {orderBadges.toPack > 0 && (
+              <span className="rounded-full bg-gold px-2 py-0.5 font-body text-xs font-semibold text-forest-900">
+                {orderBadges.toPack} to pack
+              </span>
+            )}
+          </p>
+          <p className="mt-1 text-sm text-stone">Pack, ship, cancel, refund and replace.</p>
+        </Link>
         <Link
           href="/admin/products"
           className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50"

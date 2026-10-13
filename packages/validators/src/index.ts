@@ -18,5 +18,7 @@ export * from './product';
 export * from './category';
 export * from './image';
 export * from './order';
+export * from './admin-order';
+export * from './payment';
 export * from './coupon';
 export * from './partner';

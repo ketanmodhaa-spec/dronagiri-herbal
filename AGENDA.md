@@ -72,11 +72,11 @@
 - [ ] Product detail page (gallery, accordions, Gujarati toggle)
 - [ ] Cart system (Redis-backed, server-side prices)
 - [ ] Checkout flow (address form + payment selector)
-- [ ] Razorpay integration (test mode first)
-- [ ] Payment verification (HMAC-SHA256)
+- [x] Razorpay integration (test mode first) — payment layer done 13 Oct 2026; checkout UI still gated on OTP
+- [x] Payment verification (HMAC-SHA256) — 13 Oct 2026
 - [ ] Order confirmation + tracking page
 - [ ] WhatsApp notifications (Meta Business API templates)
-- [ ] Admin panel — orders management
+- [x] Admin panel — orders management — done 13 Oct 2026 (list + detail, status steps, cancel, partial refunds, replacements). Still to add: packing slip, customer notifications on each step
 - [ ] Hair & skin quiz
 
 ---

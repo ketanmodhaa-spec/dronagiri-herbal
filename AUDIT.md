@@ -8,12 +8,12 @@
 ## Security Audit — Pre-Launch Checklist
 
 ### Payment Security
-- [ ] Razorpay signature verified with HMAC-SHA256 timing-safe comparison
+- [x] Razorpay signature verified with HMAC-SHA256 timing-safe comparison *(13 Oct 2026)*
 - [ ] Price fetched server-side — never trusted from client
 - [ ] Idempotency key on every payment operation
-- [ ] Razorpay webhook signature verified before processing
-- [ ] Double-fulfillment prevented (order status check before fulfillment)
-- [ ] Stock decremented ONLY after verified payment
+- [x] Razorpay webhook signature verified before processing *(13 Oct 2026 — over the raw body, before parsing)*
+- [x] Double-fulfillment prevented (order status check before fulfillment) *(13 Oct 2026 — order row locked FOR UPDATE; handler and webhook converge on one settlement)*
+- [x] Stock decremented ONLY after verified payment *(13 Oct 2026 — online orders; all-or-nothing, products locked in id order)*
 - [ ] COD orders stock decremented immediately on placement
 
 ### Authentication
@@ -74,6 +74,35 @@
 ### [15 May 2026] — Initial audit checklist created
 Status: Not yet run — project not built yet  
 Next audit: After Step 1 completion
+
+### [13 Oct 2026] — Admin orders, refunds and replacements verified (test mode)
+Migration `20261013090000_orders_refunds_replacements` adds the Refund table, `Order.attentionReason`, replacement links, `OrderEvent.createdBy`, the order-number counter and a unique `Order.razorpayOrderId`. It is applied to dev only. **Production must be migrated before this code deploys.** Tested through the admin API, logged in as the dev owner, against Razorpay test mode:
+- [x] Status steps run in order only: pack → ship (courier + AWB validated) → deliver. Out-of-order steps get a 409 with a plain explanation, and so does a held order until its attention is cleared.
+- [x] Cancel works only before dispatch. Stock the order took goes back (CANCELLATION), and a paid online order is refunded in full automatically.
+- [x] Refunds: Owner only. The amount is capped at what was paid minus pending and processed refunds; ₹300 on a ₹299 order is refused. A repeated idempotency key returns the same refund, and nothing is paid twice.
+- [x] Restock on return is capped at the units this order still has out, read from the ledger. A second restock of the same unit is refused.
+- [x] A Razorpay refusal is recorded as FAILED, the order is flagged with a reason, and nothing counts as refunded. An unclear outcome stays PENDING; "Check status" and the `refund.processed` webhook both reconcile it by `notes.refundId`.
+- [x] Full refund on a delivered order → REFUND_INITIATED → REFUNDED once processed. A partial refund leaves the status alone.
+- [x] Replacement: shipped or delivered orders only, quantity capped at what was ordered. It becomes a ₹0 linked order (DH-26-00001) in "To pack" and takes stock as REPLACEMENT, not SALE.
+- [x] Held order (paid, stock short): "confirm" takes the stock all-or-nothing and clears the flag.
+- [x] Unpaid online order older than 24h is cancelled automatically when the orders page opens.
+- [ ] Visual check of `/admin/orders` on Sarita's phone
+- Finding: Razorpay pays refunds from the merchant balance. On a nearly empty test balance, any refund above it was refused with a generic `invalid request sent`. The failure note now explains this.
+
+### [13 Oct 2026] — Razorpay payment layer verified (test mode)
+Built: `lib/payments/` (REST client, signatures, payment service), `POST /api/payment/verify`, `POST /api/webhooks/razorpay`. Checked against the real Razorpay test API on the dev database:
+- [x] Razorpay order amount comes from `Order.totalPaise`. The browser never sends an amount. A page reload reuses the same Razorpay order.
+- [x] Forged checkout signature → 400 INVALID_SIGNATURE, with no Razorpay call made
+- [x] Malformed verify body → 400 (Zod)
+- [x] Verify rate limit: 3 per 5 min per session+IP → 429
+- [x] Bad webhook signature → 401
+- [x] Signed `payment.failed` → order stays PENDING, paymentStatus FAILED, OrderEvent written. A later success still wins.
+- [x] Duplicate webhook event id → 200 duplicate, not processed twice (Redis claim, released on transient failure so Razorpay retries)
+- [x] Settlement re-fetches the payment from Razorpay and checks order id, amount and currency before writing anything. An authorized payment is captured only while the order is still open; otherwise it is left for Razorpay to auto-refund.
+- [x] Paid but out of stock, a second payment, or a payment on a closed order → NEEDS_ATTENTION. The money is recorded, no stock is taken, and Sarita is emailed.
+- [x] Success path: a real test card payment (`pay_TnIBEqepYOU5iy`) took the order to CONFIRMED + PAID, wrote one SALE movement (50 → 49) and set Customer.lastOrderAt. The first run exposed Prisma's 5 s interactive-transaction timeout against Neon. The settlement rolled back cleanly (nothing half-written) and now runs with a 30 s timeout. It was recovered by replaying the signed `payment.captured` webhook, which is the same path Razorpay retries take in production.
+- [x] Idempotency: the same payment replayed under a new event id returns ALREADY_CONFIRMED, with no second stock movement
+- [ ] Webhook delivery from Razorpay itself — needs a deployed URL + `RAZORPAY_WEBHOOK_SECRET`
 
 ### [22 May 2026] — Admin authentication verified
 Phase 1 (admin auth) built and verified — 25/25 checks passed in a scripted

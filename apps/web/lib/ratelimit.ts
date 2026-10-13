@@ -78,6 +78,23 @@ export function getCartMutationLimiter(): Ratelimit {
   return cartMutationLimiter;
 }
 
+let paymentVerifyLimiter: Ratelimit | undefined;
+
+/**
+ * Payment verification limiter — 3 per 5 minutes, keyed on `sessionId:ip`
+ * (CLAUDE.md security rule 5). A real customer verifies once per payment;
+ * a forged-signature probe gets three tries and stops.
+ */
+export function getPaymentVerifyLimiter(): Ratelimit {
+  paymentVerifyLimiter ??= new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(3, '5 m'),
+    prefix: 'rl:payment-verify',
+    analytics: false,
+  });
+  return paymentVerifyLimiter;
+}
+
 let otpIssueLimiter: Ratelimit | undefined;
 
 /**

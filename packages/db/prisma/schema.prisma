@@ -52,6 +52,7 @@ enum StockMovementReason {
   ADJUSTMENT // manual correction by admin
   RETURN // customer return — stock re-enters
   CANCELLATION // confirmed order cancelled — stock restored
+  REPLACEMENT // replacement goods sent free for a damaged / wrong item
 }
 
 enum StockMovementSource {
@@ -60,6 +61,17 @@ enum StockMovementSource {
   ORDER // automatic — driven by an order's lifecycle
   WEBHOOK // automatic — driven by an inbound webhook (e.g. payment)
   SYSTEM // automatic — seed, migration, or cron; no human or external trigger
+}
+
+enum RefundMethod {
+  RAZORPAY // back to the original online payment, through Razorpay
+  MANUAL // paid by Sarita outside the system (UPI / bank transfer) — COD orders
+}
+
+enum RefundStatus {
+  PENDING // asked for — Razorpay has not confirmed it yet
+  PROCESSED // the money has left
+  FAILED // Razorpay refused or failed it — nothing was refunded
 }
 
 enum NotificationChannel {
@@ -238,6 +250,15 @@ model Order {
   trackingTokenHash String  @unique // SHA-256 of the tracking token; raw token is sent to the customer and never stored
   idempotencyKey    String? @unique // guards against duplicate checkout submits
 
+  // Set when the order needs Sarita before it can move on (paid but out of
+  // stock, a second payment, a failed refund). Null = nothing to do.
+  attentionReason String?
+
+  // A replacement is a free order sent for a damaged / wrong item in another.
+  replacementForId String?
+  replacementFor   Order?  @relation("Replacement", fields: [replacementForId], references: [id], onDelete: Restrict)
+  replacements     Order[] @relation("Replacement")
+
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
 
@@ -265,9 +286,8 @@ model Order {
   // Payment
   paymentMethod     PaymentMethod
   paymentStatus     PaymentStatus @default(PENDING)
-  razorpayOrderId   String?
+  razorpayOrderId   String?       @unique
   razorpayPaymentId String?
-  razorpayRefundId  String?
 
   // Fulfillment
   courierName    String?
@@ -287,6 +307,7 @@ model Order {
   items     OrderItem[]
   events    OrderEvent[]
   movements StockMovement[]
+  refunds   Refund[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -295,6 +316,7 @@ model Order {
   @@index([status])
   @@index([couponId])
   @@index([createdAt])
+  @@index([replacementForId])
 }
 
 model OrderItem {
@@ -323,9 +345,36 @@ model OrderEvent {
   order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
   status    OrderStatus
   note      String?
+  createdBy String? // admin id, or "system" for automatic changes
   createdAt DateTime    @default(now())
 
   @@index([orderId])
+}
+
+// Money returned to a customer. An order can have several (partial refunds);
+// processed + pending refunds never exceed what was paid.
+model Refund {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  amountPaise Int
+  method      RefundMethod
+  status      RefundStatus @default(PENDING)
+  reason      String
+
+  razorpayRefundId String? @unique
+  manualReference  String? // UPI / bank transfer reference for MANUAL refunds
+  failureReason    String?
+  idempotencyKey   String  @unique // the admin form's key — a double tap refunds once
+
+  createdBy   String // admin id
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([orderId])
+  @@index([status])
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -514,4 +563,14 @@ model PartnerEnquiry {
   @@index([createdAt])
   @@index([phone])
   @@index([stateCode])
+}
+
+// ─── Order numbering ────────────────────────────────────────────────────────
+
+// One row per calendar year (IST); `lastNumber` is the last order number
+// issued that year. Incremented atomically with INSERT … ON CONFLICT, so two
+// orders can never get the same number. Order numbers read DH-26-00042.
+model OrderNumberCounter {
+  year       Int @id
+  lastNumber Int
 }

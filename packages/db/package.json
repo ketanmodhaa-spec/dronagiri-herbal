@@ -10,7 +10,8 @@
     "db:ensure-admin": "tsx prisma/ensure-admin.ts",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:test-order": "tsx prisma/test-order.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

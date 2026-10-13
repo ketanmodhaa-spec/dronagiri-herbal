@@ -91,6 +91,34 @@ export const serverConfig = {
     },
   },
 
+  /**
+   * Razorpay — online payments (UPI, cards, netbanking).
+   *
+   * The key id is public by design (it is embedded in the checkout widget), but
+   * it is still read here rather than from a NEXT_PUBLIC_ variable: the server
+   * hands it to the browser alongside each payment, so switching from test to
+   * live keys is a Doppler change with no rebuild.
+   */
+  razorpay: {
+    /** `rzp_test_…` or `rzp_live_…` — identifies the account and the mode. */
+    get keyId(): string {
+      return required('RAZORPAY_KEY_ID');
+    },
+    /** Basic-auth secret for the REST API and the key for checkout signatures. */
+    get keySecret(): string {
+      return required('RAZORPAY_KEY_SECRET');
+    },
+    /** Chosen by us and entered in Razorpay → Webhooks; signs every webhook body. */
+    get webhookSecret(): string {
+      return required('RAZORPAY_WEBHOOK_SECRET');
+    },
+    /** True for `rzp_test_` keys — no real money moves. */
+    get isTestMode(): boolean {
+      return required('RAZORPAY_KEY_ID').startsWith('rzp_test_');
+    },
+    apiBase: 'https://api.razorpay.com/v1',
+  },
+
   /** Cloudflare R2 (S3-compatible) — product and category image storage. */
   r2: {
     get accessKeyId(): string {

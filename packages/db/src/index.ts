@@ -71,6 +71,17 @@ function createClient() {
 
 export type DbClient = ReturnType<typeof createClient>;
 
+/**
+ * Options for an interactive transaction that makes several round trips
+ * (locks, ledger entries, events). Prisma's 5 s default is too tight against a
+ * waking or distant Neon compute: when it expires, the whole transaction rolls
+ * back and the operation fails.
+ */
+export const MULTI_STEP_TRANSACTION = { maxWait: 10_000, timeout: 30_000 } as const;
+
+/** The client handed to an interactive `prisma.$transaction(async (tx) => …)` callback. */
+export type DbTransaction = Parameters<Parameters<DbClient['$transaction']>[0]>[0];
+
 const globalForPrisma = globalThis as unknown as { prisma?: DbClient };
 
 export const prisma = globalForPrisma.prisma ?? createClient();

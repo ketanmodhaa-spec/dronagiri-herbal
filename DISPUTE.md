@@ -69,7 +69,7 @@
 **Description:** 13 WhatsApp message templates need to be submitted **directly to Meta Business Manager** for approval. Each takes 24–48 hours.  
 **Impact:** No WhatsApp OTP delivery and no notifications until templates approved.  
 **Assigned to:** Developer to write template content → Jaydeep to submit via Meta Business Manager  
-**Resolution:** ⏳ Open — submit at least 1 week before launch
+**Resolution:** ⏳ Open — **14 Oct 2026:** the live number +91 6355 124 688 is connected on WhatsApp account `1346230040712730`, which has **no templates yet**. Submit all 13 there, `otp_login` included (its earlier approval was on the test account). Ask Claude to "check templates" to read their status from Meta.
 
 ---
 

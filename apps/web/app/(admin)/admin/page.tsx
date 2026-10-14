@@ -57,7 +57,7 @@ export default async function AdminDashboardPage() {
         </Link>
         <Link
           href="/admin/reviews"
-          className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50"
+          className={`rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50${admin.role === 'OWNER' ? '' : ' sm:col-span-2'}`}
         >
           <p className="flex items-center gap-2 font-display text-lg font-semibold text-forest-900">
             Reviews
@@ -72,7 +72,7 @@ export default async function AdminDashboardPage() {
         {admin.role === 'OWNER' && (
           <Link
             href="/admin/reports"
-            className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50 sm:col-span-2"
+            className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50"
           >
             <p className="font-display text-lg font-semibold text-forest-900">Reports</p>
             <p className="mt-1 text-sm text-stone">
@@ -96,7 +96,7 @@ export default async function AdminDashboardPage() {
         </Link>
         <Link
           href="/admin/enquiries"
-          className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50"
+          className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50 sm:col-span-2"
         >
           <p className="flex items-center gap-2 font-display text-lg font-semibold text-forest-900">
             Distributor enquiries

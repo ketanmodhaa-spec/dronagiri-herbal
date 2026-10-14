@@ -152,11 +152,11 @@ Stage 1 of WhatsApp Business API integration shipped — every outbound message 
 
 **Doppler variables required for the webhook to verify (do this first):**
 - `WHATSAPP_WEBHOOK_VERIFY_TOKEN` — any random string, used as the GET-handshake shared secret
-- `WHATSAPP_WEBHOOK_APP_SECRET` — Meta App Secret, used to HMAC-verify POSTs
+- `META_APP_SECRET` — Meta App Secret, used to HMAC-verify POSTs
 
 **Doppler variables required to flip `ENABLE_WHATSAPP=true`:**
-- `WHATSAPP_ACCESS_TOKEN` — long-lived system-user token from Meta Business
-- `WHATSAPP_PHONE_NUMBER_ID` — the WABA phone-number ID Meta issues
+- `META_WHATSAPP_ACCESS_TOKEN` — long-lived system-user token from Meta Business
+- `META_WHATSAPP_PHONE_NUMBER_ID` — the WABA phone-number ID Meta issues
 - `ENABLE_WHATSAPP` — set to the literal string `true` (anything else keeps the flag off)
 
 Stage 2 — not yet written, parked for after Meta approves templates: RESTOCK / STOCK / ORDERS / HELP command parser (incoming webhook hands text messages to a real handler), order-state-transition notification hooks (call `sendWhatsAppTemplate` from the order machine once checkout exists), marketing broadcast scheduler.

@@ -154,27 +154,32 @@ export const serverConfig = {
    * `webhookVerifyToken` and `webhookAppSecret` are therefore the only two
    * variables required to make the webhook work; the rest become required
    * the moment `ENABLE_WHATSAPP=true`.
+   *
+   * Names follow Doppler (`META_*`): the app secret that signs webhooks is
+   * the Meta app's own secret, and the access token must be a permanent
+   * System User token — a token copied from the "API Setup" page expires in
+   * 24 hours.
    */
   whatsapp: {
     /** Master feature flag. Only `'true'` enables outbound; anything else off. */
     get enabled(): boolean {
       return process.env.ENABLE_WHATSAPP === 'true';
     },
-    /** Long-lived system-user access token issued by Meta. */
+    /** Permanent System User access token (Business settings → System users). */
     get accessToken(): string {
-      return required('WHATSAPP_ACCESS_TOKEN');
+      return required('META_WHATSAPP_ACCESS_TOKEN');
     },
     /** Phone-number ID Meta assigns to the WABA — addresses outbound sends. */
     get phoneNumberId(): string {
-      return required('WHATSAPP_PHONE_NUMBER_ID');
+      return required('META_WHATSAPP_PHONE_NUMBER_ID');
     },
     /** Verify token sent back in the GET handshake — set the same value in Meta. */
     get webhookVerifyToken(): string {
       return required('WHATSAPP_WEBHOOK_VERIFY_TOKEN');
     },
-    /** App secret used to HMAC-sign incoming webhooks; we verify against it. */
+    /** The Meta app's secret — Meta HMAC-signs every webhook POST with it. */
     get webhookAppSecret(): string {
-      return required('WHATSAPP_WEBHOOK_APP_SECRET');
+      return required('META_APP_SECRET');
     },
     /** Meta Graph API base URL — pinned to a stable version. */
     graphApiBase: 'https://graph.facebook.com/v20.0',

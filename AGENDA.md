@@ -5,6 +5,28 @@
 
 ---
 
+## Next session — 15 Oct 2026
+
+**Razorpay go-live (KYC expected done):**
+- [ ] Live keys into Doppler `prd`: `RAZORPAY_KEY_ID` (rzp_live_…) + `RAZORPAY_KEY_SECRET`. Generate `RAZORPAY_WEBHOOK_SECRET`.
+- [ ] Register the webhook in the Razorpay **live** dashboard: `https://dronagiriherbal.in/api/webhooks/razorpay`. Events: payment.authorized, payment.captured, order.paid, payment.failed, refund.processed, refund.failed.
+- [ ] Verify with the read-only API check (no money moves). Keep test keys in `dev`.
+- [ ] Ask the Razorpay dashboard to enable auto-capture. The code captures anyway, but auto-capture is the safety net.
+
+**WhatsApp templates (account 1346230040712730):**
+- [x] 10 approved 14 Oct: otp_login, order_placed/confirmed/packed/shipped/delivered/cancelled, refund_initiated, repurchase_nudge, winback_nudge.
+- [ ] Fix the typo in `order_cancelled`: "Hir {{1}}" → "Hi {{1}}" (edit in WhatsApp Manager).
+- [ ] Submit the rest: `refund_completed`, `restock_alert`, `daily_summary`, `order_invoice` (document header; sample = `sample-invoice-for-meta.pdf`).
+
+**Code — the checkout build (the last big piece, now unblocked):**
+- [ ] Checkout: address form, WhatsApp OTP, Terms + marketing-consent checkboxes, order placement, Razorpay pay step (button already built).
+- [ ] `otp_login` has a Copy-code **URL button**: the send must also fill the button parameter with the code, or Meta rejects it. Fix with a live OTP test.
+- [ ] Connect every status button and the payment/refund webhooks to their WhatsApp template (sent in the background, never blocking).
+- [ ] Order tracking page `/track/<signed token>`, with an HMAC link like the review link (the stored-hash design can't rebuild a link at ship time).
+- [ ] Point Doppler `dev` at the test WhatsApp account (1534533821662577), so laptop testing can't message real customers.
+
+---
+
 ## Today — 15 May 2026
 
 ### In progress right now
@@ -132,6 +154,8 @@ Still open:
 
 ## Parking Lot
 *(Ideas to revisit — not blocking anything)*
+
+- **Product image in WhatsApp messages** (agreed 14 Oct 2026; start after ~100 confirmed orders and reviews): new templates `order_placed_image` and `order_delivered_image` with an image header showing the first item's hero photo. Fall back to the text-only templates when a product has no photo. Needs `NEXT_PUBLIC_CDN_URL` set.
 
 - Vertex AI Imagen 3 for automatic product photography on new product creation
 - Shiprocket integration for automatic tracking updates

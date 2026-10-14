@@ -1,6 +1,6 @@
 # WhatsApp Template Submission Sheet
 
-> Copy-paste source for submitting Dronagiri Herbal's 13 templates in
+> Copy-paste source for submitting Dronagiri Herbal's 14 templates in
 > **Meta WhatsApp Manager → Message templates → Create template**.
 >
 > ⚠️ **The `{{n}}` order below is not cosmetic.** It must match the order each
@@ -205,6 +205,31 @@ Your hair & skin deserve the Sanjivani touch. Come see what's new at Dronagiri H
 ```
 
 Samples: `Sarita`
+
+---
+
+## 14. `order_invoice` — Category: **Utility** *(sent with the shipping message)*
+
+The GST tax invoice as a PDF attachment. A printed copy also goes in the parcel.
+This template has a **document header**: the invoice PDF rides on it.
+
+- **Header:** choose **Media → Document**. Meta asks for a sample file: upload
+  `sample-invoice-for-meta.pdf` from the project folder (a SPECIMEN-watermarked
+  invoice). The real invoice is attached by the code on each send.
+- **Body variables:** `{{1}}` firstName · `{{2}}` orderNumber
+
+```
+Hi {{1}}, here is the tax invoice for your Dronagiri Herbal order {{2}}.
+
+Please keep it for your records. A printed copy is also inside your parcel.
+```
+
+Samples: `Sarita` · `DH-1042`
+
+> Submit it now so approval is ready, but it can't be **sent** until the GST
+> facts in DISPUTE.md are confirmed: legal name and address as on the GST
+> certificate, HSN code and rate per product, GST on shipping, signature, and
+> invoice numbering. Until then no real invoice is issued.
 
 ---
 

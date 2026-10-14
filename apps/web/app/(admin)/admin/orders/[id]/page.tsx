@@ -5,13 +5,17 @@ import { notFound, redirect } from 'next/navigation';
 import { cuidSchema } from '@dronagiri/validators';
 
 import { OrderRefundForm } from '@/components/admin/order-refund-form';
+import { OrderSamplePanel } from '@/components/admin/order-sample-panel';
 import { OrderReplacementForm } from '@/components/admin/order-replacement-form';
 import { OrderStatusActions } from '@/components/admin/order-status-actions';
 import { RefundSyncButton } from '@/components/admin/refund-sync-button';
+import { ReviewLinkPanel } from '@/components/admin/review-link-panel';
 import { getAdminOrNull } from '@/lib/auth/require-admin';
+import { loyaltyOf, SAMPLE_WINDOW } from '@/lib/customers/loyalty';
 import { NotFoundError } from '@/lib/errors';
 import { formatPrice } from '@/lib/format';
 import { getOrderDetail, type OrderDetail } from '@/lib/orders/admin-order-service';
+import { reviewUrl } from '@/lib/reviews/review-link';
 import {
   ORDER_STATUS_LABEL,
   PAYMENT_STATUS_LABEL,
@@ -21,6 +25,8 @@ import {
 
 export const metadata: Metadata = { title: 'Order' };
 export const dynamic = 'force-dynamic';
+
+const monthYear = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', year: 'numeric' });
 
 const timeFormatter = new Intl.DateTimeFormat('en-IN', {
   timeZone: 'Asia/Kolkata',
@@ -58,6 +64,13 @@ export default async function AdminOrderPage({ params }: { params: { id: string 
   const order = await loadOrder(params.id);
   const isOwner = admin.role === 'OWNER';
   const isCashOrder = order.paymentMethod === 'COD';
+  const loyalty = await loyaltyOf(order.customerId);
+  const loyaltySummary =
+    `${loyalty.orders} order${loyalty.orders === 1 ? '' : 's'} · ${formatPrice(loyalty.lifetimePaise)} spent` +
+    (loyalty.firstOrderAt ? ` since ${monthYear.format(loyalty.firstOrderAt)}` : '');
+  const showSample =
+    loyalty.isLoyal && !order.replacementForId && (order.sampleNote !== null || SAMPLE_WINDOW.includes(order.status));
+  const sampleDue = loyalty.isLoyal && !order.replacementForId && order.sampleAddedAt === null && SAMPLE_WINDOW.includes(order.status);
   const actor = (id: string | null) =>
     id === null || id === SYSTEM_ACTOR ? 'Automatic' : (order.actorNames[id] ?? 'Admin');
 
@@ -94,7 +107,17 @@ export default async function AdminOrderPage({ params }: { params: { id: string 
         attentionReason={order.attentionReason}
         isOwner={isOwner}
         refundOnCancelPaise={isCashOrder ? 0 : order.refundablePaise}
+        sampleDue={sampleDue}
       />
+
+      {showSample && (
+        <OrderSamplePanel
+          orderId={order.id}
+          loyaltySummary={loyaltySummary}
+          sampleNote={order.sampleNote}
+          canStillAdd={SAMPLE_WINDOW.includes(order.status)}
+        />
+      )}
 
       <Section title="Items">
         <ul className="divide-y divide-forest-100 text-sm">
@@ -127,6 +150,16 @@ export default async function AdminOrderPage({ params }: { params: { id: string 
             <dd>{formatPrice(order.totalPaise)}</dd>
           </div>
         </dl>
+      </Section>
+
+      <Section title="Customer">
+        <p className="text-sm text-forest-900">
+          {order.customer.name ?? order.shipRecipientName} · {order.customer.phone}
+        </p>
+        <p className="mt-1 text-sm text-stone">
+          {loyalty.orders <= 1 ? 'First order' : loyaltySummary}
+          {loyalty.isLoyal && <span className="ml-2 rounded-full bg-gold-light px-2 py-0.5 text-xs text-forest-900">Loyal</span>}
+        </p>
       </Section>
 
       <Section title="Ship to">
@@ -263,6 +296,18 @@ export default async function AdminOrderPage({ params }: { params: { id: string 
               }))}
             />
           )}
+        </Section>
+      )}
+
+      {order.deliveredAt && !order.replacementForId && (
+        <Section title="Customer review">
+          <ReviewLinkPanel
+            url={reviewUrl(order.id)}
+            phone={order.shipPhone}
+            firstName={order.shipRecipientName.split(/\s+/)[0] ?? order.shipRecipientName}
+            reviewCount={order._count.reviews}
+            productCount={order.items.length}
+          />
         </Section>
       )}
 

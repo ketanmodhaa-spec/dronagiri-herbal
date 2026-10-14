@@ -19,6 +19,7 @@
 import { prisma } from '@dronagiri/db';
 
 import { serverConfig } from '@/lib/config.server';
+import { hasMarketingConsent } from '@/lib/customers/consent-service';
 import type { WhatsAppTemplate } from '@/lib/notifications/whatsapp/templates';
 
 /** Inputs the caller provides. Phone may be E.164 with or without leading `+`. */
@@ -38,7 +39,7 @@ export interface SendWhatsAppResult {
   /** Meta's `wamid` — useful for tracing delivery via the status webhook. */
   providerMessageId?: string;
   /** Short, machine-readable cause when not sent. Human details land in the log. */
-  reason?: 'disabled' | 'http_error' | 'invalid_phone' | 'unknown_error';
+  reason?: 'disabled' | 'http_error' | 'invalid_phone' | 'no_consent' | 'unknown_error';
 }
 
 /** Meta wraps every parameter type the same way; this is the body wrapper. */
@@ -95,6 +96,24 @@ export async function sendWhatsAppTemplate<P extends Record<string, string>>(
       },
     });
     return { sent: false, reason: 'invalid_phone' };
+  }
+
+  // Marketing needs the customer's recorded opt-in — enforced here, for
+  // every caller, rather than trusted to each one (DPDP Act; Meta policy).
+  if (template.category === 'MARKETING' && !(customerId && (await hasMarketingConsent(customerId)))) {
+    await prisma.notificationLog.create({
+      data: {
+        channel: 'WHATSAPP',
+        status: 'FAILED',
+        recipient,
+        templateName: template.name,
+        payload: params as Record<string, string>,
+        errorMessage: 'Not sent: marketing message without the customer’s marketing consent.',
+        orderId,
+        customerId,
+      },
+    });
+    return { sent: false, reason: 'no_consent' };
   }
 
   // Feature-flag short-circuit — log intent, no network call.

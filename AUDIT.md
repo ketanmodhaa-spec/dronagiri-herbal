@@ -75,6 +75,15 @@
 Status: Not yet run — project not built yet  
 Next audit: After Step 1 completion
 
+### [14 Oct 2026] — Consent, loyalty samples and verified reviews
+Migration `20261014090000_consent_samples_reviews`. Applied to dev; **production must be migrated before deploy**.
+- [x] Marketing consent is false by default. The migration cleared it for every customer with no recorded opt-in, then tested: START → on, with the time and the words "Replied START on WhatsApp"; "stop" → off, with the opt-out time; an ordinary message changes nothing. Signed WhatsApp webhook throughout.
+- [x] The WhatsApp send client refuses MARKETING templates unless the customer has consent, and logs `no_consent`. Enforced for every caller.
+- [x] Samples: loyal (3+ real orders or ₹1,500+) orders show "🎁 Add sample" in the packing list and on the order. The packer records it once, before shipping; doing it twice or after shipping is refused. Packing without the sample asks for confirmation.
+- [x] Reviews only through the HMAC-signed link of a delivered, non-replacement order (ORDER_TOKEN_SECRET; nothing stored). A forged link, an undelivered order, a product not in the order, or a second review of a product → refused. A filled-in honeypot gets a fake success and nothing is stored. Submissions limited to 10 per hour per IP.
+- [x] Moderation: PENDING → PUBLISHED, or REJECTED for one of five posting rules. There is no "negative" reason, so it can't be sent. A critical review (≤2★) is flagged, published and answered publicly. AggregateRating JSON-LD is emitted only when real reviews exist.
+- [x] Helpful votes: one per guest session per review, enforced by a unique key on a hashed session id, plus 20 per 10 minutes per IP. Tested: same visitor twice → 1; second visitor → 2.
+
 ### [13 Oct 2026] — Sales reports verified
 `/admin/reports` and `GET /api/admin/reports/export` (Owner only; 401 when signed out, 400 for a bad format or a reversed range).
 - [x] Period boundaries are IST midnight. Checked at 01:30 IST, on a Sunday, on 1 Jan and on 31 Mar: weeks run Mon–Sun, the financial year Apr–Mar, and 18:29Z / 18:30Z fall on the correct IST days.

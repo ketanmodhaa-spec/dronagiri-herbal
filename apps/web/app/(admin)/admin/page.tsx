@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { AdminSignOutButton } from '@/components/admin/admin-sign-out-button';
 import { getAdminOrNull } from '@/lib/auth/require-admin';
 import { countOrdersForBadges } from '@/lib/orders/admin-order-service';
+import { countPendingReviews } from '@/lib/reviews/review-service';
 import { countNewPartnerEnquiries } from '@/lib/partners/partner-enquiry-service';
 
 export const metadata: Metadata = { title: 'Dashboard' };
@@ -15,9 +16,10 @@ export default async function AdminDashboardPage() {
   if (!admin) {
     redirect('/admin/login');
   }
-  const [newEnquiries, orderBadges] = await Promise.all([
+  const [newEnquiries, orderBadges, pendingReviews] = await Promise.all([
     countNewPartnerEnquiries(),
     countOrdersForBadges(),
+    countPendingReviews(),
   ]);
 
   return (
@@ -52,6 +54,20 @@ export default async function AdminDashboardPage() {
             )}
           </p>
           <p className="mt-1 text-sm text-stone">Pack, ship, cancel, refund and replace.</p>
+        </Link>
+        <Link
+          href="/admin/reviews"
+          className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50"
+        >
+          <p className="flex items-center gap-2 font-display text-lg font-semibold text-forest-900">
+            Reviews
+            {pendingReviews > 0 && (
+              <span className="rounded-full bg-gold px-2 py-0.5 font-body text-xs font-semibold text-forest-900">
+                {pendingReviews} to check
+              </span>
+            )}
+          </p>
+          <p className="mt-1 text-sm text-stone">Publish verified buyers&rsquo; reviews and reply to them.</p>
         </Link>
         {admin.role === 'OWNER' && (
           <Link

@@ -235,6 +235,15 @@ GET    /api/admin/orders            Orders list
 
 ---
 
+## Marketing Consent Rule
+
+```
+Marketing WhatsApp (repurchase / win-back / offers) only with Customer.marketingConsent.
+Consent is OFF by default; set only via recordMarketingConsentInTx (unticked checkbox at checkout).
+STOP on WhatsApp withdraws it, START restores it — handled in the WhatsApp webhook.
+The send client refuses MARKETING templates without consent — never bypass it.
+```
+
 ## Notification Rule
 
 ```

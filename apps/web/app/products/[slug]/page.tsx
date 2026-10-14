@@ -18,7 +18,9 @@ import { ProductCard } from '@/components/ui/product-card';
 import { TrustBadge } from '@/components/ui/trust-badge';
 import { config } from '@/lib/config';
 import { formatPrice } from '@/lib/format';
+import { ProductReviews } from '@/components/reviews/product-reviews';
 import { getProductBySlug, getRelatedProducts } from '@/lib/products/product-service';
+import { getProductReviews } from '@/lib/reviews/review-service';
 import { breadcrumbJsonLd, productJsonLd } from '@/lib/seo/json-ld';
 import { DEFAULT_OG_IMAGE, SITE_URL, absoluteUrl } from '@/lib/seo/site';
 
@@ -149,9 +151,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await fetchProduct(params.slug);
   if (!product) notFound();
 
-  // Related-products query runs in parallel with the rest of the render —
-  // it's a separate Prisma round-trip but cheap (single category, take 4).
-  const relatedProducts = await getRelatedProducts(product.id, product.categoryId, 4);
+  // Related products and published reviews load in parallel — two cheap
+  // queries (one category, take 4; one product's reviews).
+  const [relatedProducts, { summary: reviewSummary, reviews }] = await Promise.all([
+    getRelatedProducts(product.id, product.categoryId, 4),
+    getProductReviews(product.id),
+  ]);
 
   const primaryImage = product.images[0];
   const onSale =
@@ -182,6 +187,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
     priceRupees: product.pricePaise / 100,
     inStock: product.stockQty > 0,
     priceValidUntil,
+    reviews: {
+      average: reviewSummary.average,
+      count: reviewSummary.count,
+      top: reviews.slice(0, 5).map((review) => ({
+        rating: review.rating,
+        author: review.displayName,
+        body: review.body,
+        datePublished: review.createdAt.toISOString().slice(0, 10),
+      })),
+    },
   });
 
   const breadcrumbLd = breadcrumbJsonLd([
@@ -332,6 +347,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </section>
             )}
           </div>
+
+          <ProductReviews summary={reviewSummary} reviews={reviews} />
 
           {/* ── Related products ──────────────────────────────────────────── */}
           {relatedProducts.length > 0 && (

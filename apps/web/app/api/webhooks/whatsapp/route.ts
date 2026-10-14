@@ -15,8 +15,9 @@
  * to verify the webhook URL before we can submit templates for approval — so
  * this code unblocks the rest of the WhatsApp work even with sending disabled.
  *
- * Stage 1 scope: status updates patch `NotificationLog`; inbound messages
- * are logged for later inspection (RESTOCK parser lands in Stage 2). The
+ * Stage 1 scope: status updates patch `NotificationLog`; a STOP / START
+ * from a customer withdraws or restores marketing consent; other inbound
+ * messages are logged for later inspection (RESTOCK parser lands in Stage 2). The
  * route never throws — Meta retries with backoff on non-200, which means a
  * crash here can flood our endpoint.
  */
@@ -26,6 +27,8 @@ import { type NextRequest } from 'next/server';
 import { prisma } from '@dronagiri/db';
 
 import { serverConfig } from '@/lib/config.server';
+import { applyConsentKeyword, consentKeyword } from '@/lib/customers/consent-service';
+import { customerPhoneFromWhatsApp } from '@/lib/customers/customer-phone';
 import { verifyWhatsAppSignature } from '@/lib/notifications/whatsapp/signature';
 
 /** Node runtime — `node:crypto` (used by the signature helper) isn't on edge. */
@@ -139,6 +142,21 @@ async function applyStatusUpdate(event: MetaStatusEvent): Promise<void> {
 }
 
 /**
+ * STOP / START from a customer — withdraw or restore marketing consent.
+ * Returns true when the message was a consent keyword (handled).
+ */
+async function handleConsentKeyword(message: MetaIncomingMessage): Promise<boolean> {
+  const keyword = message.type === 'text' && message.text ? consentKeyword(message.text.body) : null;
+  if (!keyword) return false;
+  const phone = customerPhoneFromWhatsApp(message.from);
+  if (!phone) return true;
+  const changed = await applyConsentKeyword(phone, keyword);
+  // eslint-disable-next-line no-console
+  console.info(`[whatsapp-webhook] consent ${keyword} from a ${changed ? 'customer' : 'non-customer'}`);
+  return true;
+}
+
+/**
  * Log an inbound message we received from a user. Stage 1: log only.
  * Stage 2 will hand text messages to the RESTOCK / STOCK / ORDERS / HELP
  * command parser.
@@ -185,7 +203,9 @@ export async function POST(req: NextRequest): Promise<Response> {
           await applyStatusUpdate(status);
         }
         for (const message of change.value.messages ?? []) {
-          await logIncomingMessage(message);
+          if (!(await handleConsentKeyword(message))) {
+            await logIncomingMessage(message);
+          }
         }
       }
     }

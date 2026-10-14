@@ -31,6 +31,11 @@ export const orderActionSchema = z.discriminatedUnion('action', [
   z.strictObject({ action: z.literal('DELIVER') }),
   z.strictObject({ action: z.literal('CONFIRM_HELD') }),
   z.strictObject({ action: z.literal('RESOLVE'), note: reasonSchema }),
+  /** The packer put a surprise sample in the parcel — what it was. */
+  z.strictObject({
+    action: z.literal('SAMPLE'),
+    note: z.string().trim().min(2, 'Say which sample went in').max(120, 'Keep it short'),
+  }),
 ]);
 
 export type OrderAction = z.infer<typeof orderActionSchema>;

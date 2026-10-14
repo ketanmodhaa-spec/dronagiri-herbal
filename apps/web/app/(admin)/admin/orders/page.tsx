@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getAdminOrNull } from '@/lib/auth/require-admin';
+import { loyaltyByCustomer, SAMPLE_WINDOW } from '@/lib/customers/loyalty';
 import { cn } from '@/lib/cn';
 import { formatPrice } from '@/lib/format';
 import {
@@ -42,6 +43,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   const badges = await countOrdersForBadges();
   const tab = isOrderTab(searchParams.tab) ? searchParams.tab : badges.attention > 0 ? 'attention' : 'to-pack';
   const orders = await listOrders(tab);
+  const loyalty = await loyaltyByCustomer(orders.map((order) => order.customerId));
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-12">
@@ -130,6 +132,14 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                     {order.paymentMethod === 'COD' ? 'Cash on delivery' : 'Online'} ·{' '}
                     {PAYMENT_STATUS_LABEL[order.paymentStatus]}
                   </span>
+                  {loyalty.get(order.customerId)?.isLoyal &&
+                    !order.replacementForId &&
+                    SAMPLE_WINDOW.includes(order.status) &&
+                    (order.sampleAddedAt ? (
+                      <span className="rounded-full bg-forest-100 px-2 py-0.5 text-forest-800">🎁 Sample added</span>
+                    ) : (
+                      <span className="rounded-full bg-gold px-2 py-0.5 font-medium text-forest-900">🎁 Add sample</span>
+                    ))}
                 </p>
                 {order.attentionReason && (
                   <p className="mt-2 line-clamp-2 text-sm text-red-700">{order.attentionReason}</p>

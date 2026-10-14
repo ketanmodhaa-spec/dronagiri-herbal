@@ -52,6 +52,12 @@ export interface ProductJsonLdInput {
   inStock: boolean;
   /** ISO 8601 date — set this far enough out to outlive the next price refresh. */
   priceValidUntil: string;
+  /** Published verified-buyer reviews — omitted from the graph when there are none. */
+  reviews?: {
+    average: number;
+    count: number;
+    top: { rating: number; author: string; body: string; datePublished: string }[];
+  };
 }
 
 /**
@@ -81,6 +87,25 @@ export function productJsonLd(input: ProductJsonLdInput) {
       itemCondition: 'https://schema.org/NewCondition',
       seller: { '@type': 'Organization', name: SITE_NAME },
     },
+    // Ratings only when real reviews exist — never an empty or invented score.
+    ...(input.reviews && input.reviews.count > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: input.reviews.average.toFixed(1),
+            reviewCount: input.reviews.count,
+            bestRating: '5',
+            worstRating: '1',
+          },
+          review: input.reviews.top.map((review) => ({
+            '@type': 'Review',
+            reviewRating: { '@type': 'Rating', ratingValue: String(review.rating), bestRating: '5' },
+            author: { '@type': 'Person', name: review.author },
+            reviewBody: review.body,
+            datePublished: review.datePublished,
+          })),
+        }
+      : {}),
   } as const;
 }
 

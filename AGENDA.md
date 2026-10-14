@@ -92,7 +92,7 @@
 
 ### Checkout consent capture — when building checkout
 - [ ] Required checkbox: agree to Terms + Privacy → store on the Order with a timestamp
-- [ ] Optional checkbox: WhatsApp marketing consent → Customer.marketingConsent with a timestamp (enables Step 3 broadcast legally)
+- [ ] Optional checkbox: WhatsApp marketing consent → call `recordMarketingConsentInTx` (lib/customers/consent-service.ts) with the checkbox wording `MARKETING_CONSENT_TEXT`. Groundwork done 14 Oct 2026: consent is off by default, the time and wording are stored, STOP/START on WhatsApp is handled, and marketing templates are blocked without consent.
 
 ---
 
@@ -113,6 +113,8 @@ Still open:
 ## June 2026
 
 ### Step 3 — Intelligence & AI
+
+- [x] Loyalty and reviews — done 14 Oct 2026: surprise-sample reminders for loyal customers (3+ orders or ₹1,500+), recorded by the packer; verified-buyer reviews via a signed link per delivered order, checked by Sarita (negative reviews are published, with posting-rule rejections only), shown with star ratings, owner replies and Helpful votes. Later: automatic review-request WhatsApp after delivery (Meta template); Customers page with segments once there are 30–50 real customers.
 
 - [x] Sales reports — done 13 Oct 2026: `/admin/reports` (Owner only), presets today → financial year + custom range, Excel (6 sheets) and PDF download. Still to add once on Vercel Pro: emailed daily / weekly / monthly reports via cron; GST sheet once invoices are live.
 

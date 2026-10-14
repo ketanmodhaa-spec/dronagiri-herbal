@@ -31,7 +31,10 @@ function assertDevWithTestKeys(): void {
 }
 
 async function clean(): Promise<void> {
-  const { count } = await prisma.order.deleteMany({ where: { orderNumber: { startsWith: TEST_PREFIX } } });
+  const testOrders = { orderNumber: { startsWith: TEST_PREFIX } };
+  await prisma.review.deleteMany({ where: { order: testOrders } });
+  await prisma.refund.deleteMany({ where: { order: testOrders } });
+  const { count } = await prisma.order.deleteMany({ where: testOrders });
   console.log(`Deleted ${count} test order(s).`);
 }
 

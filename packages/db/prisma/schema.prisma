@@ -167,6 +167,7 @@ model Product {
   aliases    ProductAlias[]
   orderItems OrderItem[]
   movements  StockMovement[]
+  reviews    Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -206,16 +207,23 @@ model ProductAlias {
 // ──────────────────────────────────────────────────────────────────────────
 
 model Customer {
-  id               String    @id @default(cuid())
-  phone            String    @unique // E.164 — the primary customer identity
-  name             String?
-  email            String? // always optional, never required
-  marketingConsent Boolean   @default(true)
-  lastOrderAt      DateTime? // drives win-back nudges
-  addresses        Address[]
-  orders           Order[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  phone                String    @unique // E.164 — the primary customer identity
+  name                 String?
+  email                String? // always optional, never required
+  // Marketing consent (DPDP Act, Meta WhatsApp policy): off unless the
+  // customer actively ticks the box. The time and the exact wording shown are
+  // kept as proof; a WhatsApp "STOP" turns it off again.
+  marketingConsent     Boolean   @default(false)
+  marketingConsentAt   DateTime?
+  marketingConsentText String?
+  marketingOptOutAt    DateTime?
+  lastOrderAt          DateTime? // drives win-back nudges
+  addresses            Address[]
+  orders               Order[]
+  reviews              Review[]
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   @@index([lastOrderAt])
 }
@@ -296,6 +304,11 @@ model Order {
   customerNote String?
   internalNote String?
 
+  // Surprise sample for loyal customers — the system suggests, the packer
+  // records what went into the parcel.
+  sampleAddedAt DateTime?
+  sampleNote    String?
+
   // Lifecycle timestamps
   paidAt      DateTime?
   packedAt    DateTime?
@@ -308,6 +321,7 @@ model Order {
   events    OrderEvent[]
   movements StockMovement[]
   refunds   Refund[]
+  reviews   Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -573,4 +587,71 @@ model PartnerEnquiry {
 model OrderNumberCounter {
   year       Int @id
   lastNumber Int
+}
+
+// ─── Reviews ────────────────────────────────────────────────────────────────
+
+enum ReviewStatus {
+  PENDING // submitted — waiting for Sarita to check it against the posting rules
+  PUBLISHED // visible on the product page
+  REJECTED // broke a posting rule — never for being negative
+}
+
+// Why a review was not published. Deliberately has no "negative" option:
+// honest bad reviews are published (Consumer Protection (E-Commerce) Rules,
+// BIS IS 19000:2022 on online consumer reviews).
+enum ReviewRejectReason {
+  ABUSIVE // abusive, hateful or obscene language
+  PERSONAL_INFO // phone numbers, addresses or other personal data
+  MEDICAL_CLAIM // claims to cure or treat a disease — cannot appear on a cosmetics site
+  SPAM // advertising, links, gibberish
+  NOT_ABOUT_PRODUCT // about delivery or something else entirely — handled privately
+}
+
+// A review by a verified buyer: only reachable through the signed link for a
+// delivered order, one per product per order.
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  rating      Int // 1–5
+  title       String?
+  body        String
+  displayName String // e.g. "Priya S." — chosen by the reviewer
+  city        String? // from the order's ship-to
+
+  status       ReviewStatus        @default(PENDING)
+  rejectReason ReviewRejectReason?
+  moderatedBy  String? // admin id
+  moderatedAt  DateTime?
+
+  ownerReply   String? // Sarita's public reply
+  ownerReplyAt DateTime?
+
+  helpfulCount Int          @default(0) // materialised count of ReviewVote rows
+  votes        ReviewVote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orderId, productId])
+  @@index([productId, status])
+  @@index([status])
+}
+
+// One "helpful" thumbs-up per visitor per review. voterKey is a SHA-256 of
+// the guest session id — no personal data.
+model ReviewVote {
+  id        String   @id @default(cuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  voterKey  String
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, voterKey])
 }

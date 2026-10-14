@@ -95,6 +95,39 @@ export function getPaymentVerifyLimiter(): Ratelimit {
   return paymentVerifyLimiter;
 }
 
+let reviewSubmitLimiter: Ratelimit | undefined;
+
+/**
+ * Review submission limiter — 10 per hour per IP. A buyer reviews the few
+ * products in their order once each; this stops a scripted flood.
+ */
+export function getReviewSubmitLimiter(): Ratelimit {
+  reviewSubmitLimiter ??= new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(10, '1 h'),
+    prefix: 'rl:review-submit',
+    analytics: false,
+  });
+  return reviewSubmitLimiter;
+}
+
+let reviewVoteLimiter: Ratelimit | undefined;
+
+/**
+ * "Helpful" vote limiter — 20 per 10 minutes per IP. One vote per visitor per
+ * review is enforced in the database; this caps how fast a script that keeps
+ * minting fresh sessions can add votes.
+ */
+export function getReviewVoteLimiter(): Ratelimit {
+  reviewVoteLimiter ??= new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(20, '10 m'),
+    prefix: 'rl:review-vote',
+    analytics: false,
+  });
+  return reviewVoteLimiter;
+}
+
 let otpIssueLimiter: Ratelimit | undefined;
 
 /**

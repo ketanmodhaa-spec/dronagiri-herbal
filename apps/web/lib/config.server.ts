@@ -52,6 +52,14 @@ export const serverConfig = {
     },
   },
 
+  /**
+   * Signs customer-facing order links (the review invitation) — an HMAC key,
+   * so a link cannot be forged or guessed and nothing has to be stored.
+   */
+  get orderTokenSecret(): string {
+    return required('ORDER_TOKEN_SECRET');
+  },
+
   /** Upstash Redis (REST) — backs rate limiting today, the cart later. */
   redis: {
     get url(): string {

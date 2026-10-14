@@ -20,5 +20,6 @@ export * from './image';
 export * from './order';
 export * from './admin-order';
 export * from './payment';
+export * from './review';
 export * from './coupon';
 export * from './partner';

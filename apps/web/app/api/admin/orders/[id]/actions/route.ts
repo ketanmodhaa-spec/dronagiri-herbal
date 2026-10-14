@@ -1,7 +1,8 @@
 /**
  * POST /api/admin/orders/[id]/actions — one status step on an order:
  * PACK, SHIP (courier + tracking), DELIVER, CONFIRM_HELD (a paid order that
- * was waiting for stock), or RESOLVE (clear the attention flag with a note).
+ * was waiting for stock), RESOLVE (clear the attention flag with a note), or
+ * SAMPLE (record the surprise sample put in the parcel).
  */
 import type { NextRequest } from 'next/server';
 
@@ -15,6 +16,7 @@ import {
   markDelivered,
   markPacked,
   markShipped,
+  recordSample,
   resolveAttention,
 } from '@/lib/orders/admin-order-service';
 
@@ -56,6 +58,9 @@ export async function POST(req: NextRequest, { params }: RouteContext): Promise<
         break;
       case 'RESOLVE':
         await resolveAttention(params.id, admin.id, action.note);
+        break;
+      case 'SAMPLE':
+        await recordSample(params.id, admin.id, action.note);
         break;
     }
     return jsonData({ ok: true });

@@ -19,6 +19,7 @@ import {
   type DbTransaction,
 } from '@dronagiri/db';
 
+import { SAMPLE_WINDOW } from '@/lib/customers/loyalty';
 import { AppError, NotFoundError } from '@/lib/errors';
 import {
   commitOrderStockInTx,
@@ -93,6 +94,8 @@ export async function listOrders(tab: OrderTab) {
       shipCity: true,
       attentionReason: true,
       replacementForId: true,
+      customerId: true,
+      sampleAddedAt: true,
       _count: { select: { items: true } },
     },
   });
@@ -119,6 +122,7 @@ export async function getOrderDetail(orderId: string) {
       refunds: { orderBy: { createdAt: 'asc' } },
       replacements: { select: { id: true, orderNumber: true, status: true }, orderBy: { createdAt: 'asc' } },
       replacementFor: { select: { id: true, orderNumber: true } },
+      _count: { select: { reviews: true } },
     },
   });
   if (!order) {
@@ -312,6 +316,23 @@ export async function confirmHeldOrder(orderId: string, adminId: string): Promis
       data: { orderId, status: OrderStatus.CONFIRMED, note: 'Stock available — confirmed.', createdBy: adminId },
     });
   }, MULTI_STEP_TRANSACTION);
+}
+
+/** Record the surprise sample the packer put in the parcel. */
+export async function recordSample(orderId: string, adminId: string, note: string): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const { count } = await tx.order.updateMany({
+      where: { id: orderId, status: { in: SAMPLE_WINDOW }, sampleAddedAt: null },
+      data: { sampleAddedAt: new Date(), sampleNote: note },
+    });
+    if (count === 0) {
+      throw new OrderStateError('A sample can only be recorded once, before the parcel is shipped.');
+    }
+    const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, select: { status: true } });
+    await tx.orderEvent.create({
+      data: { orderId, status: order.status, note: `Surprise sample added: ${note}`, createdBy: adminId },
+    });
+  });
 }
 
 /** Clear the attention flag once Sarita has dealt with it outside the system. */

@@ -23,9 +23,11 @@ interface OrderStatusActionsProps {
   isOwner: boolean;
   /** Paise the customer would get back on cancellation (paid online, not yet refunded). */
   refundOnCancelPaise: number;
+  /** A loyal customer's sample has not been recorded yet — confirm before sealing the parcel. */
+  sampleDue: boolean;
 }
 
-type Panel = 'none' | 'ship' | 'cancel' | 'resolve';
+type Panel = 'none' | 'ship' | 'cancel' | 'resolve' | 'pack-without-sample';
 
 const CANCELLABLE: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PACKED'];
 
@@ -106,7 +108,11 @@ export function OrderStatusActions(props: OrderStatusActionsProps) {
       {!props.attentionReason && (
         <div className="flex flex-wrap gap-2">
           {props.status === 'CONFIRMED' && (
-            <Button size="lg" disabled={busy} onClick={() => void act({ action: 'PACK' })}>
+            <Button
+              size="lg"
+              disabled={busy}
+              onClick={() => (props.sampleDue ? setPanel('pack-without-sample') : void act({ action: 'PACK' }))}
+            >
               Mark packed
             </Button>
           )}
@@ -128,8 +134,30 @@ export function OrderStatusActions(props: OrderStatusActionsProps) {
         </div>
       )}
 
+      {panel === 'pack-without-sample' && (
+        <div className="mt-4 space-y-3 rounded-xl border border-gold bg-gold-light/30 p-4">
+          <p className="text-sm text-forest-900">
+            🎁 This loyal customer&rsquo;s surprise sample hasn&rsquo;t been recorded. Add it in the box above first —
+            or pack without one.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="secondary" disabled={busy} onClick={() => void act({ action: 'PACK' })}>
+              Pack without a sample
+            </Button>
+            <Button variant="ghost" onClick={() => setPanel('none')}>
+              Back
+            </Button>
+          </div>
+        </div>
+      )}
+
       {panel === 'ship' && (
         <form onSubmit={submitShip} noValidate className="mt-4 space-y-3 border-t border-forest-100 pt-4">
+          {props.sampleDue && (
+            <p className="rounded-lg bg-gold-light/40 px-3 py-2 text-sm text-forest-900">
+              🎁 Reminder: this loyal customer&rsquo;s surprise sample hasn&rsquo;t been recorded yet.
+            </p>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <TextField
               label="Courier"

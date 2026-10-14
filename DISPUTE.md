@@ -25,13 +25,13 @@
 
 ---
 
-### [OPEN] — WhatsApp webhook verify token changed by accident
+### [RESOLVED] — WhatsApp webhook verify token changed by accident
 **Opened:** 8 Oct 2026
 **Description:** `WHATSAPP_WEBHOOK_VERIFY_TOKEN` in Doppler was changed by mistake on 8 Oct 2026. The webhook at `/api/webhooks/whatsapp` answers Meta's `GET` verification handshake only when `hub.verify_token` matches this value, so it no longer matches whatever was entered in Meta Business Manager (if anything was).
 **Impact:** None while the webhook is already verified — Meta only sends the handshake when the callback URL is saved. Incoming event `POST`s are authenticated by `META_APP_SECRET`, which was not touched. It bites the next time the callback URL is saved or re-verified in Meta: verification fails.
 **Workaround:** None needed yet.
 **Assigned to:** Jaydeep — before the next Meta webhook setup/re-verification
-**Resolution:** ⏳ Open — set the same value in Doppler (`dev` / `prd`) and in Meta → WhatsApp → Configuration → Webhook "Verify token", then re-verify.
+**Resolution:** ✅ Resolved 14 Oct 2026. The webhook was saved in Meta with the current Doppler `prd` value and verified. Meta's `/{app-id}/subscriptions` reports it active at `https://dronagiriherbal.in/api/webhooks/whatsapp`, subscribed to `messages`. A self-test against the live site passed: correct token → challenge echoed; wrong token → 403; app-secret-signed POST → 200; unsigned → 401.
 
 ---
 

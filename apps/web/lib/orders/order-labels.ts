@@ -8,6 +8,13 @@ import type { OrderStatus, PaymentStatus, RefundStatus } from '@dronagiri/db';
 /** `createdBy` on events and ledger entries the system made on its own. */
 export const SYSTEM_ACTOR = 'system';
 
+/**
+ * A shipped order still not marked delivered after this many days is shown
+ * in amber — past the shipping policy's delivery window, worth checking with
+ * the courier.
+ */
+export const DELIVERY_OVERDUE_DAYS = 7;
+
 /** An online order nobody has paid for is cancelled after this long. */
 export const UNPAID_ORDER_TTL_HOURS = 24;
 

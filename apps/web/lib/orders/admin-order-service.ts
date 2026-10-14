@@ -72,8 +72,13 @@ function tabWhere(tab: OrderTab): Prisma.OrderWhereInput {
   }
 }
 
-/** The packing queue is first-in, first-out; every other tab is newest first. */
+/**
+ * Work queues are first-in, first-out: the packing queue by order date, the
+ * shipped list by ship date (longest on the road first, for the daily
+ * delivery check). Every other tab is newest first.
+ */
 function tabOrder(tab: OrderTab): Prisma.OrderOrderByWithRelationInput {
+  if (tab === 'shipped') return { shippedAt: 'asc' };
   return { createdAt: tab === 'to-pack' || tab === 'packed' ? 'asc' : 'desc' };
 }
 
@@ -96,6 +101,8 @@ export async function listOrders(tab: OrderTab) {
       replacementForId: true,
       customerId: true,
       sampleAddedAt: true,
+      shippedAt: true,
+      courierName: true,
       _count: { select: { items: true } },
     },
   });

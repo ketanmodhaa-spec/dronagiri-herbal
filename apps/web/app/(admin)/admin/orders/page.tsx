@@ -11,7 +11,13 @@ import {
   expireStaleUnpaidOrders,
   listOrders,
 } from '@/lib/orders/admin-order-service';
-import { isOrderTab, ORDER_STATUS_LABEL, ORDER_TABS, PAYMENT_STATUS_LABEL } from '@/lib/orders/order-labels';
+import {
+  DELIVERY_OVERDUE_DAYS,
+  isOrderTab,
+  ORDER_STATUS_LABEL,
+  ORDER_TABS,
+  PAYMENT_STATUS_LABEL,
+} from '@/lib/orders/order-labels';
 
 export const metadata: Metadata = { title: 'Orders' };
 export const dynamic = 'force-dynamic';
@@ -24,11 +30,34 @@ const placedFormatter = new Intl.DateTimeFormat('en-IN', {
   minute: '2-digit',
 });
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** "Shipped today" / "Shipped 1 day ago" / "Shipped 9 days ago". */
+function shippedAgo(shippedAt: Date, now: Date): { text: string; overdue: boolean } {
+  const days = Math.floor((now.getTime() - shippedAt.getTime()) / DAY_MS);
+  return {
+    text: days === 0 ? 'Shipped today' : `Shipped ${days} day${days === 1 ? '' : 's'} ago`,
+    overdue: days >= DELIVERY_OVERDUE_DAYS,
+  };
+}
+
+/** How long a shipped order has been on the road — amber once delivery is overdue. */
+function ShippedAge({ shippedAt, courierName, now }: { shippedAt: Date; courierName: string | null; now: Date }) {
+  const age = shippedAgo(shippedAt, now);
+  return (
+    <p className={cn('mt-2 text-sm', age.overdue ? 'font-medium text-amber-700' : 'text-stone')}>
+      {age.text}
+      {courierName ? ` with ${courierName}` : ''}
+      {age.overdue && ' — not marked delivered yet. Check with the courier.'}
+    </p>
+  );
+}
+
 const EMPTY_COPY: Record<(typeof ORDER_TABS)[number]['key'], string> = {
   attention: 'Nothing needs your attention.',
   'to-pack': 'Nothing to pack right now.',
   packed: 'No packed orders waiting for the courier.',
-  shipped: 'No orders on the way.',
+  shipped: 'No orders on the way. Shipped orders appear here, longest on the road first — mark each one delivered when the courier confirms it.',
   delivered: 'No delivered orders yet.',
   unpaid: 'No unpaid orders. Unpaid online orders are cancelled after 24 hours.',
   closed: 'No cancelled or refunded orders.',
@@ -44,6 +73,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   const tab = isOrderTab(searchParams.tab) ? searchParams.tab : badges.attention > 0 ? 'attention' : 'to-pack';
   const orders = await listOrders(tab);
   const loyalty = await loyaltyByCustomer(orders.map((order) => order.customerId));
+  const now = new Date();
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-12">
@@ -141,6 +171,9 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                       <span className="rounded-full bg-gold px-2 py-0.5 font-medium text-forest-900">🎁 Add sample</span>
                     ))}
                 </p>
+                {order.status === 'SHIPPED' && order.shippedAt && (
+                  <ShippedAge shippedAt={order.shippedAt} courierName={order.courierName} now={now} />
+                )}
                 {order.attentionReason && (
                   <p className="mt-2 line-clamp-2 text-sm text-red-700">{order.attentionReason}</p>
                 )}

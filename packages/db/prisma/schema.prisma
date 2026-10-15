@@ -121,6 +121,47 @@ model Category {
   updatedAt   DateTime  @updatedAt
 }
 
+// ─── Product sensory profile ────────────────────────────────────────────────
+
+enum ProductTexture {
+  LIGHTWEIGHT_GEL
+  RICH_BODY_BUTTER
+  NOURISHING_OIL
+  NON_GREASY_LOTION
+  REFRESHING_MIST
+  FOAMING_SHAMPOO
+  POWDER_PACK // mixed into a paste before use
+  EXFOLIATING_SCRUB
+}
+
+enum ProductAroma {
+  HERBAL
+  EARTHY
+  FLORAL
+  CITRUS
+  CAMPHOR
+  WARM // coffee, turmeric, spices
+  MILD_NATURAL // no added fragrance — smells of its ingredients
+}
+
+// Skin and hair finishes share one enum: some products (aloe vera gel,
+// coconut oil) are used on both, so the category can't decide the list.
+enum ProductFinish {
+  SKIN_MATTE
+  SKIN_DEWY
+  SKIN_NOURISHING
+  SKIN_FRESH
+  HAIR_SOFT_SMOOTH
+  HAIR_VOLUMINOUS
+  HAIR_CONDITIONED
+  HAIR_CLEAN_FRESH
+}
+
+enum ProductRoutine {
+  LEAVE_ON
+  RINSE_OFF
+}
+
 model Product {
   id        String  @id @default(cuid())
   slug      String  @unique
@@ -148,6 +189,16 @@ model Product {
   // Inventory — stockQty is the materialised balance of the StockMovement ledger
   stockQty          Int @default(0)
   lowStockThreshold Int @default(10)
+
+  // Sensory profile — fixed choices shown as "How it feels" on the product
+  // page, so every product is described in the same words. All optional; a
+  // row that isn't set simply isn't shown.
+  texture       ProductTexture?
+  aromas        ProductAroma[]  @default([])
+  finish        ProductFinish?
+  routine       ProductRoutine?
+  routineNote   String? // e.g. "2 hrs on hair · shampoo after 24 hrs"
+  routineNoteGu String?
 
   // Logistics & display
   weightGrams Int?

@@ -23,6 +23,7 @@ import { config } from '@/lib/config';
 import { formatPrice } from '@/lib/format';
 import { ProductReviews } from '@/components/reviews/product-reviews';
 import { getProductBySlug, getRelatedProducts } from '@/lib/products/product-service';
+import { sensoryRows } from '@/lib/products/sensory-labels';
 import { getProductReviews } from '@/lib/reviews/review-service';
 import { breadcrumbJsonLd, productJsonLd } from '@/lib/seo/json-ld';
 import { DEFAULT_OG_IMAGE, SITE_URL, absoluteUrl } from '@/lib/seo/site';
@@ -180,6 +181,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     .toISOString()
     .slice(0, 10);
 
+  const howItFeels = sensoryRows(product);
+
   const productLd = productJsonLd({
     url: canonical,
     name: product.name,
@@ -190,6 +193,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     priceRupees: product.pricePaise / 100,
     inStock: product.stockQty > 0,
     priceValidUntil,
+    properties: howItFeels,
     reviews: {
       average: reviewSummary.average,
       count: reviewSummary.count,
@@ -277,6 +281,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   lowStockThreshold={product.lowStockThreshold}
                 />
               </div>
+
+              {/* How it feels — texture, aroma, finish, routine, before buying */}
+              {howItFeels.length > 0 && (
+                <section
+                  aria-labelledby="how-it-feels"
+                  className="mt-6 rounded-2xl border border-forest-100 bg-white px-5 py-4"
+                >
+                  <h2
+                    id="how-it-feels"
+                    className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark"
+                  >
+                    How it feels
+                  </h2>
+                  <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-5 gap-y-2 text-sm">
+                    {howItFeels.map((row) => (
+                      <div key={row.label} className="contents">
+                        <dt className="text-stone">{row.label}</dt>
+                        <dd className="font-medium text-forest-900">{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+              )}
 
               {/* Add-to-cart behind the cart flag; until then, honest copy beats a teaser. */}
               {config.cart.enabled ? (

@@ -13,7 +13,8 @@ import {
 } from '@dronagiri/db';
 import type { AdminProductCreate, AdminProductUpdate } from '@dronagiri/validators';
 
-import { NotFoundError, ValidationError } from '@/lib/errors';
+import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors';
+import { isSameProduct } from '@/lib/products/product-identity';
 
 /** A row in the admin product list. */
 export interface AdminProductListItem {
@@ -52,6 +53,12 @@ function toProductData(input: AdminProductUpdate) {
     ingredientsGu: orNull(input.ingredientsGu),
     howToUse: orNull(input.howToUse),
     howToUseGu: orNull(input.howToUseGu),
+    texture: input.texture ?? null,
+    aromas: input.aromas,
+    finish: input.finish ?? null,
+    routine: input.routine ?? null,
+    routineNote: orNull(input.routineNote),
+    routineNoteGu: orNull(input.routineNoteGu),
     pricePaise: input.pricePaise,
     comparePaise: input.comparePaise ?? null,
     sizeLabel: orNull(input.sizeLabel),
@@ -84,6 +91,46 @@ function rethrowWriteError(error: unknown): never {
     }
   }
   throw error;
+}
+
+/** An existing product that a new or edited entry would duplicate. */
+export interface DuplicateProduct {
+  id: string;
+  name: string;
+  sku: string;
+  sizeLabel: string | null;
+  isActive: boolean;
+}
+
+/**
+ * The product already in the catalogue under this name and size, if any —
+ * inactive products included, since re-activating one is the right fix.
+ * `excludeId` is the product being edited, which never duplicates itself.
+ * The catalogue is a few dozen rows, so it is compared in full in memory.
+ */
+export async function findDuplicateProduct(
+  entry: { name: string; sizeLabel?: string | null },
+  excludeId?: string,
+): Promise<DuplicateProduct | null> {
+  const products = await prisma.product.findMany({
+    where: excludeId ? { id: { not: excludeId } } : undefined,
+    select: { id: true, name: true, sku: true, sizeLabel: true, isActive: true },
+  });
+  return products.find((product) => isSameProduct(product, { name: entry.name, sizeLabel: entry.sizeLabel })) ?? null;
+}
+
+/** Refuse a second entry of a product that is already in the catalogue. */
+async function assertNotDuplicate(input: AdminProductUpdate, excludeId?: string): Promise<void> {
+  const existing = await findDuplicateProduct(input, excludeId);
+  if (!existing) return;
+  const size = existing.sizeLabel ? `, ${existing.sizeLabel}` : '';
+  const advice = existing.isActive
+    ? 'Open that product and edit it instead.'
+    : 'It is inactive — open it and tick Active instead.';
+  throw new ConflictError(
+    `Product already entered: “${existing.name}”${size} (SKU ${existing.sku}). ${advice}`,
+    'PRODUCT_ALREADY_ENTERED',
+  );
 }
 
 /** Every product, active and inactive, for the admin list. */
@@ -135,6 +182,7 @@ export async function createProduct(
   input: AdminProductCreate,
   adminId: string,
 ): Promise<Product> {
+  await assertNotDuplicate(input);
   const opening = input.openingStock;
   try {
     return await prisma.product.create({
@@ -163,6 +211,7 @@ export async function createProduct(
 
 /** Update a product. Stock is untouched here — it moves only via the stock service. */
 export async function updateProduct(id: string, input: AdminProductUpdate): Promise<Product> {
+  await assertNotDuplicate(input, id);
   try {
     return await prisma.product.update({ where: { id }, data: toProductData(input) });
   } catch (error) {

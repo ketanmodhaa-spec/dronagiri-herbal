@@ -1,15 +1,31 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 import type { Product } from '@dronagiri/db';
+import {
+  PRODUCT_AROMAS,
+  PRODUCT_HAIR_FINISHES,
+  PRODUCT_SKIN_FINISHES,
+  PRODUCT_TEXTURES,
+  type ProductAroma,
+} from '@dronagiri/validators';
 
 import { Button } from '@/components/ui/button';
+import type { DuplicateProduct } from '@/lib/admin/admin-product-service';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 import { SelectField } from '@/components/ui/select-field';
 import { TextField } from '@/components/ui/text-field';
 import { TextareaField } from '@/components/ui/textarea-field';
+import {
+  AROMA_HINTS,
+  AROMA_LABELS,
+  FINISH_LABELS,
+  ROUTINE_LABELS,
+  TEXTURE_LABELS,
+} from '@/lib/products/sensory-labels';
 import { slugify } from '@/lib/slug';
 
 interface CategoryOption {
@@ -42,6 +58,12 @@ interface FormState {
   ingredientsGu: string;
   howToUse: string;
   howToUseGu: string;
+  /** Sensory profile — '' means "not set". */
+  texture: string;
+  finish: string;
+  routine: string;
+  routineNote: string;
+  routineNoteGu: string;
   priceRupees: string;
   compareRupees: string;
   sizeLabel: string;
@@ -68,6 +90,11 @@ function initialState(product?: Product): FormState {
     ingredientsGu: product?.ingredientsGu ?? '',
     howToUse: product?.howToUse ?? '',
     howToUseGu: product?.howToUseGu ?? '',
+    texture: product?.texture ?? '',
+    finish: product?.finish ?? '',
+    routine: product?.routine ?? '',
+    routineNote: product?.routineNote ?? '',
+    routineNoteGu: product?.routineNoteGu ?? '',
     priceRupees: product ? String(product.pricePaise / 100) : '',
     compareRupees: product?.comparePaise ? String(product.comparePaise / 100) : '',
     sizeLabel: product?.sizeLabel ?? '',
@@ -76,6 +103,11 @@ function initialState(product?: Product): FormState {
     sortOrder: String(product?.sortOrder ?? 0),
     openingStock: '0',
   };
+}
+
+/** A select's '' (not set) becomes undefined, so the schema leaves the field empty. */
+function choiceOrUndefined(value: string): string | undefined {
+  return value.length > 0 ? value : undefined;
 }
 
 /** Rupees string → integer paise. Empty/invalid yields a value the schema rejects. */
@@ -97,6 +129,47 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
   const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
+  const [aromas, setAromas] = useState<ProductAroma[]>(product?.aromas ?? []);
+  const [duplicate, setDuplicate] = useState<DuplicateProduct | null>(null);
+
+  // Warn as soon as the name and size match a product already entered, not
+  // after the whole form is filled in. Saving is re-checked on the server.
+  const productId = product?.id;
+  useEffect(() => {
+    const name = form.name.trim();
+    if (name.length < 3) {
+      setDuplicate(null);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      const query = new URLSearchParams({ name });
+      if (form.sizeLabel.trim()) query.set('size', form.sizeLabel.trim());
+      if (productId) query.set('excludeId', productId);
+      fetch(`/api/admin/products/duplicate?${query.toString()}`, { signal: controller.signal })
+        .then((response) => response.json() as Promise<{ data?: { duplicate: DuplicateProduct | null } }>)
+        .then((result) => setDuplicate(result.data?.duplicate ?? null))
+        .catch((fetchError: unknown) => {
+          // Aborted because the name changed again, or offline: the server
+          // still refuses a duplicate on save, so the early warning can wait.
+          if (!(fetchError instanceof DOMException && fetchError.name === 'AbortError')) {
+            // eslint-disable-next-line no-console
+            console.warn('[product-form] duplicate check failed', fetchError);
+          }
+        });
+    }, 400);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [form.name, form.sizeLabel, productId]);
+
+  // Kept in the canonical list order, whatever order they were ticked in.
+  function toggleAroma(aroma: ProductAroma, on: boolean) {
+    setAromas((current) =>
+      PRODUCT_AROMAS.filter((candidate) => (candidate === aroma ? on : current.includes(candidate))),
+    );
+  }
 
   const set = <K extends keyof FormState>(key: K, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -139,6 +212,13 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
       ingredientsGu: form.ingredientsGu.trim(),
       howToUse: form.howToUse.trim(),
       howToUseGu: form.howToUseGu.trim(),
+      texture: choiceOrUndefined(form.texture),
+      aromas,
+      finish: choiceOrUndefined(form.finish),
+      routine: choiceOrUndefined(form.routine),
+      // A time note without leave-on / rinse-off would never be shown; drop it.
+      routineNote: form.routine ? form.routineNote.trim() : '',
+      routineNoteGu: form.routine ? form.routineNoteGu.trim() : '',
       pricePaise: toPaise(form.priceRupees),
       comparePaise: form.compareRupees.trim() ? toPaise(form.compareRupees) : undefined,
       sizeLabel: form.sizeLabel.trim(),
@@ -191,6 +271,20 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
         <p role="status" className="rounded-lg bg-forest-100 px-3 py-2 text-sm text-forest-800">
           {message}
         </p>
+      )}
+
+      {duplicate && (
+        <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">Product already entered</p>
+          <p className="mt-1">
+            “{duplicate.name}”{duplicate.sizeLabel ? `, ${duplicate.sizeLabel}` : ''} (SKU{' '}
+            {duplicate.sku}) is already in the catalogue
+            {duplicate.isActive ? '' : ', marked inactive'}. It cannot be entered twice.{' '}
+            <Link href={`/admin/products/${duplicate.id}`} className="font-medium underline">
+              Open {duplicate.isActive ? 'it' : 'it and tick Active'}
+            </Link>
+          </p>
+        </div>
       )}
 
       {/* ── Basics ─────────────────────────────────────────────────────── */}
@@ -337,6 +431,95 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
         </div>
       </section>
 
+      {/* ── How it feels ───────────────────────────────────────────────── */}
+      <section className="space-y-4 rounded-2xl border border-forest-100 bg-white p-6">
+        <h2 className="font-display text-lg font-semibold text-forest-900">How it feels</h2>
+        <p className="text-xs text-stone">
+          Shown to customers on the product page. Leave any of these blank and that line is
+          simply not shown.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectField
+            label="Texture"
+            value={form.texture}
+            onChange={(e) => set('texture', e.target.value)}
+          >
+            <option value="">Not set</option>
+            {PRODUCT_TEXTURES.map((texture) => (
+              <option key={texture} value={texture}>
+                {TEXTURE_LABELS[texture]}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField
+            label="How it leaves skin or hair"
+            value={form.finish}
+            onChange={(e) => set('finish', e.target.value)}
+          >
+            <option value="">Not set</option>
+            <optgroup label="Skin feels">
+              {PRODUCT_SKIN_FINISHES.map((finish) => (
+                <option key={finish} value={finish}>
+                  {FINISH_LABELS[finish]}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Hair feels">
+              {PRODUCT_HAIR_FINISHES.map((finish) => (
+                <option key={finish} value={finish}>
+                  {FINISH_LABELS[finish]}
+                </option>
+              ))}
+            </optgroup>
+          </SelectField>
+        </div>
+
+        <fieldset>
+          <legend className="text-sm font-medium text-forest-900">
+            Aroma <span className="font-normal text-stone">— tick all that apply</span>
+          </legend>
+          <div className="mt-2 grid gap-3 sm:grid-cols-3">
+            {PRODUCT_AROMAS.map((aroma) => (
+              <CheckboxField
+                key={aroma}
+                id={`aroma-${aroma}`}
+                label={AROMA_LABELS[aroma]}
+                hint={AROMA_HINTS[aroma]}
+                checked={aromas.includes(aroma)}
+                onChange={(e) => toggleAroma(aroma, e.target.checked)}
+              />
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <SelectField
+            label="Routine"
+            value={form.routine}
+            onChange={(e) => set('routine', e.target.value)}
+          >
+            <option value="">Not set</option>
+            <option value="LEAVE_ON">{ROUTINE_LABELS.LEAVE_ON}</option>
+            <option value="RINSE_OFF">{ROUTINE_LABELS.RINSE_OFF}</option>
+          </SelectField>
+          <TextField
+            label="Time needed — optional"
+            hint="Short, e.g. 2 hrs on hair · shampoo after 24 hrs"
+            maxLength={80}
+            value={form.routineNote}
+            onChange={(e) => set('routineNote', e.target.value)}
+            disabled={!form.routine}
+          />
+          <TextField
+            label="Time needed (Gujarati)"
+            maxLength={80}
+            value={form.routineNoteGu}
+            onChange={(e) => set('routineNoteGu', e.target.value)}
+            disabled={!form.routine}
+          />
+        </div>
+      </section>
+
       {/* ── Content ────────────────────────────────────────────────────── */}
       <section className="space-y-4 rounded-2xl border border-forest-100 bg-white p-6">
         <h2 className="font-display text-lg font-semibold text-forest-900">Content</h2>
@@ -399,7 +582,7 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
       </section>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" disabled={submitting || duplicate !== null}>
           {submitting ? 'Saving…' : mode === 'create' ? 'Create product' : 'Save changes'}
         </Button>
         <Button href="/admin/products" variant="secondary">

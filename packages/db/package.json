@@ -11,7 +11,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:test-order": "tsx prisma/test-order.ts"
+    "db:test-order": "tsx prisma/test-order.ts",
+    "db:sensory-drafts": "tsx prisma/sensory-drafts.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

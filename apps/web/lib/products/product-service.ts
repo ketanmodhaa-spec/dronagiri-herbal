@@ -5,7 +5,13 @@
  * they never query Prisma directly. Each function returns plain view shapes,
  * not Prisma rows, so callers stay decoupled from the schema.
  */
-import { prisma } from '@dronagiri/db';
+import {
+  prisma,
+  type ProductAroma,
+  type ProductFinish,
+  type ProductRoutine,
+  type ProductTexture,
+} from '@dronagiri/db';
 
 import type { ProductCardData } from '@/components/ui/product-card';
 
@@ -97,6 +103,12 @@ export interface ProductDetailView {
   ingredientsGu: string | null;
   howToUse: string | null;
   howToUseGu: string | null;
+  texture: ProductTexture | null;
+  aromas: ProductAroma[];
+  finish: ProductFinish | null;
+  routine: ProductRoutine | null;
+  routineNote: string | null;
+  routineNoteGu: string | null;
   pricePaise: number;
   comparePaise: number | null;
   sizeLabel: string | null;
@@ -372,6 +384,12 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailView 
       ingredientsGu: true,
       howToUse: true,
       howToUseGu: true,
+      texture: true,
+      aromas: true,
+      finish: true,
+      routine: true,
+      routineNote: true,
+      routineNoteGu: true,
       pricePaise: true,
       comparePaise: true,
       sizeLabel: true,
@@ -414,6 +432,12 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailView 
     ingredientsGu: product.ingredientsGu,
     howToUse: product.howToUse,
     howToUseGu: product.howToUseGu,
+    texture: product.texture,
+    aromas: product.aromas,
+    finish: product.finish,
+    routine: product.routine,
+    routineNote: product.routineNote,
+    routineNoteGu: product.routineNoteGu,
     pricePaise: product.pricePaise,
     comparePaise: product.comparePaise,
     sizeLabel: product.sizeLabel,

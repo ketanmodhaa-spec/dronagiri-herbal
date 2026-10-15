@@ -25,6 +25,44 @@ const shortText = z.string().trim().max(200).optional();
 /** Optional long-form rich text — trimmed, capped. */
 const longText = z.string().trim().max(8000).optional();
 
+/*
+ * Sensory profile — the values mirror the Prisma enums of the same names.
+ * Display labels live with the web app (lib/products/sensory-labels.ts).
+ */
+export const PRODUCT_TEXTURES = [
+  'LIGHTWEIGHT_GEL',
+  'RICH_BODY_BUTTER',
+  'NOURISHING_OIL',
+  'NON_GREASY_LOTION',
+  'REFRESHING_MIST',
+  'FOAMING_SHAMPOO',
+  'POWDER_PACK',
+  'EXFOLIATING_SCRUB',
+] as const;
+export const PRODUCT_AROMAS = [
+  'HERBAL',
+  'EARTHY',
+  'FLORAL',
+  'CITRUS',
+  'CAMPHOR',
+  'WARM',
+  'MILD_NATURAL',
+] as const;
+export const PRODUCT_SKIN_FINISHES = ['SKIN_MATTE', 'SKIN_DEWY', 'SKIN_NOURISHING', 'SKIN_FRESH'] as const;
+export const PRODUCT_HAIR_FINISHES = [
+  'HAIR_SOFT_SMOOTH',
+  'HAIR_VOLUMINOUS',
+  'HAIR_CONDITIONED',
+  'HAIR_CLEAN_FRESH',
+] as const;
+export const PRODUCT_FINISHES = [...PRODUCT_SKIN_FINISHES, ...PRODUCT_HAIR_FINISHES] as const;
+export const PRODUCT_ROUTINES = ['LEAVE_ON', 'RINSE_OFF'] as const;
+
+export type ProductTexture = (typeof PRODUCT_TEXTURES)[number];
+export type ProductAroma = (typeof PRODUCT_AROMAS)[number];
+export type ProductFinish = (typeof PRODUCT_FINISHES)[number];
+export type ProductRoutine = (typeof PRODUCT_ROUTINES)[number];
+
 /** A monetary amount the admin enters — positive integer paise, capped at ₹1,00,000. */
 const pricePaiseSchema = z
   .number()
@@ -49,6 +87,17 @@ const productFields = {
   ingredientsGu: longText,
   howToUse: longText,
   howToUseGu: longText,
+
+  texture: z.enum(PRODUCT_TEXTURES).optional(),
+  aromas: z
+    .array(z.enum(PRODUCT_AROMAS))
+    .max(PRODUCT_AROMAS.length)
+    .refine((list) => new Set(list).size === list.length, 'Each aroma can be chosen once')
+    .default([]),
+  finish: z.enum(PRODUCT_FINISHES).optional(),
+  routine: z.enum(PRODUCT_ROUTINES).optional(),
+  routineNote: z.string().trim().max(80).optional(),
+  routineNoteGu: z.string().trim().max(80).optional(),
 
   pricePaise: pricePaiseSchema,
   comparePaise: pricePaiseSchema.optional(),
@@ -80,6 +129,13 @@ export const adminProductCreateSchema = z
 export const adminProductUpdateSchema = z
   .strictObject(productFields)
   .refine(compareAbovePrice, compareAbovePriceError);
+
+/** "Is this product already entered?" — the admin form's early check. */
+export const productDuplicateQuerySchema = z.strictObject({
+  name: z.string().trim().min(1, 'Enter a product name').max(200),
+  size: z.string().trim().max(200).optional(),
+  excludeId: cuidSchema.optional(),
+});
 
 /** Adjust stock — the admin enters the new absolute count; the server derives the delta. */
 export const stockAdjustmentSchema = z.strictObject({

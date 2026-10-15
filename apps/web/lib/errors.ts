@@ -48,6 +48,13 @@ export class NotFoundError extends AppError {
   }
 }
 
+/** 409 — the request clashes with something that already exists. */
+export class ConflictError extends AppError {
+  constructor(message = 'This already exists', code = 'CONFLICT') {
+    super(code, message, 409);
+  }
+}
+
 /** 429 — too many attempts; the caller should slow down. */
 export class RateLimitError extends AppError {
   constructor(

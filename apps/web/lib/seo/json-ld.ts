@@ -52,6 +52,8 @@ export interface ProductJsonLdInput {
   inStock: boolean;
   /** ISO 8601 date — set this far enough out to outlive the next price refresh. */
   priceValidUntil: string;
+  /** "How it feels" rows (texture, aroma…) — sent as schema.org `additionalProperty`. */
+  properties?: { label: string; value: string }[];
   /** Published verified-buyer reviews — omitted from the graph when there are none. */
   reviews?: {
     average: number;
@@ -75,6 +77,15 @@ export function productJsonLd(input: ProductJsonLdInput) {
     category: input.category,
     image: input.imageUrls,
     brand: { '@type': 'Brand', name: SITE_NAME },
+    ...(input.properties && input.properties.length > 0
+      ? {
+          additionalProperty: input.properties.map((property) => ({
+            '@type': 'PropertyValue',
+            name: property.label,
+            value: property.value,
+          })),
+        }
+      : {}),
     offers: {
       '@type': 'Offer',
       url: input.url,

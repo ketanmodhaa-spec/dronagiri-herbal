@@ -126,9 +126,10 @@ Still open:
 - [ ] **Shipping decision (Sarita)** — keep ₹49 under ₹499, or make all shipping free? If free, update `content/legal/shipping-policy.md`, `SITE_DESCRIPTION` in `apps/web/lib/seo/site.ts` and the homepage trust badge together.
 - [ ] **www redirect → 308** — Vercel → Settings → Domains → www.dronagiriherbal.in → Edit → redirect to dronagiriherbal.in with **308 Permanent**. Currently 307 (dashboard setting, not code).
 - [ ] **Admin two-factor login** — login is already rate-limited (5 attempts / 15 min / IP); no second factor yet. Decide TOTP (authenticator app) vs WhatsApp OTP once Meta is approved.
-- [ ] **GA4 purchase tracking** — add `purchase` event when checkout ships (`lib/analytics/gtag.ts`). `view_item` already fires on product pages.
+- [x] **GA4 shopping funnel** — done 15 Oct 2026. Every item is identified by SKU. Events: `view_item_list` / `select_item` (lists: homepage featured, shop, related products, quiz result), `view_item`, `add_to_cart` / `remove_from_cart` (sent as the difference the server confirmed), `view_cart` (only when the shopper opens the cart), `generate_lead` (partner enquiry accepted; partner type only), `quiz_start` / `quiz_complete` (answer codes only). Consent signals deny all advertising storage; Decline after Accept stops GA at once and clears the `_ga` cookies. Cart events go live with `NEXT_PUBLIC_ENABLE_CART`.
+- [ ] **GA4 purchase tracking** — `trackPurchase` is ready in `lib/analytics/gtag.ts`. Call it from the order confirmation page when checkout ships, with the totals from the server's order (never the browser cart) and the order number as `transaction_id`. Add `begin_checkout` at the same time.
 - [ ] **Meta Pixel** — needs a Pixel ID and a privacy-policy line naming Meta before it goes in; reuse the existing consent banner.
-- [ ] **GA4 admin** — in GA, mark `purchase` as a key event and link Search Console.
+- [ ] **GA4 admin (Jaydeep, ~10 min)** — Admin → Events: mark `generate_lead` as a key event now, and `purchase` once it first arrives. Admin → Custom definitions → create event-scoped dimensions `partner_type`, `quiz_primary_focus`, `quiz_hair_type`, `quiz_hair_concern`, `quiz_skin_type`, `quiz_skin_concern`, `quiz_routine`. Admin → Product links → link Search Console. After deploy, check the events in Admin → DebugView or Reports → Realtime.
 
 ---
 

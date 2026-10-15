@@ -1,7 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { SelectItemLink } from '@/components/analytics/select-item-link';
 import { LeafIcon } from '@/components/ui/icons';
+import type { AnalyticsList } from '@/lib/analytics/gtag';
+import { cardToAnalyticsItem } from '@/lib/analytics/items';
 import { formatPrice } from '@/lib/format';
 
 /** Primary image as the card needs it — URL + dimensions + accessible alt. */
@@ -18,6 +21,7 @@ export interface ProductCardImage {
  */
 export interface ProductCardData {
   slug: string;
+  sku: string;
   name: string;
   pricePaise: number;
   comparePaise: number | null;
@@ -34,16 +38,23 @@ export interface ProductCardData {
  * placeholder a card always had stays — products without images are still
  * visible, just without imagery.
  */
-export function ProductCard({ product }: { product: ProductCardData }) {
+interface ProductCardProps {
+  product: ProductCardData;
+  /** The GA list this card sits in and its position — a tap reports `select_item`. */
+  listing?: { list: AnalyticsList; index: number };
+}
+
+export function ProductCard({ product, listing }: ProductCardProps) {
   const onSale =
     product.comparePaise !== null && product.comparePaise > product.pricePaise;
   const image = product.image;
 
-  return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-forest-100 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:ring-forest-200"
-    >
+  const href = `/products/${product.slug}`;
+  const className =
+    'group flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-forest-100 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:ring-forest-200';
+
+  const body = (
+    <>
       <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-forest-100 to-forest-200">
         {image ? (
           <Image
@@ -84,6 +95,22 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           )}
         </div>
       </div>
+    </>
+  );
+
+  return listing ? (
+    <SelectItemLink
+      href={href}
+      className={className}
+      list={listing.list}
+      item={cardToAnalyticsItem(product)}
+      index={listing.index}
+    >
+      {body}
+    </SelectItemLink>
+  ) : (
+    <Link href={href} className={className}>
+      {body}
     </Link>
   );
 }

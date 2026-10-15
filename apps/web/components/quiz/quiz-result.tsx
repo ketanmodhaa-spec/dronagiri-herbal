@@ -1,8 +1,10 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
+import { SelectItemLink } from '@/components/analytics/select-item-link';
 import { Button } from '@/components/ui/button';
 import { LeafIcon } from '@/components/ui/icons';
+import { PRODUCT_LISTS } from '@/lib/analytics/gtag';
+import { cardToAnalyticsItem } from '@/lib/analytics/items';
 import { formatPrice } from '@/lib/format';
 import type { QuizRecommendation } from '@/lib/quiz/types';
 
@@ -57,7 +59,7 @@ export function QuizResult({ recommendations, focusLabel, onRestart }: QuizResul
       </h2>
 
       <ul className="mt-8 grid gap-5">
-        {recommendations.map(({ product, reason }) => {
+        {recommendations.map(({ product, reason }, index) => {
           const onSale =
             product.comparePaise !== null && product.comparePaise > product.pricePaise;
 
@@ -118,13 +120,16 @@ export function QuizResult({ recommendations, focusLabel, onRestart }: QuizResul
                   </div>
 
                   <div className="mt-3">
-                    <Link
+                    <SelectItemLink
                       href={`/products/${product.slug}`}
                       className="inline-flex items-center gap-1 text-sm font-medium text-forest-700 hover:text-forest-800"
+                      list={PRODUCT_LISTS.quizResult}
+                      item={cardToAnalyticsItem(product)}
+                      index={index}
                     >
                       View product
                       <span aria-hidden>→</span>
-                    </Link>
+                    </SelectItemLink>
                   </div>
                 </div>
               </div>

@@ -13,7 +13,7 @@ import {
   readConsent,
   writeConsent,
 } from '@/lib/analytics/consent';
-import { GA_MEASUREMENT_ID, prepareAnalytics } from '@/lib/analytics/gtag';
+import { disableAnalytics, GA_MEASUREMENT_ID, prepareAnalytics } from '@/lib/analytics/gtag';
 
 /**
  * Cookie-consent banner + consent-gated Google Analytics.
@@ -39,8 +39,9 @@ export function Analytics() {
 
   useEffect(() => {
     // Once loaded, gtag.js stays for the rest of the visit; withdrawing
-    // consent takes full effect from the next page load.
+    // consent switches it off at once and clears its cookies.
     if (choice === 'granted' && prepareAnalytics()) setLoadGa(true);
+    if (choice === 'denied') disableAnalytics();
   }, [choice]);
 
   if (pathname.startsWith('/admin')) return null;

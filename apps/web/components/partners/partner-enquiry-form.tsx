@@ -17,6 +17,7 @@ import { CheckIcon } from '@/components/ui/icons';
 import { SelectField } from '@/components/ui/select-field';
 import { TextField } from '@/components/ui/text-field';
 import { TextareaField } from '@/components/ui/textarea-field';
+import { trackPartnerLead } from '@/lib/analytics/gtag';
 import { cn } from '@/lib/cn';
 import {
   PARTNER_BACKGROUND_LABEL,
@@ -86,6 +87,7 @@ export function PartnerEnquiryForm() {
         body: JSON.stringify({ ...fields, partnerType, consent }),
       });
       if (response.ok) {
+        trackPartnerLead(partnerType);
         setSubmitted(true);
         return;
       }

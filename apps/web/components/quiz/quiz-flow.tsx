@@ -5,6 +5,13 @@ import { useCallback, useMemo, useState } from 'react';
 import { QuizResult } from '@/components/quiz/quiz-result';
 import { QuizStep } from '@/components/quiz/quiz-step';
 import {
+  PRODUCT_LISTS,
+  trackQuizComplete,
+  trackQuizStart,
+  trackViewItemList,
+} from '@/lib/analytics/gtag';
+import { cardToAnalyticsItem } from '@/lib/analytics/items';
+import {
   hairConcernQuestion,
   hairTypeQuestion,
   primaryFocusQuestion,
@@ -78,6 +85,7 @@ export function QuizFlow({ products }: QuizFlowProps) {
       if (!currentQuestionId) return;
       const nextAnswers = { ...answers, [currentQuestionId]: value };
       setAnswers(nextAnswers);
+      if (Object.keys(answers).length === 0) trackQuizStart();
 
       // The step list is derived from answers — picking "Skin" prunes the hair
       // branch out from underneath us. Recompute against the new answers.
@@ -85,12 +93,21 @@ export function QuizFlow({ products }: QuizFlowProps) {
       const nextIndex = index + 1;
 
       if (nextIndex >= nextSteps.length) {
+        // Answers left over from a branch the visitor backed out of are
+        // dropped, so GA sees only the questions this run actually asked.
+        const asked = Object.fromEntries(nextSteps.map((id) => [id, nextAnswers[id]]));
+        const shown = recommend(nextAnswers as QuizAnswers, products);
+        trackQuizComplete(asked, shown.length);
+        trackViewItemList(
+          PRODUCT_LISTS.quizResult,
+          shown.map(({ product }) => cardToAnalyticsItem(product)),
+        );
         setShowingResults(true);
       } else {
         setIndex(nextIndex);
       }
     },
-    [answers, currentQuestionId, index],
+    [answers, currentQuestionId, index, products],
   );
 
   const handleBack = useCallback(() => {

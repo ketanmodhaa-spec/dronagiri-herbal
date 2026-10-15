@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
 
+import { TrackViewItemList } from '@/components/analytics/track-view-item-list';
 import { SiteFooter } from '@/components/shop/site-footer';
 import { SiteHeader } from '@/components/shop/site-header';
 import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
 import { ProductCard } from '@/components/ui/product-card';
+import { PRODUCT_LISTS } from '@/lib/analytics/gtag';
+import { cardToAnalyticsItem } from '@/lib/analytics/items';
 import { listShopCategoriesWithProducts } from '@/lib/products/product-service';
 import { DEFAULT_OG_IMAGE, absoluteUrl } from '@/lib/seo/site';
 
@@ -31,11 +34,10 @@ export const metadata: Metadata = {
 export default async function ShopPage() {
   const categories = await listShopCategoriesWithProducts();
 
-  // Total count across all categories — drives the empty-state.
-  const totalProducts = categories.reduce(
-    (sum, category) => sum + category.products.length,
-    0,
-  );
+  // The whole page is one GA list, in reading order; each card's index is
+  // its position in that list, counted across category sections.
+  const allProducts = categories.flatMap((category) => category.products);
+  const listIndex = new Map(allProducts.map((product, index) => [product.slug, index]));
 
   return (
     <>
@@ -62,7 +64,7 @@ export default async function ShopPage() {
 
         {/* ── Category sections ──────────────────────────────────────── */}
         <Container className="pt-12 md:pt-16">
-          {totalProducts === 0 ? (
+          {allProducts.length === 0 ? (
             <div className="rounded-2xl border border-forest-100 bg-white px-6 py-14 text-center">
               <p className="font-display text-xl font-semibold text-forest-900">
                 The shelf is being stocked.
@@ -74,6 +76,10 @@ export default async function ShopPage() {
             </div>
           ) : (
             <div className="space-y-16">
+              <TrackViewItemList
+                list={PRODUCT_LISTS.shop}
+                items={allProducts.map(cardToAnalyticsItem)}
+              />
               {categories.map((category) => (
                 <section key={category.id} aria-labelledby={`cat-${category.id}`}>
                   <div className="mb-6 flex items-baseline justify-between gap-4 border-b border-forest-100 pb-3">
@@ -90,7 +96,11 @@ export default async function ShopPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
                     {category.products.map((product) => (
-                      <ProductCard key={product.slug} product={product} />
+                      <ProductCard
+                        key={product.slug}
+                        product={product}
+                        listing={{ list: PRODUCT_LISTS.shop, index: listIndex.get(product.slug) ?? 0 }}
+                      />
                     ))}
                   </div>
                 </section>

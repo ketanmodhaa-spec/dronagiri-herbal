@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { TrackViewItemList } from '@/components/analytics/track-view-item-list';
 import { SiteFooter } from '@/components/shop/site-footer';
 import { SiteHeader } from '@/components/shop/site-header';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,8 @@ import { Container } from '@/components/ui/container';
 import { ArrowRightIcon, LeafIcon } from '@/components/ui/icons';
 import { ProductCard } from '@/components/ui/product-card';
 import { TrustBadge } from '@/components/ui/trust-badge';
+import { PRODUCT_LISTS } from '@/lib/analytics/gtag';
+import { cardToAnalyticsItem } from '@/lib/analytics/items';
 import { getFeaturedProducts } from '@/lib/products/product-service';
 import { SITE_URL } from '@/lib/seo/site';
 
@@ -99,8 +102,16 @@ export default async function HomePage() {
 
             {featuredProducts.length > 0 ? (
               <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-                {featuredProducts.map((product) => (
-                  <ProductCard key={product.slug} product={product} />
+                <TrackViewItemList
+                  list={PRODUCT_LISTS.homeFeatured}
+                  items={featuredProducts.map(cardToAnalyticsItem)}
+                />
+                {featuredProducts.map((product, index) => (
+                  <ProductCard
+                    key={product.slug}
+                    product={product}
+                    listing={{ list: PRODUCT_LISTS.homeFeatured, index }}
+                  />
                 ))}
               </div>
             ) : (

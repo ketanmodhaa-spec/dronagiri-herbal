@@ -25,7 +25,9 @@ export interface CartLineImage {
 export interface CartLineView {
   productId: string;
   slug: string;
+  sku: string;
   name: string;
+  categoryName: string;
   sizeLabel: string | null;
   image: CartLineImage | null;
   quantity: number;

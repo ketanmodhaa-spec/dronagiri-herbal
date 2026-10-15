@@ -95,7 +95,9 @@ async function buildCartView(sessionId: string, stored: StoredCartLine[]): Promi
     lines.push({
       productId: product.id,
       slug: product.slug,
+      sku: product.sku,
       name: product.name,
+      categoryName: product.categoryName,
       sizeLabel: product.sizeLabel,
       image: product.image,
       quantity: line.quantity,

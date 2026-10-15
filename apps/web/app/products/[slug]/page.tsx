@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { MAX_LINE_QUANTITY } from '@dronagiri/validators';
 
 import { TrackViewItem } from '@/components/analytics/track-view-item';
+import { TrackViewItemList } from '@/components/analytics/track-view-item-list';
 import { AddToCartButton } from '@/components/cart/add-to-cart-button';
 import { JsonLd } from '@/components/seo/json-ld';
 import { ProductImageZoom } from '@/components/shop/product-image-zoom';
@@ -16,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { ProductCard } from '@/components/ui/product-card';
 import { TrustBadge } from '@/components/ui/trust-badge';
+import { PRODUCT_LISTS } from '@/lib/analytics/gtag';
+import { cardToAnalyticsItem } from '@/lib/analytics/items';
 import { config } from '@/lib/config';
 import { formatPrice } from '@/lib/format';
 import { ProductReviews } from '@/components/reviews/product-reviews';
@@ -366,8 +369,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </div>
 
               <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-                {relatedProducts.map((related) => (
-                  <ProductCard key={related.slug} product={related} />
+                <TrackViewItemList
+                  list={PRODUCT_LISTS.related}
+                  items={relatedProducts.map(cardToAnalyticsItem)}
+                />
+                {relatedProducts.map((related, index) => (
+                  <ProductCard
+                    key={related.slug}
+                    product={related}
+                    listing={{ list: PRODUCT_LISTS.related, index }}
+                  />
                 ))}
               </div>
             </section>

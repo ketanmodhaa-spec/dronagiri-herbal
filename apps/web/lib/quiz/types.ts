@@ -53,6 +53,7 @@ export interface QuizProductImage {
  */
 export interface QuizProduct {
   slug: string;
+  sku: string;
   name: string;
   tagline: string | null;
   pricePaise: number;

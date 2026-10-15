@@ -36,6 +36,7 @@ export async function getFeaturedProducts(limit = 8): Promise<ProductCardData[]>
     take: limit,
     select: {
       slug: true,
+      sku: true,
       name: true,
       pricePaise: true,
       comparePaise: true,
@@ -52,6 +53,7 @@ export async function getFeaturedProducts(limit = 8): Promise<ProductCardData[]>
 
   return products.map((product) => ({
     slug: product.slug,
+    sku: product.sku,
     name: product.name,
     pricePaise: product.pricePaise,
     comparePaise: product.comparePaise,
@@ -120,6 +122,7 @@ export async function getRelatedProducts(
     take: limit,
     select: {
       slug: true,
+      sku: true,
       name: true,
       pricePaise: true,
       comparePaise: true,
@@ -135,6 +138,7 @@ export async function getRelatedProducts(
 
   return products.map((product) => ({
     slug: product.slug,
+    sku: product.sku,
     name: product.name,
     pricePaise: product.pricePaise,
     comparePaise: product.comparePaise,
@@ -177,6 +181,7 @@ export async function listShopCategoriesWithProducts(): Promise<ShopCategorySect
         orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }],
         select: {
           slug: true,
+          sku: true,
           name: true,
           pricePaise: true,
           comparePaise: true,
@@ -196,6 +201,7 @@ export async function listShopCategoriesWithProducts(): Promise<ShopCategorySect
     name: category.name,
     products: category.products.map((product) => ({
       slug: product.slug,
+      sku: product.sku,
       name: product.name,
       pricePaise: product.pricePaise,
       comparePaise: product.comparePaise,
@@ -214,11 +220,13 @@ export async function listShopCategoriesWithProducts(): Promise<ShopCategorySect
 export interface CartProductRow {
   id: string;
   slug: string;
+  sku: string;
   name: string;
   sizeLabel: string | null;
   pricePaise: number;
   stockQty: number;
   isActive: boolean;
+  categoryName: string;
   image: ProductCardData['image'];
 }
 
@@ -233,11 +241,13 @@ export async function getProductsForCart(ids: string[]): Promise<CartProductRow[
     select: {
       id: true,
       slug: true,
+      sku: true,
       name: true,
       sizeLabel: true,
       pricePaise: true,
       stockQty: true,
       isActive: true,
+      category: { select: { name: true } },
       images: {
         orderBy: { sortOrder: 'asc' },
         take: 1,
@@ -249,11 +259,13 @@ export async function getProductsForCart(ids: string[]): Promise<CartProductRow[
   return products.map((product) => ({
     id: product.id,
     slug: product.slug,
+    sku: product.sku,
     name: product.name,
     sizeLabel: product.sizeLabel,
     pricePaise: product.pricePaise,
     stockQty: product.stockQty,
     isActive: product.isActive,
+    categoryName: product.category.name,
     image: imageRowToCardImage(product.images[0]),
   }));
 }
@@ -267,6 +279,7 @@ export interface ProductSitemapEntry {
 /** Active-product shape the quiz recommender reads. Trimmed to what it scores on. */
 export interface QuizProductRow {
   slug: string;
+  sku: string;
   name: string;
   tagline: string | null;
   pricePaise: number;
@@ -290,6 +303,7 @@ export async function listActiveProductsForQuiz(): Promise<QuizProductRow[]> {
     orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }],
     select: {
       slug: true,
+      sku: true,
       name: true,
       tagline: true,
       pricePaise: true,
@@ -308,6 +322,7 @@ export async function listActiveProductsForQuiz(): Promise<QuizProductRow[]> {
 
   return products.map((product) => ({
     slug: product.slug,
+    sku: product.sku,
     name: product.name,
     tagline: product.tagline,
     pricePaise: product.pricePaise,

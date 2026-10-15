@@ -1,6 +1,6 @@
 'use client';
 
-import type { CartMutationResult, CartView } from '@dronagiri/types';
+import type { CartLineView, CartMutationResult, CartView } from '@dronagiri/types';
 import {
   createContext,
   useCallback,
@@ -14,6 +14,8 @@ import {
 
 import { clampedAddMessage, limitMessage } from '@/components/cart/cart-copy';
 import { useToast } from '@/components/ui/toast';
+import { trackAddToCart, trackRemoveFromCart, trackViewCart } from '@/lib/analytics/gtag';
+import { cartLineToAnalyticsItem } from '@/lib/analytics/items';
 
 /**
  * A cart read older than this is refreshed when the tab regains focus. Every
@@ -86,6 +88,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // overwrites one from a newer request.
   const requestSeq = useRef(0);
   const appliedSeq = useRef(0);
+  // The last cart shown, and how many units of each line GA has been told
+  // about. Add / change / remove events report the difference, so GA's
+  // cart matches the server's even when a request was clamped or failed.
+  const cartRef = useRef<CartView | null>(null);
+  const reportedQty = useRef(new Map<string, number>());
+
+  /** Report the move from what GA last heard to `quantity` units of `line`. */
+  const reportLine = useCallback((line: CartLineView, quantity: number) => {
+    const before = reportedQty.current.get(line.productId) ?? 0;
+    if (quantity > before) trackAddToCart(cartLineToAnalyticsItem(line, quantity - before));
+    if (quantity < before) trackRemoveFromCart(cartLineToAnalyticsItem(line, before - quantity));
+    if (quantity > 0) reportedQty.current.set(line.productId, quantity);
+    else reportedQty.current.delete(line.productId);
+  }, []);
+
+  /** Find a line in the cart just returned, else in the cart shown before it. */
+  const lineFor = useCallback(
+    (productId: string, next: CartView): CartLineView | undefined =>
+      next.lines.find((line) => line.productId === productId) ??
+      cartRef.current?.lines.find((line) => line.productId === productId),
+    [],
+  );
 
   const nextSeq = useCallback((): number => {
     requestSeq.current += 1;
@@ -98,7 +122,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (result.ok && seq >= appliedSeq.current) {
       appliedSeq.current = seq;
       setCart(result.data.cart);
+      cartRef.current = result.data.cart;
       lastFetchedAt.current = Date.now();
+      // A plain read is not a shopper action: GA's tally follows it silently
+      // (the cart a visitor arrives with, or a change made in another tab).
+      reportedQty.current = new Map(
+        result.data.cart.lines.map((line) => [line.productId, line.quantity]),
+      );
     }
   }, [nextSeq]);
 
@@ -115,6 +145,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       appliedSeq.current = seq;
       setCart(next);
+      cartRef.current = next;
       lastFetchedAt.current = Date.now();
     },
     [refresh],
@@ -179,6 +210,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (queues.current.get(productId) !== queue) return;
 
       if (result.ok) {
+        const line = lineFor(productId, result.data.cart);
+        if (line) reportLine(line, result.data.lineQuantity);
         applyCart(result.data.cart, seq);
         if (result.data.notice) {
           showToast(limitMessage(result.data.lineQuantity, result.data.notice));
@@ -196,7 +229,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearOptimistic(productId);
       }
     },
-    [applyCart, clearOptimistic, nextSeq, queueFor, refresh, showToast],
+    [applyCart, clearOptimistic, lineFor, nextSeq, queueFor, refresh, reportLine, showToast],
   );
 
   const setQuantity = useCallback(
@@ -225,6 +258,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         showToast(result.message);
         return false;
       }
+      // The server says exactly how many units this add put in, so report
+      // that rather than a difference — right even before the first read lands.
+      const line = lineFor(productId, result.data.cart);
+      if (line && result.data.added > 0) {
+        trackAddToCart(cartLineToAnalyticsItem(line, result.data.added));
+        reportedQty.current.set(productId, result.data.lineQuantity);
+      }
       applyCart(result.data.cart, seq);
       setDrawerOpen(true);
       if (result.data.notice) {
@@ -232,7 +272,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return true;
     },
-    [applyCart, nextSeq, showToast],
+    [applyCart, lineFor, nextSeq, showToast],
   );
 
   const removeItem = useCallback(
@@ -242,6 +282,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (queue && queue.timer !== null) window.clearTimeout(queue.timer);
       queues.current.delete(productId);
       clearOptimistic(productId);
+      const removedLine = cartRef.current?.lines.find((line) => line.productId === productId);
       setCart((current) =>
         current
           ? { ...current, lines: current.lines.filter((line) => line.productId !== productId) }
@@ -254,13 +295,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         `/api/cart/items/${encodeURIComponent(productId)}`,
       );
       if (result.ok) {
+        if (removedLine) reportLine(removedLine, 0);
         applyCart(result.data.cart, seq);
       } else {
         showToast(result.message);
         void refresh();
       }
     },
-    [applyCart, clearOptimistic, nextSeq, refresh, showToast],
+    [applyCart, clearOptimistic, nextSeq, refresh, reportLine, showToast],
   );
 
   const displayQuantity = useCallback(
@@ -279,7 +321,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setQuantity,
       removeItem,
       drawerOpen,
-      openDrawer: () => setDrawerOpen(true),
+      // Only an open the shopper asked for is a `view_cart`; the drawer that
+      // slides in after Add to cart is reported as the add.
+      openDrawer: () => {
+        setDrawerOpen(true);
+        if (cart && cart.lines.length > 0) {
+          trackViewCart(cart.lines.map((line) => cartLineToAnalyticsItem(line)));
+        }
+      },
       closeDrawer: () => setDrawerOpen(false),
     }),
     [cart, displayQuantity, addItem, setQuantity, removeItem, drawerOpen],

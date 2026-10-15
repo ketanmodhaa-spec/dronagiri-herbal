@@ -1,6 +1,6 @@
 # WhatsApp Template Submission Sheet
 
-> Copy-paste source for submitting Dronagiri Herbal's 14 templates in
+> Copy-paste source for submitting Dronagiri Herbal's 15 templates in
 > **Meta WhatsApp Manager → Message templates → Create template**.
 >
 > ⚠️ **The `{{n}}` order below is not cosmetic.** It must match the order each
@@ -230,6 +230,35 @@ Samples: `Sarita` · `DH-1042`
 > facts in DISPUTE.md are confirmed: legal name and address as on the GST
 > certificate, HSN code and rate per product, GST on shipping, signature, and
 > invoice numbering. Until then no real invoice is issued.
+
+---
+
+## 15. `new_order_alert` — Category: **Utility** *(recipient: Sarita)*
+
+Sent to Sarita's personal WhatsApp (not the shop number, which runs on the
+API and can't be opened in the app) the moment an order needs packing: when
+an online payment is confirmed, or when a COD order is confirmed. Never for
+unpaid orders, which may expire. An email copy goes to store@ as a backup.
+
+Variables: `{{1}}` orderNumber · `{{2}}` totalRupees · `{{3}}` paymentMethod ·
+`{{4}}` items · `{{5}}` city · `{{6}}` adminOrderUrl
+
+```
+🛒 New order {{1}} — ₹{{2}}, {{3}}
+
+Items: {{4}}
+Ship to: {{5}}
+
+Open the order to pack it: {{6}}
+
+Dronagiri Herbal order alert
+```
+
+Samples: `DH-1042` · `598` · `paid online` · `2 × Hair Protein Pack, 1 × Rose Hydra Toner` · `Ahmedabad` · `https://dronagiriherbal.in/admin/orders/clx1042order`
+
+> Meta refuses parameters containing line breaks, so the items arrive as one
+> comma-separated line. The last line is fixed text on purpose: Meta rejects
+> a body that ends with a variable.
 
 ---
 

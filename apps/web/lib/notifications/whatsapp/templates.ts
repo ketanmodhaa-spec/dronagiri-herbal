@@ -231,6 +231,34 @@ export const dailySummaryTemplate = defineTemplate<{
   ],
 });
 
+/**
+ * New-order alert to Sarita's personal number, sent when an order needs
+ * packing (online payment confirmed, or COD confirmed) — never for an unpaid
+ * order. Meta refuses line breaks inside a parameter, so `items` is one
+ * comma-separated line ("2 × Hair Protein Pack, 1 × Rose Hydra Toner").
+ */
+export const newOrderAlertTemplate = defineTemplate<{
+  orderNumber: string;
+  totalRupees: string;
+  /** "paid online" or "Cash on Delivery". */
+  paymentMethod: string;
+  items: string;
+  city: string;
+  adminOrderUrl: string;
+}>({
+  name: 'new_order_alert',
+  category: 'UTILITY',
+  language: 'en',
+  build: (p) => [
+    { type: 'text', text: p.orderNumber },
+    { type: 'text', text: p.totalRupees },
+    { type: 'text', text: p.paymentMethod },
+    { type: 'text', text: p.items },
+    { type: 'text', text: p.city },
+    { type: 'text', text: p.adminOrderUrl },
+  ],
+});
+
 /* ─── Marketing (requires marketingConsent on the Customer) ───────────── */
 
 /** Repeat-order nudge — sent N days after the typical re-purchase interval. */

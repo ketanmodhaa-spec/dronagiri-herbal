@@ -16,12 +16,13 @@
 **WhatsApp templates (account 1346230040712730):**
 - [x] 10 approved 14 Oct: otp_login, order_placed/confirmed/packed/shipped/delivered/cancelled, refund_initiated, repurchase_nudge, winback_nudge.
 - [ ] Fix the typo in `order_cancelled`: "Hir {{1}}" → "Hi {{1}}" (edit in WhatsApp Manager).
-- [ ] Submit the rest: `refund_completed`, `restock_alert`, `daily_summary`, `order_invoice` (document header; sample = `sample-invoice-for-meta.pdf`).
+- [ ] Submit the rest: `refund_completed`, `restock_alert`, `daily_summary`, `new_order_alert` (added 15 Oct — Sarita's instant alert when an order needs packing), `order_invoice` (document header; sample = `sample-invoice-for-meta.pdf`).
 
 **Code — the checkout build (the last big piece, now unblocked):**
 - [ ] Checkout: address form, WhatsApp OTP, Terms + marketing-consent checkboxes, order placement, Razorpay pay step (button already built).
 - [ ] `otp_login` has a Copy-code **URL button**: the send must also fill the button parameter with the code, or Meta rejects it. Fix with a live OTP test.
 - [ ] Connect every status button and the payment/refund webhooks to their WhatsApp template (sent in the background, never blocking).
+- [ ] Send `new_order_alert` to Sarita's personal number (94290 29840) when an order needs packing — online payment confirmed or COD confirmed, never on an unpaid order — plus an email copy to store@ as backup. Background, never blocking.
 - [ ] Order tracking page `/track/<signed token>`, with an HMAC link like the review link (the stored-hash design can't rebuild a link at ship time).
 - [ ] Point Doppler `dev` at the test WhatsApp account (1534533821662577), so laptop testing can't message real customers.
 

@@ -30,10 +30,12 @@ export async function requireAdmin(): Promise<AdminClaims> {
 }
 
 /** Return the current admin if they are the owner — money moves only on the owner's say. */
-export async function requireOwner(): Promise<AdminClaims> {
+export async function requireOwner(
+  message = 'Only the owner account can refund or cancel paid orders.',
+): Promise<AdminClaims> {
   const admin = await requireAdmin();
   if (admin.role !== 'OWNER') {
-    throw new ForbiddenError('Only the owner account can refund or cancel paid orders.');
+    throw new ForbiddenError(message);
   }
   return admin;
 }

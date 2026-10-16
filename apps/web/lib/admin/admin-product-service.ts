@@ -15,6 +15,7 @@ import type { AdminProductCreate, AdminProductUpdate } from '@dronagiri/validato
 
 import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors';
 import { isSameProduct } from '@/lib/products/product-identity';
+import { deleteObject, objectKeyFromUrl } from '@/lib/storage/r2';
 
 /** A row in the admin product list. */
 export interface AdminProductListItem {
@@ -126,7 +127,7 @@ async function assertNotDuplicate(input: AdminProductUpdate, excludeId?: string)
   const size = existing.sizeLabel ? `, ${existing.sizeLabel}` : '';
   const advice = existing.isActive
     ? 'Open that product and edit it instead.'
-    : 'It is inactive — open it and tick Active instead.';
+    : 'It is hidden — open it and tap Show in shop instead.';
   throw new ConflictError(
     `Product already entered: “${existing.name}”${size} (SKU ${existing.sku}). ${advice}`,
     'PRODUCT_ALREADY_ENTERED',
@@ -209,12 +210,96 @@ export async function createProduct(
   }
 }
 
-/** Update a product. Stock is untouched here — it moves only via the stock service. */
+/**
+ * Update a product. Stock is untouched here — it moves only via the stock
+ * service — and so is visibility, which only `setProductVisibility` changes:
+ * a form opened before a Hide must not quietly re-show the product on save.
+ */
 export async function updateProduct(id: string, input: AdminProductUpdate): Promise<Product> {
   await assertNotDuplicate(input, id);
   try {
-    return await prisma.product.update({ where: { id }, data: toProductData(input) });
+    return await prisma.product.update({
+      where: { id },
+      data: { ...toProductData(input), isActive: undefined },
+    });
   } catch (error) {
     rethrowWriteError(error);
+  }
+}
+
+/**
+ * Show or hide a product in the shop. Hiding is the normal way to delist:
+ * orders, stock history and reviews are kept, and the product can return.
+ */
+export async function setProductVisibility(id: string, isActive: boolean): Promise<Product> {
+  try {
+    return await prisma.product.update({ where: { id }, data: { isActive } });
+  } catch (error) {
+    rethrowWriteError(error);
+  }
+}
+
+/** Plural-aware count for refusal messages — "1 order", "3 orders". */
+function countOf(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? '' : 's'}`;
+}
+
+/**
+ * Permanently delete a product that was never sold or reviewed — a mistaken,
+ * duplicate or test entry. Anything with orders or reviews is refused: order
+ * history and GST records must keep pointing at it, so it can only be hidden.
+ *
+ * Its stock ledger (manual adjustments only, since it has no orders), images
+ * and WhatsApp aliases go with it. The database enforces the same rule with
+ * `onDelete: Restrict`, which also covers an order placed mid-delete.
+ */
+export async function deleteProduct(id: string): Promise<void> {
+  let imageUrls: string[];
+  try {
+    imageUrls = await prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id },
+        select: {
+          images: { select: { url: true } },
+          _count: { select: { orderItems: true, reviews: true } },
+        },
+      });
+      if (!product) {
+        throw new NotFoundError('Product not found.');
+      }
+      const { orderItems, reviews } = product._count;
+      if (orderItems > 0 || reviews > 0) {
+        const history = [
+          orderItems > 0 ? countOf(orderItems, 'order') : null,
+          reviews > 0 ? countOf(reviews, 'review') : null,
+        ]
+          .filter(Boolean)
+          .join(' and ');
+        throw new ConflictError(
+          `This product has ${history}, so it cannot be deleted — hide it from the shop instead.`,
+          'PRODUCT_HAS_HISTORY',
+        );
+      }
+      await tx.stockMovement.deleteMany({ where: { productId: id } });
+      await tx.product.delete({ where: { id } });
+      return product.images.map((image) => image.url);
+    }, { timeout: 15_000 }); // headroom for a Neon cold start
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+      throw new ConflictError(
+        'This product was just ordered, so it cannot be deleted — hide it from the shop instead.',
+        'PRODUCT_HAS_HISTORY',
+      );
+    }
+    rethrowWriteError(error);
+  }
+
+  // The rows are gone; a failed R2 delete only leaves an orphaned file.
+  for (const url of imageUrls) {
+    const objectKey = objectKeyFromUrl(url);
+    if (!objectKey) continue;
+    await deleteObject(objectKey).catch((error: unknown) => {
+      console.error('[r2] failed to delete object', objectKey, error);
+    });
   }
 }

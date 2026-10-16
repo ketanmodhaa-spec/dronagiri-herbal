@@ -1,12 +1,16 @@
 /**
- * /api/admin/products/[id] — read and update a single product.
+ * /api/admin/products/[id] — read, update and delete a single product.
  */
 import type { NextRequest } from 'next/server';
 
 import { adminProductUpdateSchema } from '@dronagiri/validators';
 
-import { getProductForAdmin, updateProduct } from '@/lib/admin/admin-product-service';
-import { requireAdmin } from '@/lib/auth/require-admin';
+import {
+  deleteProduct,
+  getProductForAdmin,
+  updateProduct,
+} from '@/lib/admin/admin-product-service';
+import { requireAdmin, requireOwner } from '@/lib/auth/require-admin';
 import { ValidationError } from '@/lib/errors';
 import { errorResponse, jsonData } from '@/lib/http';
 
@@ -38,6 +42,18 @@ export async function PATCH(req: NextRequest, context: RouteContext): Promise<Re
     }
     const product = await updateProduct(params.id, parsed.data);
     return jsonData({ product });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+/** Permanent delete — owner only, and only for a product never ordered or reviewed. */
+export async function DELETE(_request: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
+  try {
+    await requireOwner('Only the owner account can delete products.');
+    await deleteProduct(params.id);
+    return jsonData({ deleted: true });
   } catch (error) {
     return errorResponse(error);
   }

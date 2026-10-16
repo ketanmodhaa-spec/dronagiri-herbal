@@ -281,7 +281,7 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
             {duplicate.sku}) is already in the catalogue
             {duplicate.isActive ? '' : ', marked inactive'}. It cannot be entered twice.{' '}
             <Link href={`/admin/products/${duplicate.id}`} className="font-medium underline">
-              Open {duplicate.isActive ? 'it' : 'it and tick Active'}
+              Open {duplicate.isActive ? 'it' : 'it and tap Show in shop'}
             </Link>
           </p>
         </div>
@@ -416,12 +416,15 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
           </p>
         )}
         <div className="flex flex-wrap gap-6 pt-1">
-          <CheckboxField
-            label="Active"
-            hint="Visible in the shop"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-          />
+          {/* An existing product is shown or hidden from the panel at the top of its page. */}
+          {mode === 'create' && (
+            <CheckboxField
+              label="Active"
+              hint="Visible in the shop"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+            />
+          )}
           <CheckboxField
             label="Featured"
             hint="Shown on the homepage"

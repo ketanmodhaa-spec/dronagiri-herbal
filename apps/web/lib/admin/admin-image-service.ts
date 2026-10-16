@@ -98,7 +98,10 @@ export async function confirmProductImage(
     );
   }
   if (head.contentLength > MAX_IMAGE_BYTES || !ALLOWED_CONTENT_TYPES.has(head.contentType)) {
-    await deleteObject(input.objectKey).catch(() => {});
+    // The upload is refused either way; a failed delete only leaves an orphan in R2.
+    await deleteObject(input.objectKey).catch((error: unknown) => {
+      console.error('[r2] failed to delete rejected upload', input.objectKey, error);
+    });
     throw new ValidationError('That file is not an accepted image.', 'BAD_UPLOAD');
   }
 

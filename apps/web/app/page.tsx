@@ -10,7 +10,7 @@ import { ProductCard } from '@/components/ui/product-card';
 import { TrustBadge } from '@/components/ui/trust-badge';
 import { PRODUCT_LISTS } from '@/lib/analytics/gtag';
 import { cardToAnalyticsItem } from '@/lib/analytics/items';
-import { getFeaturedProducts } from '@/lib/products/product-service';
+import { getFeaturedProducts, listShopCategoryLinks } from '@/lib/products/product-service';
 import { SITE_URL } from '@/lib/seo/site';
 
 /**
@@ -39,7 +39,11 @@ const TRUST_ITEMS = [
 const STORY_CREDENTIALS = ['WHO GMP Certified', 'KVIC Registered', 'UDYAM Registered'] as const;
 
 export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts(8);
+  const [featuredProducts, categoryLinks] = await Promise.all([
+    getFeaturedProducts(8),
+    listShopCategoryLinks(),
+  ]);
+  const totalProducts = categoryLinks.reduce((sum, category) => sum + category.productCount, 0);
 
   return (
     <>
@@ -101,19 +105,43 @@ export default async function HomePage() {
             </div>
 
             {featuredProducts.length > 0 ? (
-              <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-                <TrackViewItemList
-                  list={PRODUCT_LISTS.homeFeatured}
-                  items={featuredProducts.map(cardToAnalyticsItem)}
-                />
-                {featuredProducts.map((product, index) => (
-                  <ProductCard
-                    key={product.slug}
-                    product={product}
-                    listing={{ list: PRODUCT_LISTS.homeFeatured, index }}
+              <>
+                <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+                  <TrackViewItemList
+                    list={PRODUCT_LISTS.homeFeatured}
+                    items={featuredProducts.map(cardToAnalyticsItem)}
                   />
-                ))}
-              </div>
+                  {featuredProducts.map((product, index) => (
+                    <ProductCard
+                      key={product.slug}
+                      product={product}
+                      listing={{ list: PRODUCT_LISTS.homeFeatured, index }}
+                    />
+                  ))}
+                </div>
+
+                {/* The grid is a selection — always show the way to everything else. */}
+                <div className="mt-10 flex flex-col items-center gap-4">
+                  <Button href="/shop" size="lg">
+                    View all {totalProducts} products
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </Button>
+                  {categoryLinks.length > 1 && (
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {categoryLinks.map((category) => (
+                        <Button
+                          key={category.slug}
+                          href={`/shop?category=${category.slug}`}
+                          variant="secondary"
+                          size="sm"
+                        >
+                          {category.name} ({category.productCount})
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
               <p className="mt-12 text-center text-stone-light">
                 Our catalogue is being prepared — please check back shortly.

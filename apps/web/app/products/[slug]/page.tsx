@@ -35,7 +35,7 @@ import { DEFAULT_OG_IMAGE, SITE_URL, absoluteUrl } from '@/lib/seo/site';
 export const dynamic = 'force-dynamic';
 
 interface ProductPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 /**
@@ -46,7 +46,8 @@ interface ProductPageProps {
 const fetchProduct = cache(getProductBySlug);
 
 /** SEO + social-share metadata. Inactive products fall back to a generic title. */
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+export async function generateMetadata(props: ProductPageProps): Promise<Metadata> {
+  const params = await props.params;
   const product = await fetchProduct(params.slug);
   if (!product) {
     return { title: 'Product not found', robots: { index: false, follow: true } };
@@ -151,7 +152,8 @@ function StockBadge({ stockQty, lowStockThreshold }: { stockQty: number; lowStoc
 
 const TRUST_ITEMS = ['WHO GMP Certified', '100% Ayurvedic', 'Cash on Delivery'] as const;
 
-export default async function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage(props: ProductPageProps) {
+  const params = await props.params;
   const product = await fetchProduct(params.slug);
   if (!product) notFound();
 

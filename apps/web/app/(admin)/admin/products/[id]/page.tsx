@@ -6,6 +6,7 @@ import type { Product } from '@dronagiri/db';
 
 import { ProductForm } from '@/components/admin/product-form';
 import { ProductImageManager } from '@/components/admin/product-image-manager';
+import { ProductVisibilityPanel } from '@/components/admin/product-visibility-panel';
 import { StockEditor } from '@/components/admin/stock-editor';
 import { listCategoryOptions } from '@/lib/admin/admin-category-service';
 import { listProductImages } from '@/lib/admin/admin-image-service';
@@ -15,8 +16,10 @@ import { NotFoundError } from '@/lib/errors';
 
 export const metadata: Metadata = { title: 'Edit product' };
 
-export default async function EditProductPage({ params }: { params: { id: string } }) {
-  if (!(await getAdminOrNull())) {
+export default async function EditProductPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const admin = await getAdminOrNull();
+  if (!admin) {
     redirect('/admin/login');
   }
 
@@ -42,6 +45,12 @@ export default async function EditProductPage({ params }: { params: { id: string
       </h1>
 
       <div className="space-y-8">
+        <ProductVisibilityPanel
+          productId={product.id}
+          productName={product.name}
+          isActive={product.isActive}
+          canDelete={admin.role === 'OWNER'}
+        />
         <ProductForm mode="edit" product={product} categories={categories} />
         <ProductImageManager productId={product.id} images={images} />
         <StockEditor

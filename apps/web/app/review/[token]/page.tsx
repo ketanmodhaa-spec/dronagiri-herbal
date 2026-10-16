@@ -27,7 +27,8 @@ const CLOSED_COPY: Record<Exclude<InvitationState['kind'], 'open'>, string> = {
   expired: 'This review link has expired. Thank you for shopping with us!',
 };
 
-export default async function ReviewPage({ params }: { params: { token: string } }) {
+export default async function ReviewPage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   const invitation = await getInvitation(params.token);
 
   return (

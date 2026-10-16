@@ -26,7 +26,8 @@ const submittedFormatter = new Intl.DateTimeFormat('en-IN', {
   minute: '2-digit',
 });
 
-export default async function AdminReviewsPage({ searchParams }: { searchParams: { status?: string } }) {
+export default async function AdminReviewsPage(props: { searchParams: Promise<{ status?: string }> }) {
+  const searchParams = await props.searchParams;
   if (!(await getAdminOrNull())) {
     redirect('/admin/login');
   }

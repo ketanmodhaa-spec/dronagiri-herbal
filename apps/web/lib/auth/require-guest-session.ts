@@ -13,8 +13,8 @@ import { GUEST_SESSION_ID_HEADER } from '@/lib/auth/guest-session';
 import { AuthError } from '@/lib/errors';
 
 /** Return the session id, or throw `AuthError` (→ 401) if the middleware did not run. */
-export function requireGuestSession(): string {
-  const sessionId = headers().get(GUEST_SESSION_ID_HEADER);
+export async function requireGuestSession(): Promise<string> {
+  const sessionId = (await headers()).get(GUEST_SESSION_ID_HEADER);
   if (!sessionId) {
     throw new AuthError('Your session could not be found. Please refresh the page.', 'NO_SESSION');
   }

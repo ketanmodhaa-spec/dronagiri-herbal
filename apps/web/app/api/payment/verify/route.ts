@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const sessionId = requireGuestSession();
+    const sessionId = await requireGuestSession();
     const { success } = await getPaymentVerifyLimiter().limit(
       `${sessionId}:${clientIp(req) ?? 'unknown'}`,
     );

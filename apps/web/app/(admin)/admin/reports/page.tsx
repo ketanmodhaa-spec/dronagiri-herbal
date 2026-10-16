@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Reports' };
 export const dynamic = 'force-dynamic';
 
 interface ReportsPageProps {
-  searchParams: { period?: string; from?: string; to?: string };
+  searchParams: Promise<{ period?: string; from?: string; to?: string }>;
 }
 
 function Figure({ label, value, note, strong }: { label: string; value: string; note?: string; strong?: boolean }) {
@@ -25,7 +25,8 @@ function Figure({ label, value, note, strong }: { label: string; value: string; 
   );
 }
 
-export default async function AdminReportsPage({ searchParams }: ReportsPageProps) {
+export default async function AdminReportsPage(props: ReportsPageProps) {
+  const searchParams = await props.searchParams;
   const admin = await getAdminOrNull();
   if (!admin) {
     redirect('/admin/login');

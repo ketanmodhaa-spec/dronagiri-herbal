@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(): Promise<Response> {
   try {
     assertCartEnabled();
-    const sessionId = requireGuestSession();
+    const sessionId = await requireGuestSession();
     return cartJson({ cart: await getCart(sessionId) });
   } catch (error) {
     return errorResponse(error);
@@ -25,7 +25,7 @@ export async function GET(): Promise<Response> {
 export async function DELETE(req: NextRequest): Promise<Response> {
   try {
     assertCartEnabled();
-    const sessionId = requireGuestSession();
+    const sessionId = await requireGuestSession();
     await enforceCartRateLimit(req, sessionId);
     return cartJson({ cart: await clearCart(sessionId) });
   } catch (error) {

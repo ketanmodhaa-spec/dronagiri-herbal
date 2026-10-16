@@ -60,17 +60,13 @@ const nextConfig = {
       { protocol: 'https', hostname: 'cdn.dronagiriherbal.in' },
     ],
   },
-  experimental: {
-    // Required on Next.js 14 so instrumentation.ts runs (becomes default in Next 15).
-    instrumentationHook: true,
-    // Prisma's query engine is a native binary — keep the client out of the
-    // server bundle so it loads from disk at runtime.
-    serverComponentsExternalPackages: ['@prisma/client'],
-    // PDF fonts and logo are read from disk at runtime (lib/pdf/brand-assets.ts),
-    // which file tracing cannot see — ship them with every route that renders a PDF.
-    outputFileTracingIncludes: {
-      '/api/admin/reports/export': ['./lib/pdf/assets/**'],
-    },
+  // Prisma's query engine is a native binary — keep the client out of the
+  // server bundle so it loads from disk at runtime.
+  serverExternalPackages: ['@prisma/client'],
+  // PDF fonts and logo are read from disk at runtime (lib/pdf/brand-assets.ts),
+  // which file tracing cannot see — ship them with every route that renders a PDF.
+  outputFileTracingIncludes: {
+    '/api/admin/reports/export': ['./lib/pdf/assets/**'],
   },
 };
 

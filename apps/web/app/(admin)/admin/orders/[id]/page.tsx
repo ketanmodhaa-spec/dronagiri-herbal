@@ -56,7 +56,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default async function AdminOrderPage({ params }: { params: { id: string } }) {
+export default async function AdminOrderPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const admin = await getAdminOrNull();
   if (!admin) {
     redirect('/admin/login');

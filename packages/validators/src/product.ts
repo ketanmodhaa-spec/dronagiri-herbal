@@ -130,6 +130,11 @@ export const adminProductUpdateSchema = z
   .strictObject(productFields)
   .refine(compareAbovePrice, compareAbovePriceError);
 
+/** Show or hide a product in the shop — the one-tap control on the edit page. */
+export const productVisibilitySchema = z.strictObject({
+  isActive: z.boolean(),
+});
+
 /** "Is this product already entered?" — the admin form's early check. */
 export const productDuplicateQuerySchema = z.strictObject({
   name: z.string().trim().min(1, 'Enter a product name').max(200),
@@ -150,3 +155,4 @@ export const stockAdjustmentSchema = z.strictObject({
 export type AdminProductCreate = z.infer<typeof adminProductCreateSchema>;
 export type AdminProductUpdate = z.infer<typeof adminProductUpdateSchema>;
 export type StockAdjustment = z.infer<typeof stockAdjustmentSchema>;
+export type ProductVisibility = z.infer<typeof productVisibilitySchema>;

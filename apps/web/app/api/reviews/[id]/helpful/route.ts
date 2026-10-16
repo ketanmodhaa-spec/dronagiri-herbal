@@ -16,12 +16,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export async function POST(req: NextRequest, { params }: RouteContext): Promise<Response> {
+export async function POST(req: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
   try {
-    const sessionId = requireGuestSession();
+    const sessionId = await requireGuestSession();
     if (!cuidSchema.safeParse(params.id).success) {
       throw new NotFoundError('That review is not available.');
     }

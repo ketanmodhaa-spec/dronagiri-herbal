@@ -211,7 +211,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
   } catch (error) {
     // Swallow the error after logging — Meta retry storms hurt more than
-    // a missed event. Sentry's auto-capture grabs this; we just need the
+    // a missed event. Sentry picks up console.error (captureConsoleIntegration
+    // in sentry.server.config.ts); we just need the
     // return to be a 200 so retries do not pile on.
     // eslint-disable-next-line no-console
     console.error('[whatsapp-webhook] processing error', error);

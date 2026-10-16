@@ -100,6 +100,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+/**
+ * What to log about a malformed Razorpay object: its kind, id and field names
+ * only. Payments carry the customer's phone and email, and error logs are
+ * forwarded to Sentry — the values themselves never leave this process.
+ */
+function shapeSummary(value: unknown): Record<string, unknown> {
+  if (!isRecord(value)) return { type: value === null ? 'null' : typeof value };
+  return { entity: value.entity, id: value.id, fields: Object.keys(value) };
+}
+
 function asOrder(value: unknown): RazorpayOrder {
   if (
     !isRecord(value) ||
@@ -109,7 +119,7 @@ function asOrder(value: unknown): RazorpayOrder {
     typeof value.currency !== 'string' ||
     typeof value.status !== 'string'
   ) {
-    console.error('[razorpay] unexpected order shape', value);
+    console.error('[razorpay] unexpected order shape', shapeSummary(value));
     throw new PaymentProviderError();
   }
   return value as unknown as RazorpayOrder;
@@ -125,7 +135,7 @@ function asPayment(value: unknown): RazorpayPayment {
     typeof value.status !== 'string' ||
     (value.order_id !== null && typeof value.order_id !== 'string')
   ) {
-    console.error('[razorpay] unexpected payment shape', value);
+    console.error('[razorpay] unexpected payment shape', shapeSummary(value));
     throw new PaymentProviderError();
   }
   return value as unknown as RazorpayPayment;
@@ -140,7 +150,7 @@ function asRefund(value: unknown): RazorpayRefund {
     !Number.isSafeInteger(value.amount) ||
     typeof value.status !== 'string'
   ) {
-    console.error('[razorpay] unexpected refund shape', value);
+    console.error('[razorpay] unexpected refund shape', shapeSummary(value));
     throw new PaymentProviderError();
   }
   return value as unknown as RazorpayRefund;
@@ -211,7 +221,7 @@ export async function createRazorpayRefund(args: {
 export async function listPaymentRefunds(paymentId: string): Promise<RazorpayRefund[]> {
   const payload = await request('GET', `/payments/${encodeURIComponent(paymentId)}/refunds?count=100`);
   if (!isRecord(payload) || !Array.isArray(payload.items)) {
-    console.error('[razorpay] unexpected refund list shape', payload);
+    console.error('[razorpay] unexpected refund list shape', shapeSummary(payload));
     throw new PaymentProviderError();
   }
   return payload.items.map(asRefund);

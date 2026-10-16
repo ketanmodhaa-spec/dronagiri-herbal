@@ -2,7 +2,9 @@ import type { MetadataRoute } from 'next';
 
 import {
   listActiveProductsForSitemap,
+  listShopCategoryLinks,
   type ProductSitemapEntry,
+  type ShopCategoryLink,
 } from '@/lib/products/product-service';
 import { absoluteUrl } from '@/lib/seo/site';
 
@@ -50,8 +52,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // returning the static half is far better than a 500 that takes the whole
   // file off the air.
   let products: ProductSitemapEntry[] = [];
+  let categories: ShopCategoryLink[] = [];
   try {
-    products = await listActiveProductsForSitemap();
+    [products, categories] = await Promise.all([
+      listActiveProductsForSitemap(),
+      listShopCategoryLinks(),
+    ]);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.warn('[sitemap] product fetch failed; returning static entries only', error);
@@ -76,5 +82,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }));
 
-  return [...staticEntries, ...productEntries];
+  // Each category view of the shop (/shop?category=skin-care) is its own page.
+  const categoryEntries: MetadataRoute.Sitemap = categories.map((category) => ({
+    url: absoluteUrl(`/shop?category=${category.slug}`),
+    lastModified: catalogueUpdatedAt,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  return [...staticEntries, ...categoryEntries, ...productEntries];
 }

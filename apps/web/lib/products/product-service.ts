@@ -167,6 +167,8 @@ export async function getRelatedProducts(
  */
 export interface ShopCategorySection {
   id: string;
+  /** URL key for the shop filter — /shop?category=<slug>. */
+  slug: string;
   name: string;
   products: ProductCardData[];
 }
@@ -187,6 +189,7 @@ export async function listShopCategoriesWithProducts(): Promise<ShopCategorySect
     orderBy: { sortOrder: 'asc' },
     select: {
       id: true,
+      slug: true,
       name: true,
       products: {
         where: { isActive: true },
@@ -210,6 +213,7 @@ export async function listShopCategoriesWithProducts(): Promise<ShopCategorySect
 
   return categories.map((category) => ({
     id: category.id,
+    slug: category.slug,
     name: category.name,
     products: category.products.map((product) => ({
       slug: product.slug,
@@ -221,6 +225,35 @@ export async function listShopCategoriesWithProducts(): Promise<ShopCategorySect
       categoryName: category.name,
       image: imageRowToCardImage(product.images[0]),
     })),
+  }));
+}
+
+/** A shop category as a browse shortcut — name, filter slug and live product count. */
+export interface ShopCategoryLink {
+  slug: string;
+  name: string;
+  productCount: number;
+}
+
+/**
+ * The homepage's "browse by category" shortcuts: the same categories the shop
+ * shows (active, with at least one active product), counted without loading
+ * the products themselves.
+ */
+export async function listShopCategoryLinks(): Promise<ShopCategoryLink[]> {
+  const categories = await prisma.category.findMany({
+    where: { isActive: true, products: { some: { isActive: true } } },
+    orderBy: { sortOrder: 'asc' },
+    select: {
+      slug: true,
+      name: true,
+      _count: { select: { products: { where: { isActive: true } } } },
+    },
+  });
+  return categories.map((category) => ({
+    slug: category.slug,
+    name: category.name,
+    productCount: category._count.products,
   }));
 }
 

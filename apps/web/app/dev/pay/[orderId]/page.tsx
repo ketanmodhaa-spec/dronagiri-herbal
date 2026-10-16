@@ -28,7 +28,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function DevPayPage({ params }: { params: { orderId: string } }) {
+export default async function DevPayPage(props: { params: Promise<{ orderId: string }> }) {
+  const params = await props.params;
   if (serverConfig.isProduction || !serverConfig.razorpay.isTestMode) {
     notFound();
   }

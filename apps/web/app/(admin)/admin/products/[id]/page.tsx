@@ -15,7 +15,8 @@ import { NotFoundError } from '@/lib/errors';
 
 export const metadata: Metadata = { title: 'Edit product' };
 
-export default async function EditProductPage({ params }: { params: { id: string } }) {
+export default async function EditProductPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   if (!(await getAdminOrNull())) {
     redirect('/admin/login');
   }

@@ -24,10 +24,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export async function POST(req: NextRequest, { params }: RouteContext): Promise<Response> {
+export async function POST(req: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
   try {
     const admin = await requireAdmin();
     if (!cuidSchema.safeParse(params.id).success) {

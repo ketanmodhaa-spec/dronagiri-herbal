@@ -16,10 +16,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 interface RouteContext {
-  params: { productId: string };
+  params: Promise<{ productId: string }>;
 }
 
-function parseProductId(params: RouteContext['params']): string {
+function parseProductId(params: Awaited<RouteContext['params']>): string {
   const parsed = cartProductIdParamSchema.safeParse(params.productId);
   if (!parsed.success) {
     throw new ValidationError('Invalid product.');
@@ -27,10 +27,11 @@ function parseProductId(params: RouteContext['params']): string {
   return parsed.data;
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteContext): Promise<Response> {
+export async function PATCH(req: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
   try {
     assertCartEnabled();
-    const sessionId = requireGuestSession();
+    const sessionId = await requireGuestSession();
     await enforceCartRateLimit(req, sessionId);
 
     const productId = parseProductId(params);
@@ -45,10 +46,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext): Promise
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: RouteContext): Promise<Response> {
+export async function DELETE(req: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
   try {
     assertCartEnabled();
-    const sessionId = requireGuestSession();
+    const sessionId = await requireGuestSession();
     await enforceCartRateLimit(req, sessionId);
     return cartJson({ cart: await removeItem(sessionId, parseProductId(params)) });
   } catch (error) {

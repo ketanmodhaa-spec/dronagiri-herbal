@@ -14,10 +14,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, { params }: RouteContext): Promise<Response> {
+export async function GET(_request: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
   try {
     await requireAdmin();
     return jsonData({ product: await getProductForAdmin(params.id) });
@@ -26,7 +27,8 @@ export async function GET(_request: NextRequest, { params }: RouteContext): Prom
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteContext): Promise<Response> {
+export async function PATCH(req: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
   try {
     await requireAdmin();
     const body: unknown = await req.json().catch(() => null);

@@ -63,7 +63,8 @@ const EMPTY_COPY: Record<(typeof ORDER_TABS)[number]['key'], string> = {
   closed: 'No cancelled or refunded orders.',
 };
 
-export default async function AdminOrdersPage({ searchParams }: { searchParams: { tab?: string } }) {
+export default async function AdminOrdersPage(props: { searchParams: Promise<{ tab?: string }> }) {
+  const searchParams = await props.searchParams;
   if (!(await getAdminOrNull())) {
     redirect('/admin/login');
   }

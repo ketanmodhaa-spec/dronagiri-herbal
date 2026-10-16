@@ -16,7 +16,7 @@ import { AuthError, ForbiddenError } from '@/lib/errors';
 
 /** Return the current admin, or null — the non-throwing variant. */
 export async function getAdminOrNull(): Promise<AdminClaims | null> {
-  const token = cookies().get(ADMIN_ACCESS_COOKIE)?.value;
+  const token = (await cookies()).get(ADMIN_ACCESS_COOKIE)?.value;
   return verifyAdminAccessToken(token);
 }
 

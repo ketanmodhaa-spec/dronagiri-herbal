@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     assertCartEnabled();
-    const sessionId = requireGuestSession();
+    const sessionId = await requireGuestSession();
     await enforceCartRateLimit(req, sessionId);
 
     const body: unknown = await req.json().catch(() => null);

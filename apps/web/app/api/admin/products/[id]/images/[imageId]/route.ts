@@ -16,10 +16,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 interface RouteContext {
-  params: { id: string; imageId: string };
+  params: Promise<{ id: string; imageId: string }>;
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteContext): Promise<Response> {
+export async function PATCH(req: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
   try {
     await requireAdmin();
     const body: unknown = await req.json().catch(() => null);
@@ -34,7 +35,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext): Promise
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: RouteContext): Promise<Response> {
+export async function DELETE(_request: NextRequest, context: RouteContext): Promise<Response> {
+  const params = await context.params;
   try {
     await requireAdmin();
     await deleteProductImage(params.id, params.imageId);

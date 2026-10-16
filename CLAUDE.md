@@ -31,7 +31,7 @@ Every decision is governed by these, in this order:
 ## Stack
 
 ```
-Web:         Next.js 14 (App Router) — TypeScript
+Web:         Next.js 15 (App Router) + React 19 — TypeScript
 Mobile:      React Native (Expo managed) — Android first
 Database:    PostgreSQL on Neon (serverless)
 ORM:         Prisma

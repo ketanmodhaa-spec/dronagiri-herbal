@@ -8,4 +8,8 @@ Sentry.init({
   enabled: config.sentry.enabled,
   environment: config.sentry.environment,
   tracesSampleRate: config.sentry.tracesSampleRate,
+  // Route handlers and webhooks catch their own errors and log them with
+  // console.error, so they never reach Sentry as uncaught exceptions. Forward
+  // every console.error instead — one switch that covers all of them.
+  integrations: [Sentry.captureConsoleIntegration({ levels: ['error'] })],
 });

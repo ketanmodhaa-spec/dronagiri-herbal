@@ -76,7 +76,7 @@ Live keys and webhook in prd; prd→Vercel Doppler sync recreated as Config type
 - [x] Admin-created order DH-26-00001 (₹249, shipping waived) → pay link → real UPI payment `pay_TpfYYLNdiEqMbS`, live mode, captured, ₹0 fee.
 - [x] Settled by the **Razorpay webhook** (signed, live) within a minute: CONFIRMED + PAID, one SALE movement (Aloevera Gel 20 → 19, source WEBHOOK).
 - [x] Unsigned webhook POST on the live site → 401.
-- [ ] Refund of the test order via Cancel (owner) — confirm REFUNDED and stock back to 20.
+- [x] Refund via Cancel (owner): Razorpay accepted ₹249 at once (rfnd_…), processed ~2½ min later → Refund PROCESSED, order paymentStatus REFUNDED, stock back to 20 (CANCELLATION movement).
 
 ### [15 May 2026] — Initial audit checklist created
 Status: Not yet run — project not built yet  

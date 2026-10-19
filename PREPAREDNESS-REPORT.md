@@ -182,7 +182,7 @@ Things only you or Sarita can check. Each takes a few minutes.
 | Fix | Status |
 |---|---|
 | 1 Email routing | Fixed (16 Oct): dronagiriherbal.in added as a Google Workspace alias domain — MX, SPF, DKIM, verification live. Test email to store@ landed in the Inbox. Owner still to do: DMARC `rua` address, Gmail "Send mail as" |
-| 2 Error tracking | Code fixed on `fix/sentry-capture-errors` (16 Oct). Tested: a logged error reaches Sentry, warnings don't; Razorpay logs no longer carry customer phone/email. Owner: add the Sentry DSN + auth token in Doppler |
+| 2 Error tracking | Fixed (19 Oct): code forwards caught server errors (16 Oct); DSN + token in Doppler. It only reached the live site on 19 Oct — the prd→Vercel sync had been disabled, so the 16 Oct "live" status was wrong |
 | 3 Next.js 15 upgrade | Fixed (16 Oct): Next 15.5.28 + React 19. `pnpm audit --prod` 2 critical / 28 high → 0 / 0. tsc + build clean, local smoke test passed |
 | 4 Neon backups | Open — owner |
 | 5 GST invoices | Open — 16 Oct: moving from Composition to Regular (CA files CMP-04, then ITC-01). Other CA facts pending |

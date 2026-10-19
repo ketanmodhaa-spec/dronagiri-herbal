@@ -1,30 +1,56 @@
 # AGENDA.md — Dronagiri Herbal
 > Current tasks, sprint, and priorities.
 > Update this file at the start and end of every work session.
-> Last updated: 25 May 2026
+> Last updated: 19 Oct 2026
 
 ---
 
-## Next session — 15 Oct 2026
+## Launch plan — online-payment-only checkout (decided 19 Oct 2026)
 
-**Razorpay go-live (KYC expected done):**
-- [ ] Live keys into Doppler `prd`: `RAZORPAY_KEY_ID` (rzp_live_…) + `RAZORPAY_KEY_SECRET`. Generate `RAZORPAY_WEBHOOK_SECRET`.
-- [ ] Register the webhook in the Razorpay **live** dashboard: `https://dronagiriherbal.in/api/webhooks/razorpay`. Events: payment.authorized, payment.captured, order.paid, payment.failed, refund.processed, refund.failed.
-- [ ] Verify with the read-only API check (no money moves). Keep test keys in `dev`.
-- [ ] Ask the Razorpay dashboard to enable auto-capture. The code captures anyway, but auto-capture is the safety net.
+**Decision:** the public cart opens with **online payment only**. A prepaid order proves the buyer is real, so OTP is not needed for it. **COD + WhatsApp OTP follow as Phase 2** (COD up to ₹2,000, stock taken at placement). Target: ~5 build days after Dussehra, then a one-week soft launch with ~20 invited customers before announcing.
 
-**WhatsApp templates (account 1346230040712730):**
-- [x] 10 approved 14 Oct: otp_login, order_placed/confirmed/packed/shipped/delivered/cancelled, refund_initiated, repurchase_nudge, winback_nudge.
-- [ ] Fix the typo in `order_cancelled`: "Hir {{1}}" → "Hi {{1}}" (edit in WhatsApp Manager).
-- [ ] Submit the rest: `refund_completed`, `restock_alert`, `daily_summary`, `new_order_alert` (added 15 Oct — Sarita's instant alert when an order needs packing), `order_invoice` (document header; sample = `sample-invoice-for-meta.pdf`).
+**Already live (19 Oct):** Razorpay live keys + webhook in `prd` — first live payment DH-26-00001 paid by UPI, settled by the webhook, cancelled and refunded (see AUDIT.md). Admin-created orders + pay link (`/admin/orders/new` → `/pay/…`) — the way orders are taken until the cart opens. Cart UI built behind `NEXT_PUBLIC_ENABLE_CART`.
 
-**Code — the checkout build (the last big piece, now unblocked):**
-- [ ] Checkout: address form, WhatsApp OTP, Terms + marketing-consent checkboxes, order placement, Razorpay pay step (button already built).
-- [ ] `otp_login` has a Copy-code **URL button**: the send must also fill the button parameter with the code, or Meta rejects it. Fix with a live OTP test.
-- [ ] Connect every status button and the payment/refund webhooks to their WhatsApp template (sent in the background, never blocking).
-- [ ] Send `new_order_alert` to Sarita's personal number (94290 29840) when an order needs packing — online payment confirmed or COD confirmed, never on an unpaid order — plus an email copy to store@ as backup. Background, never blocking.
-- [ ] Order tracking page `/track/<signed token>`, with an HMAC link like the review link (the stored-hash design can't rebuild a link at ship time).
-- [ ] Point Doppler `dev` at the test WhatsApp account (1534533821662577), so laptop testing can't message real customers.
+### Go-live gates — all five must be green
+- [ ] **Build** — days 1–5 below
+- [ ] **Vercel Pro** — Hobby is non-commercial use only; paid orders already flow, so upgrade now. Then fill `vercel.json` crons.
+- [ ] **Neon paid plan** — daily snapshots, ≥ 7 days history, `production` branch protected, one practice restore
+- [ ] **GST** — CMP-04 effective (Regular scheme) + HSN/rates from the CA. Until then: Gujarat-only sales, Bill of Supply
+- [ ] **Dress rehearsal** — day 5
+
+### Build — day by day
+**Day 1 — Messages**
+- [ ] Wire templates to order events, background, never blocking, all logged: `order_confirmed` (payment received), `order_shipped` (courier + AWB), `order_delivered`, `order_cancelled`, `refund_initiated`, `refund_completed`. Skip `order_packed`.
+- [ ] Sarita on every paid order: `new_order_alert` to 94290 29840 + email copy to store@ (never on unpaid orders).
+- [ ] Admin **Messages** page — the NotificationLog (sent / failed / why), so delivery can be checked without a developer.
+- [ ] Point Doppler `dev` at the test WhatsApp account (1534533821662577) so laptop tests can't message real customers. Test every template on our own number, then set `ENABLE_WHATSAPP=true` in `prd`.
+
+**Day 2 — Checkout**
+- [ ] Cart → checkout page: name, phone, address (state picker), Terms checkbox, marketing consent **unticked** (`recordMarketingConsentInTx`).
+- [ ] Place order with the admin-order service (server prices, ₹49 / free over ₹499, idempotency key, phone-first Customer) → pay page. ONLINE only.
+- [ ] Rate limit checkout 5/min (CLAUDE.md rule 5). Unpaid orders lapse after 24h, holding no stock.
+
+**Day 3 — Tracking + stock**
+- [ ] Order tracking page `/track/<signed token>` (HMAC like review/pay links), linked from every customer message.
+- [ ] Low-stock alert when a sale crosses `lowStockThreshold` — email to store@ now; WhatsApp once a **Utility** stock template is approved (`restock_alert` was submitted as Marketing — if approved that way, create `stock_low_alert` as Utility).
+
+**Day 4 — Fulfilment paper**
+- [ ] Printable packing slip from the order page (brand strip, ship-to, items, order no.).
+- [ ] GST invoice wired to paid orders — only if the CA facts are in; otherwise Bill of Supply note.
+
+**Day 5 — Dress rehearsal, then open**
+- [ ] 5 real-phone orders: pay by UPI, failed payment then retry, cancel → refund, last-unit race (second buyer → Needs attention), ship → deliver with messages checked at each step.
+- [ ] Set `NEXT_PUBLIC_ENABLE_CART=true` in `prd` → redeploy (public var, baked at build).
+- [ ] Soft launch: invite ~20 customers for a week; fix what they hit; then announce.
+
+### Phase 2 — COD with WhatsApp OTP (~1.5 days, after soft launch)
+- [ ] OTP screens on checkout. `otp_login` has a Copy-code **URL button**: the send must also fill the button parameter with the code, or Meta rejects it — verify with a live OTP.
+- [ ] COD option up to ₹2,000; stock taken at placement; `order_placed` to the customer; COD collected tracking.
+
+### Later (needs Vercel Pro crons)
+- [ ] `daily_summary` to Sarita (approved as Marketing; the code sends it as Utility to skip the customer consent gate)
+- [ ] Repurchase / win-back nudges (marketing consent only)
+- [ ] Shiprocket API (manual handoff until ≥ 10 orders/day)
 
 ---
 

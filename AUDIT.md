@@ -71,6 +71,13 @@
 
 ## Audit History
 
+### [19 Oct 2026] — First live payment (admin order + pay link)
+Live keys and webhook in prd; prd→Vercel Doppler sync recreated as Config type (the Sensitive one had been disabled).
+- [x] Admin-created order DH-26-00001 (₹249, shipping waived) → pay link → real UPI payment `pay_TpfYYLNdiEqMbS`, live mode, captured, ₹0 fee.
+- [x] Settled by the **Razorpay webhook** (signed, live) within a minute: CONFIRMED + PAID, one SALE movement (Aloevera Gel 20 → 19, source WEBHOOK).
+- [x] Unsigned webhook POST on the live site → 401.
+- [ ] Refund of the test order via Cancel (owner) — confirm REFUNDED and stock back to 20.
+
 ### [15 May 2026] — Initial audit checklist created
 Status: Not yet run — project not built yet  
 Next audit: After Step 1 completion
@@ -118,7 +125,7 @@ Built: `lib/payments/` (REST client, signatures, payment service), `POST /api/pa
 - [x] Paid but out of stock, a second payment, or a payment on a closed order → NEEDS_ATTENTION. The money is recorded, no stock is taken, and Sarita is emailed.
 - [x] Success path: a real test card payment (`pay_TnIBEqepYOU5iy`) took the order to CONFIRMED + PAID, wrote one SALE movement (50 → 49) and set Customer.lastOrderAt. The first run exposed Prisma's 5 s interactive-transaction timeout against Neon. The settlement rolled back cleanly (nothing half-written) and now runs with a 30 s timeout. It was recovered by replaying the signed `payment.captured` webhook, which is the same path Razorpay retries take in production.
 - [x] Idempotency: the same payment replayed under a new event id returns ALREADY_CONFIRMED, with no second stock movement
-- [ ] Webhook delivery from Razorpay itself — needs a deployed URL + `RAZORPAY_WEBHOOK_SECRET`
+- [x] Webhook delivery from Razorpay itself *(19 Oct 2026 — live; see below)*
 
 ### [22 May 2026] — Admin authentication verified
 Phase 1 (admin auth) built and verified — 25/25 checks passed in a scripted

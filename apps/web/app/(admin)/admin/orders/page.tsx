@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { Button } from '@/components/ui/button';
 import { getAdminOrNull } from '@/lib/auth/require-admin';
 import { loyaltyByCustomer, SAMPLE_WINDOW } from '@/lib/customers/loyalty';
 import { cn } from '@/lib/cn';
@@ -82,7 +83,12 @@ export default async function AdminOrdersPage(props: { searchParams: Promise<{ t
         <Link href="/admin" className="text-sm text-forest-700 hover:text-forest-800">
           ← Dashboard
         </Link>
-        <h1 className="mt-1 font-display text-2xl font-semibold text-forest-900">Orders</h1>
+        <div className="mt-1 flex items-center justify-between gap-3">
+          <h1 className="font-display text-2xl font-semibold text-forest-900">Orders</h1>
+          <Button href="/admin/orders/new" size="sm">
+            + New order
+          </Button>
+        </div>
       </header>
 
       <nav aria-label="Order status" className="-mx-5 mt-5 overflow-x-auto px-5">

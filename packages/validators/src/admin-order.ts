@@ -1,6 +1,6 @@
 /**
- * Admin order requests — status changes, cancellation, refunds and
- * replacements from Sarita's order screens.
+ * Admin order requests — creating an order for a customer, status changes,
+ * cancellation, refunds and replacements from Sarita’s order screens.
  *
  * A refund amount is the one place an amount comes from a client, and only
  * from the authenticated owner: the server still caps it at what the customer
@@ -8,6 +8,7 @@
  */
 import { z } from 'zod';
 
+import { shippingAddressSchema } from './checkout';
 import { cuidSchema, MAX_CART_LINES, paisePriceSchema, quantitySchema } from './primitives';
 
 const reasonSchema = z
@@ -79,3 +80,39 @@ export const replacementCreateSchema = z.strictObject({
 });
 
 export type ReplacementCreate = z.infer<typeof replacementCreateSchema>;
+
+/** Most units of one product Sarita can put on an order she creates herself. */
+export const MAX_ADMIN_LINE_QUANTITY = 20;
+
+/**
+ * An order Sarita creates for a customer (a WhatsApp or phone enquiry), paid
+ * online through a private link. Like checkout, it carries no amount: prices
+ * and shipping are computed server-side. The address phone is the customer's
+ * identity.
+ */
+export const adminManualOrderSchema = z.strictObject({
+  shippingAddress: shippingAddressSchema,
+  items: z
+    .array(
+      z.strictObject({
+        productId: cuidSchema,
+        quantity: z
+          .number()
+          .int('Quantity must be a whole number')
+          .min(1, 'Quantity must be at least 1')
+          .max(MAX_ADMIN_LINE_QUANTITY, `At most ${MAX_ADMIN_LINE_QUANTITY} of one product`),
+      }),
+    )
+    .min(1, 'Add at least one product')
+    .max(MAX_CART_LINES, 'Too many lines')
+    .refine((items) => new Set(items.map((item) => item.productId)).size === items.length, {
+      error: 'Each product can appear only once — change its quantity instead',
+    }),
+  /** Owner's discretion — e.g. a family or launch order. */
+  waiveShipping: z.boolean(),
+  internalNote: z.string().trim().max(500, 'Please keep the note under 500 characters').optional(),
+  /** Generated when the form opens; a double tap creates one order, not two. */
+  idempotencyKey: z.uuid({ error: 'Invalid idempotency key' }),
+});
+
+export type AdminManualOrder = z.infer<typeof adminManualOrderSchema>;

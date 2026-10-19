@@ -97,6 +97,15 @@ export const serverConfig = {
       }
       return value;
     },
+    /** Flat charge below the threshold (₹49 = 4900). Must match the published shipping policy. */
+    get flatFeePaise(): number {
+      const raw = required('SHIPPING_FLAT_FEE_PAISE');
+      const value = Number(raw);
+      if (!Number.isSafeInteger(value) || value < 0) {
+        throw new Error('SHIPPING_FLAT_FEE_PAISE must be a whole number of paise, 0 or more.');
+      }
+      return value;
+    },
   },
 
   /**

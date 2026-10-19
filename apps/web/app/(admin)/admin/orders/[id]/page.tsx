@@ -8,6 +8,7 @@ import { OrderRefundForm } from '@/components/admin/order-refund-form';
 import { OrderSamplePanel } from '@/components/admin/order-sample-panel';
 import { OrderReplacementForm } from '@/components/admin/order-replacement-form';
 import { OrderStatusActions } from '@/components/admin/order-status-actions';
+import { PayLinkPanel } from '@/components/admin/pay-link-panel';
 import { RefundSyncButton } from '@/components/admin/refund-sync-button';
 import { ReviewLinkPanel } from '@/components/admin/review-link-panel';
 import { getAdminOrNull } from '@/lib/auth/require-admin';
@@ -15,6 +16,7 @@ import { loyaltyOf, SAMPLE_WINDOW } from '@/lib/customers/loyalty';
 import { NotFoundError } from '@/lib/errors';
 import { formatPrice } from '@/lib/format';
 import { getOrderDetail, type OrderDetail } from '@/lib/orders/admin-order-service';
+import { payUrl } from '@/lib/orders/pay-link';
 import { reviewUrl } from '@/lib/reviews/review-link';
 import {
   ORDER_STATUS_LABEL,
@@ -65,6 +67,10 @@ export default async function AdminOrderPage(props: { params: Promise<{ id: stri
   const order = await loadOrder(params.id);
   const isOwner = admin.role === 'OWNER';
   const isCashOrder = order.paymentMethod === 'COD';
+  const awaitingOnlinePayment =
+    !isCashOrder &&
+    order.status === 'PENDING' &&
+    (order.paymentStatus === 'PENDING' || order.paymentStatus === 'FAILED');
   const loyalty = await loyaltyOf(order.customerId);
   const loyaltySummary =
     `${loyalty.orders} order${loyalty.orders === 1 ? '' : 's'} · ${formatPrice(loyalty.lifetimePaise)} spent` +
@@ -100,6 +106,16 @@ export default async function AdminOrderPage(props: { params: Promise<{ id: stri
           </p>
         )}
       </header>
+
+      {awaitingOnlinePayment && (
+        <PayLinkPanel
+          url={payUrl(order.id)}
+          phone={order.shipPhone}
+          firstName={order.shipRecipientName.split(' ')[0] ?? order.shipRecipientName}
+          orderNumber={order.orderNumber}
+          total={formatPrice(order.totalPaise)}
+        />
+      )}
 
       <OrderStatusActions
         orderId={order.id}

@@ -209,9 +209,10 @@ export const restockAlertTemplate = defineTemplate<{
   category: 'UTILITY',
   language: 'en',
   build: (p) => [
+    // Meta requires variables in order of appearance: {{1}} name, {{2}} SKU, {{3}} stock.
     { type: 'text', text: p.productName },
-    { type: 'text', text: p.currentStock },
     { type: 'text', text: p.sku },
+    { type: 'text', text: p.currentStock },
   ],
 });
 

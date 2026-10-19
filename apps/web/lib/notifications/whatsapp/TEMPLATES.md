@@ -148,21 +148,25 @@ Samples: `Sarita` · `DH-1042` · `598`
 
 ## 10. `restock_alert` — Category: **Utility** *(recipient: Sarita)*
 
-Variables: `{{1}}` productName · `{{2}}` currentStock · `{{3}}` sku
+Variables: `{{1}}` productName · `{{2}}` sku · `{{3}}` currentStock
 
 ```
 ⚠️ Low stock alert
 
-{{1}} (SKU {{3}}) is down to {{2}} units.
+{{1}} (SKU {{2}}) is down to {{3}} units.
 
-Reply RESTOCK {{3}} <qty> to top up.
+To top up, reply RESTOCK, then the SKU and the quantity.
 ```
 
-Samples: `Hari Protein Pack` · `4` · `hpp`
+Samples: `Hari Protein Pack` · `hpp` · `4`
+
+> Meta refuses variables out of order (`{{1}}`, `{{2}}`, `{{3}}` must appear in sequence), a variable used twice, and `<` `>` in the text — the reason the first version could not be submitted (19 Oct 2026).
 
 ---
 
 ## 11. `daily_summary` — Category: **Utility** *(recipient: Sarita)*
+
+> Meta approved this as **Marketing** and will not change an approved category (19 Oct 2026). It still goes only to Sarita, so the code keeps it as UTILITY — that is what lets it bypass the customer marketing-consent check. Meta bills it at the marketing rate.
 
 Variables: `{{1}}` ordersCount · `{{2}}` revenueRupees · `{{3}}` topProduct
 

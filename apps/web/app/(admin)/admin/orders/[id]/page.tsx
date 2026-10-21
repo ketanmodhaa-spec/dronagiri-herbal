@@ -28,6 +28,9 @@ import {
 export const metadata: Metadata = { title: 'Order' };
 export const dynamic = 'force-dynamic';
 
+/** ₹50,000 — the value from which goods must move with an e-way bill. */
+const EWAY_BILL_THRESHOLD_PAISE = 50_000_00;
+
 const monthYear = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', year: 'numeric' });
 
 const timeFormatter = new Intl.DateTimeFormat('en-IN', {
@@ -67,6 +70,10 @@ export default async function AdminOrderPage(props: { params: Promise<{ id: stri
   const order = await loadOrder(params.id);
   const isOwner = admin.role === 'OWNER';
   const isCashOrder = order.paymentMethod === 'COD';
+  // GST e-way bill rule: consignments of ₹50,000 or more, before they are dispatched.
+  const needsEwayBill =
+    order.totalPaise >= EWAY_BILL_THRESHOLD_PAISE &&
+    (order.status === 'PENDING' || order.status === 'CONFIRMED' || order.status === 'PACKED');
   const awaitingOnlinePayment =
     !isCashOrder &&
     order.status === 'PENDING' &&
@@ -215,7 +222,45 @@ export default async function AdminOrderPage(props: { params: Promise<{ id: stri
         {order.customerNote && (
           <p className="mt-3 rounded-lg bg-forest-50 p-3 text-sm">Customer note: {order.customerNote}</p>
         )}
+        {needsEwayBill && (
+          <p className="mt-3 rounded-lg border border-gold bg-gold-light/30 p-3 text-sm text-forest-900">
+            <span className="font-semibold">E-way bill needed.</span> Goods worth {formatPrice(EWAY_BILL_THRESHOLD_PAISE)}{' '}
+            or more must travel with an e-way bill — generate it in Shiprocket when you book this shipment.
+          </p>
+        )}
       </Section>
+
+      {(order.billName || order.buyerGstin) && (
+        <Section title="Bill to">
+          <address className="text-sm not-italic leading-relaxed text-forest-900">
+            {order.buyerBusinessName ?? order.billName}
+            {order.billLine1 && (
+              <>
+                <br />
+                {order.billLine1}
+              </>
+            )}
+            {order.billLine2 && (
+              <>
+                <br />
+                {order.billLine2}
+              </>
+            )}
+            {order.billCity && (
+              <>
+                <br />
+                {order.billCity}, {order.billState} {order.billPincode}
+              </>
+            )}
+          </address>
+          {order.buyerGstin && (
+            <p className="mt-2 text-sm text-forest-900">
+              GSTIN <span className="font-mono">{order.buyerGstin}</span> — their invoice shows it, and GST is
+              charged by their GSTIN&rsquo;s state.
+            </p>
+          )}
+        </Section>
+      )}
 
       <Section title="Payment">
         <dl className="space-y-1 text-sm">

@@ -70,3 +70,16 @@ export function stateName(code: IndianStateCode): string {
   }
   return state.name;
 }
+
+const STATE_NAMES = INDIAN_STATES.map((state) => state.name) as [string, ...string[]];
+
+/**
+ * A state chosen by name, as addresses store it — but only one of the GST
+ * states, never free text, because the state decides CGST + SGST or IGST.
+ */
+export const indianStateNameSchema = z.enum(STATE_NAMES, { error: 'Choose a state from the list' });
+
+/** The GST state code for a state name from `INDIAN_STATES`, or null if it is not one. */
+export function stateCodeForName(name: string): IndianStateCode | null {
+  return INDIAN_STATES.find((state) => state.name === name)?.code ?? null;
+}

@@ -338,6 +338,19 @@ model Order {
   shipState         String
   shipPincode       String
 
+  // Billing — null when it is the same as the shipping address (the retail norm).
+  billName    String?
+  billLine1   String?
+  billLine2   String?
+  billCity    String?
+  billState   String?
+  billPincode String?
+
+  // A business buyer, as registered for GST — printed on the tax invoice so
+  // they can claim input tax credit. Its state decides the place of supply.
+  buyerGstin        String?
+  buyerBusinessName String?
+
   // Pricing — paise, integer.  totalPaise = subtotalPaise - discountPaise + shippingPaise
   subtotalPaise Int
   discountPaise Int @default(0)

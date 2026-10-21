@@ -6,7 +6,7 @@
  * per-line tax split and totals. The PDF document only lays this out; it
  * does no arithmetic of its own.
  */
-import type { IndianStateCode, PaymentMethod } from '@dronagiri/validators';
+import { indianStateCodeSchema, type IndianStateCode, type PaymentMethod } from '@dronagiri/validators';
 
 import {
   amountInWords,
@@ -103,12 +103,24 @@ function shippingLineDescription(rateBps: GstRateBps, split: boolean): string {
   return split ? `${SHIPPING_LINE_DESCRIPTION} (on ${formatRate(rateBps)} items)` : SHIPPING_LINE_DESCRIPTION;
 }
 
+/**
+ * Place of supply (IGST Act s.10). For a consumer, where the goods are
+ * delivered (10(1)(a)). For a business buyer with a GSTIN, the state of that
+ * GSTIN (10(1)(b), "bill to – ship to"): the goods may go to their branch or
+ * customer elsewhere, but the supply is to the registered buyer. The same
+ * rule gives the same answer whenever billing and delivery share a state.
+ */
+export function placeOfSupplyFor(billTo: InvoiceParty, shipTo: InvoiceParty): IndianStateCode {
+  const gstinState = billTo.gstin ? indianStateCodeSchema.safeParse(billTo.gstin.slice(0, 2)) : null;
+  return gstinState?.success ? gstinState.data : shipTo.stateCode;
+}
+
 export function buildInvoice(input: InvoiceInput): Invoice {
   if (input.items.length === 0) {
     throw new Error(`Invoice ${input.invoiceNumber} has no items.`);
   }
 
-  const placeOfSupply = input.shipTo.stateCode;
+  const placeOfSupply = placeOfSupplyFor(input.billTo, input.shipTo);
   const taxType = taxTypeFor(input.seller.stateCode, placeOfSupply);
 
   const lines = input.items.map((item) => computeLine(item, taxType));

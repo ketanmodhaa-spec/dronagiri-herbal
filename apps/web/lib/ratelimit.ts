@@ -144,3 +144,20 @@ export function getOtpIssueLimiter(): Ratelimit {
   });
   return otpIssueLimiter;
 }
+
+let checkoutLimiter: Ratelimit | undefined;
+
+/**
+ * Checkout limiter — 5 orders per minute, keyed on `sessionId:ip`
+ * (CLAUDE.md security rule 5). A real customer places one; this stops a
+ * script from filling the orders list with unpaid orders.
+ */
+export function getCheckoutLimiter(): Ratelimit {
+  checkoutLimiter ??= new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(5, '1 m'),
+    prefix: 'rl:checkout',
+    analytics: false,
+  });
+  return checkoutLimiter;
+}

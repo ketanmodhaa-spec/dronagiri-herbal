@@ -280,6 +280,7 @@ function PaymentTable({ invoice }: { invoice: Invoice }) {
 export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
   const { seller } = invoice;
   const placeOfSupply = stateName(invoice.placeOfSupply);
+  const placeOfDelivery = stateName(invoice.shipTo.stateCode);
 
   return (
     <Document
@@ -334,7 +335,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
             <PartyBlock heading="Shipping Address:" party={invoice.shipTo} align="right" />
             <View style={styles.block}>
               <LabelledLine label="Place of supply:" value={placeOfSupply.toUpperCase()} align="right" />
-              <LabelledLine label="Place of delivery:" value={placeOfSupply.toUpperCase()} align="right" />
+              <LabelledLine label="Place of delivery:" value={placeOfDelivery.toUpperCase()} align="right" />
             </View>
             <View style={styles.block}>
               <LabelledLine label="Invoice Number:" value={invoice.invoiceNumber} align="right" />

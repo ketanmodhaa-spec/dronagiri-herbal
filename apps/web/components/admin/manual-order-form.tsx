@@ -64,6 +64,11 @@ export function ManualOrderForm({
   const [lines, setLines] = useState<Line[]>([{ key: 0, productId: '', quantity: '1' }]);
   const [waiveShipping, setWaiveShipping] = useState(false);
   const [internalNote, setInternalNote] = useState('');
+  // Bulk and business buyers: a separate billing party, optionally with a GSTIN.
+  const [separateBilling, setSeparateBilling] = useState(false);
+  const [bill, setBill] = useState({ name: '', line1: '', line2: '', city: '', pincode: '', state: defaultState });
+  const [gstin, setGstin] = useState('');
+  const [businessName, setBusinessName] = useState('');
   // One key per form: a double tap or a retry after a slow network makes one order.
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [busy, setBusy] = useState(false);
@@ -117,6 +122,19 @@ export function ManualOrderForm({
             state,
             pincode: address.pincode,
           },
+          billing: separateBilling
+            ? {
+                billingAddress: {
+                  name: bill.name.trim() || businessName.trim(),
+                  line1: bill.line1,
+                  line2: bill.line2 || undefined,
+                  city: bill.city,
+                  state: bill.state,
+                  pincode: bill.pincode,
+                },
+                business: gstin.trim() ? { gstin: gstin.trim(), businessName: businessName.trim() } : undefined,
+              }
+            : {},
           items,
           waiveShipping,
           internalNote: internalNote || undefined,
@@ -211,6 +229,75 @@ export function ManualOrderForm({
             </option>
           ))}
         </SelectField>
+      </section>
+
+      <section className="space-y-4 rounded-2xl border border-forest-100 bg-white p-5">
+        <CheckboxField
+          label="Bill to a business, or a different address"
+          hint="For bulk and business buyers. With a GSTIN, their GST invoice shows it so they can claim input tax credit."
+          checked={separateBilling}
+          onChange={(event) => setSeparateBilling(event.target.checked)}
+        />
+        {separateBilling && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextField
+                label="GSTIN (optional)"
+                name="gstin"
+                maxLength={15}
+                placeholder="e.g. 24ABCDE1234F1Z5"
+                value={gstin}
+                onChange={(event) => setGstin(event.target.value.toUpperCase())}
+              />
+              <TextField
+                label="Business / billing name"
+                name="businessName"
+                value={businessName}
+                onChange={(event) => setBusinessName(event.target.value)}
+              />
+            </div>
+            <TextField
+              label="Billing address — house, building, street"
+              name="billLine1"
+              value={bill.line1}
+              onChange={(event) => setBill((current) => ({ ...current, line1: event.target.value }))}
+            />
+            <TextField
+              label="Area (optional)"
+              name="billLine2"
+              value={bill.line2}
+              onChange={(event) => setBill((current) => ({ ...current, line2: event.target.value }))}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <TextField
+                label="City"
+                name="billCity"
+                value={bill.city}
+                onChange={(event) => setBill((current) => ({ ...current, city: event.target.value }))}
+              />
+              <TextField
+                label="PIN code"
+                name="billPincode"
+                inputMode="numeric"
+                maxLength={6}
+                value={bill.pincode}
+                onChange={(event) => setBill((current) => ({ ...current, pincode: event.target.value }))}
+              />
+            </div>
+            <SelectField
+              label="Billing state — must be the GSTIN's state"
+              name="billState"
+              value={bill.state}
+              onChange={(event) => setBill((current) => ({ ...current, state: event.target.value }))}
+            >
+              {stateNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </SelectField>
+          </>
+        )}
       </section>
 
       <section className="space-y-4 rounded-2xl border border-forest-100 bg-white p-5">

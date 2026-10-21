@@ -8,7 +8,7 @@
  */
 import { z } from 'zod';
 
-import { shippingAddressSchema } from './checkout';
+import { orderBillingSchema, shippingAddressSchema } from './checkout';
 import { cuidSchema, MAX_CART_LINES, paisePriceSchema, quantitySchema } from './primitives';
 
 const reasonSchema = z
@@ -96,6 +96,8 @@ export const MAX_ADMIN_LINE_QUANTITY = 200;
  */
 export const adminManualOrderSchema = z.strictObject({
   shippingAddress: shippingAddressSchema,
+  /** Separate billing address and business GSTIN — common for bulk buyers. */
+  billing: orderBillingSchema,
   items: z
     .array(
       z.strictObject({

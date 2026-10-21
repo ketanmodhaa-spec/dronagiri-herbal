@@ -141,18 +141,11 @@ export function CartDrawer() {
                   {formatPrice(cart?.subtotalPaise ?? 0)}
                 </span>
               </div>
-              <Button size="lg" disabled className="w-full">
+              <Button href="/checkout" size="lg" className="w-full">
                 Proceed to checkout
               </Button>
               <p className="text-center text-xs text-stone">
-                Online checkout opens soon. To order now, message{' '}
-                <a
-                  href="https://wa.me/919429029840"
-                  className="font-medium text-forest-700 underline underline-offset-2"
-                >
-                  +91 94290 29840
-                </a>{' '}
-                on WhatsApp.
+                Shipping is added at checkout. Secure payment by UPI, card or netbanking.
               </p>
             </footer>
           </>

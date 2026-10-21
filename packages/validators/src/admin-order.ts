@@ -81,8 +81,12 @@ export const replacementCreateSchema = z.strictObject({
 
 export type ReplacementCreate = z.infer<typeof replacementCreateSchema>;
 
-/** Most units of one product Sarita can put on an order she creates herself. */
-export const MAX_ADMIN_LINE_QUANTITY = 20;
+/**
+ * Most units of one product Sarita can put on an order she creates herself —
+ * bulk buyers (over the customer cap of 10) are sent to her, so this is high.
+ * Stock is still checked when the order is created.
+ */
+export const MAX_ADMIN_LINE_QUANTITY = 200;
 
 /**
  * An order Sarita creates for a customer (a WhatsApp or phone enquiry), paid

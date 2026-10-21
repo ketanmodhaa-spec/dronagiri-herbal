@@ -4,6 +4,7 @@ import type { CartLineView } from '@dronagiri/types';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { BulkOrderNote } from '@/components/cart/bulk-order-note';
 import { limitMessage } from '@/components/cart/cart-copy';
 import { useCart } from '@/components/cart/cart-provider';
 import { LeafIcon } from '@/components/ui/icons';
@@ -109,6 +110,9 @@ export function CartItem({ line }: { line: CartLineView }) {
             Remove<span className="sr-only"> {line.name}</span>
           </button>
         </div>
+        {!outOfStock && line.limitedBy === 'MAX_PER_LINE' && quantity >= line.maxQuantity && (
+          <BulkOrderNote productName={line.name} className="mt-2 text-xs" />
+        )}
       </div>
     </li>
   );

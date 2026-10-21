@@ -208,7 +208,7 @@ Plus planned, not surprises: Day 3 tracking page, Day 4 packing slip, invoice go
 | Adjustment movement with delta, reason, source, admin id | ✅ | Labels: `ADJUSTMENT/ADMIN_PANEL` (ruling B4; noted in MEMORY.md). |
 | To 0 allowed; below 0 refused | ✅ | |
 | Opening stock recorded | ✅ | As `ADJUSTMENT` "Opening stock". |
-| Order decrements atomically | ✅ | `SALE/WEBHOOK` (or `SALE/CHECKOUT`) at payment, under a row lock. |
+| Order decrements atomically | ✅ | `SALE/WEBHOOK` or `SALE/ORDER` (whichever path confirmed the payment), under a row lock. |
 | Cancellation restores | ✅ | `CANCELLATION/ADMIN_PANEL` — seen on DH-26-00001. |
 | History per product visible | ⚠️ | Recorded, not shown in admin (Finding 9). |
 | **Stock = sum of movements** | ✅ | **Zero drift on all 10 production products.** |

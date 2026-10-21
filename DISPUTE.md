@@ -7,6 +7,16 @@
 
 ## Open Issues
 
+### [DECIDED] — CA rulings on invoices, refunds and replacements (21 Oct 2026)
+**Decided with the CA, 21 Oct 2026** — binding for the invoice go-live:
+1. **Tax invoice is issued at dispatch** (when the order is marked Shipped). An order cancelled before dispatch needs no invoice and no credit note.
+2. **Goodwill refunds** (no goods returned, e.g. compensation for a delay) get a **financial credit note** — no GST reduction.
+3. **Partial refund for a returned / damaged item:** a **GST credit note for that item's value only, at that item's GST rate**. The refund form must name the item(s) and quantity, not just an amount.
+4. **Free replacement:** a **delivery challan referencing the original invoice** — no tax invoice.
+Still open: credit-note series (e.g. DH-CN-2627-00001) and invoice series start — see "Invoice series start".
+
+---
+
 ### [OPEN] — Backups: only a 6-hour restore window
 **Opened:** 21 Oct 2026 (pre-launch QA)
 **Description:** Neon free plan keeps 6 h of point-in-time history. A mistake noticed the next morning cannot be undone. Options: (a) Neon paid tier with 7+ days PITR and daily snapshots; (b) daily `pg_dump` → encrypted, private Cloudflare R2 bucket, 30-day retention, via a scheduled **GitHub Action** (needs no Vercel Pro). Dumps contain customer personal data — encrypt and restrict.
@@ -25,7 +35,7 @@
 
 ---
 
-### [OPEN] — Credit notes for refunds once tax invoices go live
+### [OPEN] — Credit notes for refunds once tax invoices go live *(rules decided — see CA rulings above)*
 **Opened:** 21 Oct 2026 (pre-launch QA)
 **Description:** A refund on an order that had a tax invoice needs a credit note referencing it (GST s.34). Not built — part of invoice go-live.
 **Impact:** Required before tax invoices

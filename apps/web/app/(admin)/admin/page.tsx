@@ -95,6 +95,13 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 text-sm text-stone">Organise the catalogue into categories.</p>
         </Link>
         <Link
+          href="/admin/messages"
+          className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50 sm:col-span-2"
+        >
+          <p className="font-display text-lg font-semibold text-forest-900">Messages</p>
+          <p className="mt-1 text-sm text-stone">Every WhatsApp and email the shop sent, and any that failed.</p>
+        </Link>
+        <Link
           href="/admin/enquiries"
           className="rounded-2xl border border-forest-100 bg-white p-5 transition-colors hover:border-forest-200 hover:bg-forest-50 sm:col-span-2"
         >

@@ -29,7 +29,9 @@ import {
 
 import { serverConfig } from '@/lib/config.server';
 import { formatPrice } from '@/lib/format';
+import { runAfterResponse } from '@/lib/notifications/background';
 import { sendEmail } from '@/lib/notifications/email/client';
+import { notifyOrderPaid } from '@/lib/notifications/order-notifications';
 import { commitOrderStockInTx, describeShortages } from '@/lib/orders/order-stock';
 import { SYSTEM_ACTOR } from '@/lib/orders/order-labels';
 import { PaymentError } from '@/lib/payments/payment-error';
@@ -251,6 +253,10 @@ export async function settleOnlinePayment(args: {
 
   if (result.outcome === 'NEEDS_ATTENTION') {
     await alertOwner(order.id, order.orderNumber, payment, result.reason);
+  }
+  // Only the call that confirmed the order announces it — the other path finds it done.
+  if (result.outcome === 'CONFIRMED') {
+    runAfterResponse(`order ${order.orderNumber} paid`, () => notifyOrderPaid(order.id));
   }
   return { orderNumber: order.orderNumber, outcome: result.outcome };
 }

@@ -113,6 +113,13 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 
 ---
 
+### [21 Oct 2026] Stock ledger labels — keep the names the code writes
+**Decision:** The stock ledger uses `StockMovementReason` ADJUSTMENT (admin edits **and** opening stock), SALE, CANCELLATION, RETURN, REPLACEMENT, and `StockMovementSource` ADMIN_PANEL, CHECKOUT, WEBHOOK (plus WHATSAPP later). Older docs and the pre-launch QA list say RESTOCK / ORDER — same intent, different labels.
+**Reason:** Integrity matters, not the label. Production ledger checked 21 Oct: stock = sum of movements on every product, zero drift.
+**Rule:** Do not rename or retrofit the enums to match old docs; update the docs instead.
+
+---
+
 ## Service Credentials Reference
 *(Values are in .env.local — this is just a checklist)*
 

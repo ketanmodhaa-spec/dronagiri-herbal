@@ -7,6 +7,51 @@
 
 ## Open Issues
 
+### [OPEN] — Backups: only a 6-hour restore window
+**Opened:** 21 Oct 2026 (pre-launch QA)
+**Description:** Neon free plan keeps 6 h of point-in-time history. A mistake noticed the next morning cannot be undone. Options: (a) Neon paid tier with 7+ days PITR and daily snapshots; (b) daily `pg_dump` → encrypted, private Cloudflare R2 bucket, 30-day retention, via a scheduled **GitHub Action** (needs no Vercel Pro). Dumps contain customer personal data — encrypt and restrict.
+**Impact:** Launch blocker
+**Assigned to:** Jaydeep (plan) · Claude (build if b)
+**Resolution:** ⏳ Open
+
+---
+
+### [OPEN] — Quiz recommends by category only
+**Opened:** 21 Oct 2026 (pre-launch QA)
+**Description:** Every hair answer gets the same hair products; only the reason text varies, and it can describe a toner as a cleanser. Separately (fixable now): the recommender matched categories by display name — "Skin care" vs live "Skin Care" — so Skin returned nothing.
+**Impact:** Medium — misleading advice is a compliance risk
+**Assigned to:** Sarita: product → concern mapping · Claude: match by slug
+**Resolution:** ⏳ Open
+
+---
+
+### [OPEN] — Credit notes for refunds once tax invoices go live
+**Opened:** 21 Oct 2026 (pre-launch QA)
+**Description:** A refund on an order that had a tax invoice needs a credit note referencing it (GST s.34). Not built — part of invoice go-live.
+**Impact:** Required before tax invoices
+**Assigned to:** Claude, with the invoice work
+**Resolution:** ⏳ Open
+
+---
+
+### [OPEN] — Invoice series start
+**Opened:** 21 Oct 2026 (pre-launch QA)
+**Description:** Rule 46(b): a consecutive series unique within the financial year; multiple series allowed. A new series may start at 00001 mid-FY provided it does not clash with bills already issued this FY (e.g. paper bills under Composition). CA to confirm before go-live.
+**Impact:** Before first tax invoice
+**Assigned to:** CA
+**Resolution:** ⏳ Open
+
+---
+
+### [OPEN] — Admin audit: record who acted and from what device
+**Opened:** 21 Oct 2026 (pre-launch QA)
+**Description:** Order, stock and refund actions record the admin id. Ruling B2 also asks for the admin user agent on admin actions (not customers).
+**Impact:** Low
+**Assigned to:** Claude
+**Resolution:** ⏳ Open
+
+---
+
 ### [OPEN] — Privacy Policy should name B2B enquiry data
 **Opened:** 8 Oct 2026
 **Description:** The new `/become-a-distributor` form collects name, phone, optional email, business name, location, GSTIN and an investment range, stored in `PartnerEnquiry` and emailed to store@dronagiriherbal.in. The form has an explicit consent checkbox and links the Privacy Policy, but the lawyer-reviewed policy (`content/legal/privacy.md`) only describes customer data.

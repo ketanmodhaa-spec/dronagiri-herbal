@@ -19,11 +19,11 @@
 - [ ] **Dress rehearsal** — day 5
 
 ### Build — day by day
-**Day 1 — Messages**
-- [ ] Wire templates to order events, background, never blocking, all logged: `order_confirmed` (payment received), `order_shipped` (courier + AWB), `order_delivered`, `order_cancelled`, `refund_initiated`, `refund_completed`. Skip `order_packed`.
-- [ ] Sarita on every paid order: `new_order_alert` to 94290 29840 + email copy to store@ (never on unpaid orders).
-- [ ] Admin **Messages** page — the NotificationLog (sent / failed / why), so delivery can be checked without a developer.
-- [ ] Point Doppler `dev` at the test WhatsApp account (1534533821662577) so laptop tests can't message real customers. Test every template on our own number, then set `ENABLE_WHATSAPP=true` in `prd`.
+**Day 1 — Messages** ✅ *(done 21 Oct — WhatsApp switched on in prd)*
+- [x] Wire templates to order events, background, never blocking, all logged: `order_confirmed` (payment received), `order_shipped` (courier + AWB), `order_delivered`, `order_cancelled`, `refund_initiated`, `refund_completed`. Skip `order_packed`.
+- [x] Sarita on every paid order: `new_order_alert` to 94290 29840 + email copy to store@ (never on unpaid orders).
+- [x] Admin **Messages** page — the NotificationLog (sent / failed / why), so delivery can be checked without a developer.
+- [x] *(21 Oct: done differently — dev keeps `ENABLE_WHATSAPP` unset, so dev sends are only logged; all templates verified live to our own numbers instead.)* Point Doppler `dev` at the test WhatsApp account (1534533821662577) so laptop tests can't message real customers. Test every template on our own number, then set `ENABLE_WHATSAPP=true` in `prd`.
 
 **Day 2 — Checkout**
 - [ ] Cart → checkout page: name, phone, address (state picker), Terms checkbox, marketing consent **unticked** (`recordMarketingConsentInTx`).

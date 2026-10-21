@@ -63,6 +63,23 @@ export type ProductAroma = (typeof PRODUCT_AROMAS)[number];
 export type ProductFinish = (typeof PRODUCT_FINISHES)[number];
 export type ProductRoutine = (typeof PRODUCT_ROUTINES)[number];
 
+/**
+ * GST rates a Dronagiri product can carry, in basis points (500 = 5%). Cosmetics
+ * are 18%; shampoo, hair oil and face powders moved to 5% in September 2025.
+ * The rate per product is the CA's call — this list only bounds the choice.
+ */
+export const GST_RATES_BPS = [500, 1800] as const;
+export type GstRateBps = (typeof GST_RATES_BPS)[number];
+
+/** HSN code: 4, 6 or 8 digits (4 is the legal minimum for a business our size). */
+export const hsnCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^(\d{4}|\d{6}|\d{8})$/, 'HSN code is 4, 6 or 8 digits, e.g. 33059090');
+
+/** One of {@link GST_RATES_BPS}. */
+export const gstRateBpsSchema = z.literal(GST_RATES_BPS, { error: 'GST rate must be 5% or 18%' });
+
 /** A monetary amount the admin enters — positive integer paise, capped at ₹1,00,000. */
 const pricePaiseSchema = z
   .number()
@@ -102,6 +119,9 @@ const productFields = {
   pricePaise: pricePaiseSchema,
   comparePaise: pricePaiseSchema.optional(),
   sizeLabel: shortText,
+  // Optional until the CA confirms them; an invoice cannot be issued without both.
+  hsnCode: hsnCodeSchema.optional(),
+  gstRateBps: gstRateBpsSchema.optional(),
   weightGrams: z.number().int().positive().max(100_000).optional(),
   lowStockThreshold: z.number().int().min(0).max(100_000).default(10),
   sortOrder: z.number().int().min(0).max(100_000).default(0),

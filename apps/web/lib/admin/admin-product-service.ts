@@ -64,6 +64,8 @@ function toProductData(input: AdminProductUpdate) {
     comparePaise: input.comparePaise ?? null,
     sizeLabel: orNull(input.sizeLabel),
     weightGrams: input.weightGrams ?? null,
+    hsnCode: input.hsnCode ?? null,
+    gstRateBps: input.gstRateBps ?? null,
     lowStockThreshold: input.lowStockThreshold,
     sortOrder: input.sortOrder,
     isActive: input.isActive,

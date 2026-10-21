@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { BulkOrderNote } from '@/components/cart/bulk-order-note';
 import { limitMessage } from '@/components/cart/cart-copy';
 import { useCart } from '@/components/cart/cart-provider';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ export function AddToCartButton({ productId, productName, stockQty, maxPerLine }
         <span className="text-sm text-stone">
           {limitMessage(lineLimit, limitedBy)} — you have {inCart} in your cart.
         </span>
+        {limitedBy === 'MAX_PER_LINE' && <BulkOrderNote productName={productName} />}
       </div>
     );
   }

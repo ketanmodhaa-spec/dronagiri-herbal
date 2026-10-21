@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 
 import type { Product } from '@dronagiri/db';
 import {
+  GST_RATES_BPS,
   PRODUCT_AROMAS,
   PRODUCT_HAIR_FINISHES,
   PRODUCT_SKIN_FINISHES,
@@ -68,6 +69,9 @@ interface FormState {
   compareRupees: string;
   sizeLabel: string;
   weightGrams: string;
+  hsnCode: string;
+  /** "" (not set yet), "500" or "1800". */
+  gstRateBps: string;
   lowStockThreshold: string;
   sortOrder: string;
   openingStock: string;
@@ -99,6 +103,8 @@ function initialState(product?: Product): FormState {
     compareRupees: product?.comparePaise ? String(product.comparePaise / 100) : '',
     sizeLabel: product?.sizeLabel ?? '',
     weightGrams: product?.weightGrams ? String(product.weightGrams) : '',
+    hsnCode: product?.hsnCode ?? '',
+    gstRateBps: product?.gstRateBps ? String(product.gstRateBps) : '',
     lowStockThreshold: String(product?.lowStockThreshold ?? 10),
     sortOrder: String(product?.sortOrder ?? 0),
     openingStock: '0',
@@ -223,6 +229,8 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
       comparePaise: form.compareRupees.trim() ? toPaise(form.compareRupees) : undefined,
       sizeLabel: form.sizeLabel.trim(),
       weightGrams: numOrUndefined(form.weightGrams),
+      hsnCode: form.hsnCode.trim() || undefined,
+      gstRateBps: numOrUndefined(form.gstRateBps),
       lowStockThreshold: numOrUndefined(form.lowStockThreshold),
       sortOrder: numOrUndefined(form.sortOrder),
       isActive,
@@ -379,7 +387,32 @@ export function ProductForm({ mode, categories, product }: ProductFormProps) {
             value={form.weightGrams}
             onChange={(e) => set('weightGrams', e.target.value)}
           />
+          <TextField
+            label="HSN code"
+            inputMode="numeric"
+            maxLength={8}
+            placeholder="e.g. 33059090"
+            hint="4, 6 or 8 digits — as confirmed by your CA."
+            value={form.hsnCode}
+            onChange={(e) => set('hsnCode', e.target.value)}
+          />
+          <SelectField
+            label="GST rate"
+            value={form.gstRateBps}
+            onChange={(e) => set('gstRateBps', e.target.value)}
+          >
+            <option value="">Not set yet</option>
+            {GST_RATES_BPS.map((rate) => (
+              <option key={rate} value={rate}>
+                {rate / 100}%
+              </option>
+            ))}
+          </SelectField>
         </div>
+        <p className="text-xs text-stone">
+          Prices include GST. A tax invoice needs both the HSN code and the rate for every product on the
+          order.
+        </p>
       </section>
 
       {/* ── Inventory & display ────────────────────────────────────────── */}

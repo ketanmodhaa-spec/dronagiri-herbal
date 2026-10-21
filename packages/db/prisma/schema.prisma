@@ -186,6 +186,11 @@ model Product {
   pricePaise   Int
   comparePaise Int? // MRP / strike-through price
 
+  // GST — set per product once the CA confirms. Prices are GST-inclusive; the
+  // invoice carves the tax out. Rate in basis points: 500 = 5%, 1800 = 18%.
+  hsnCode    String? // 4, 6 or 8 digits, e.g. "33059090"
+  gstRateBps Int?
+
   // Inventory — stockQty is the materialised balance of the StockMovement ledger
   stockQty          Int @default(0)
   lowStockThreshold Int @default(10)
@@ -395,6 +400,8 @@ model OrderItem {
   productName    String
   productSlug    String
   unitPricePaise Int // server-verified price at the time of order
+  hsnCode        String? // GST snapshot from the product at order time —
+  gstRateBps     Int? // a later rate change never alters an issued invoice
   quantity       Int
   lineTotalPaise Int
 

@@ -18,7 +18,7 @@ export const INDIAN_PINCODE_REGEX = /^\d{6}$/;
  * on bulk adds and bot-driven quantity inflation. Stock is still re-checked
  * server-side, so the effective limit is min(this, stock).
  */
-export const MAX_LINE_QUANTITY = 5;
+export const MAX_LINE_QUANTITY = 10;
 
 /** Largest number of distinct lines a single checkout may contain. */
 export const MAX_CART_LINES = 50;

@@ -79,7 +79,16 @@ export async function createManualOrder(input: AdminManualOrder, adminId: string
     return await prisma.$transaction(async (tx) => {
       const products = await tx.product.findMany({
         where: { id: { in: input.items.map((item) => item.productId) } },
-        select: { id: true, name: true, slug: true, pricePaise: true, stockQty: true, isActive: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          pricePaise: true,
+          stockQty: true,
+          isActive: true,
+          hsnCode: true,
+          gstRateBps: true,
+        },
       });
       const byId = new Map(products.map((product) => [product.id, product]));
 
@@ -103,6 +112,9 @@ export async function createManualOrder(input: AdminManualOrder, adminId: string
           unitPricePaise: product.pricePaise,
           quantity: item.quantity,
           lineTotalPaise: product.pricePaise * item.quantity,
+          // Frozen with the price: the invoice for this order never shifts.
+          hsnCode: product.hsnCode,
+          gstRateBps: product.gstRateBps,
         };
       });
 

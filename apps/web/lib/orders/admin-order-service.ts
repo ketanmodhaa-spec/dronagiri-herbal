@@ -21,6 +21,13 @@ import {
 
 import { SAMPLE_WINDOW } from '@/lib/customers/loyalty';
 import { AppError, NotFoundError } from '@/lib/errors';
+import { runAfterResponse } from '@/lib/notifications/background';
+import {
+  notifyOrderCancelled,
+  notifyOrderConfirmed,
+  notifyOrderDelivered,
+  notifyOrderShipped,
+} from '@/lib/notifications/order-notifications';
 import {
   commitOrderStockInTx,
   describeShortages,
@@ -269,6 +276,7 @@ export async function markShipped(
       adminId,
     }),
   );
+  runAfterResponse(`order ${orderId} shipped`, () => notifyOrderShipped(orderId));
 }
 
 export async function markDelivered(orderId: string, adminId: string): Promise<void> {
@@ -289,6 +297,7 @@ export async function markDelivered(orderId: string, adminId: string): Promise<v
       adminId,
     }),
   );
+  runAfterResponse(`order ${orderId} delivered`, () => notifyOrderDelivered(orderId));
 }
 
 /**
@@ -323,6 +332,8 @@ export async function confirmHeldOrder(orderId: string, adminId: string): Promis
       data: { orderId, status: OrderStatus.CONFIRMED, note: 'Stock available — confirmed.', createdBy: adminId },
     });
   }, MULTI_STEP_TRANSACTION);
+  // Sarita released it herself, so only the customer needs telling.
+  runAfterResponse(`order ${orderId} released`, () => notifyOrderConfirmed(orderId));
 }
 
 /** Record the surprise sample the packer put in the parcel. */
@@ -370,7 +381,7 @@ export interface CancelResult {
  * it (the refund policy promises a full refund before dispatch).
  */
 export async function cancelOrder(orderId: string, adminId: string, reason: string): Promise<CancelResult> {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const [order] = await tx.$queryRaw<
       { status: OrderStatus; paymentStatus: PaymentStatus; paymentMethod: PaymentMethod; totalPaise: number }[]
     >`
@@ -411,4 +422,7 @@ export async function cancelOrder(orderId: string, adminId: string, reason: stri
     }
     return { refundDuePaise, paymentMethod: order.paymentMethod };
   }, MULTI_STEP_TRANSACTION);
+  // The reason is shown to the customer (the cancel form says so).
+  runAfterResponse(`order ${orderId} cancelled`, () => notifyOrderCancelled(orderId, reason));
+  return result;
 }

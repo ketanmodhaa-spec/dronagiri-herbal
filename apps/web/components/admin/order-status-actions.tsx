@@ -197,7 +197,7 @@ export function OrderStatusActions(props: OrderStatusActionsProps) {
             onChange={(event) => setText(event.target.value)}
             hint={
               panel === 'cancel'
-                ? 'Any stock this order took goes back on the shelf.'
+                ? 'The customer sees this reason on WhatsApp if the order was paid or confirmed. Any stock it took goes back on the shelf.'
                 : 'Saved on the order history. The order leaves "Needs attention".'
             }
           />

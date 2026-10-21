@@ -83,6 +83,14 @@ export const serverConfig = {
     ownerInbox: 'store@dronagiriherbal.in',
   },
 
+  /** Sarita herself — where order alerts go on WhatsApp. */
+  owner: {
+    /** Her personal WhatsApp, E.164 (+91…). Not the shop's sending number. */
+    get whatsappNumber(): string {
+      return required('OWNER_WHATSAPP_NUMBER');
+    },
+  },
+
   shipping: {
     /**
      * Order subtotal, in paise, at which shipping becomes free (₹499 = 49900).

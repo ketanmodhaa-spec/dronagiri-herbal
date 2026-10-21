@@ -32,6 +32,8 @@ import {
 
 import { NotFoundError } from '@/lib/errors';
 import { formatPrice } from '@/lib/format';
+import { runAfterResponse } from '@/lib/notifications/background';
+import { notifyRefundCompleted, notifyRefundInitiated } from '@/lib/notifications/order-notifications';
 import { OrderStateError } from '@/lib/orders/admin-order-service';
 import { SYSTEM_ACTOR } from '@/lib/orders/order-labels';
 import { restockOrderLinesInTx } from '@/lib/orders/order-stock';
@@ -76,10 +78,10 @@ async function refundableInTx(tx: DbTransaction, orderId: string, totalPaise: nu
 
 /** Refund part or all of an order. Returns the refund as it stands afterwards. */
 export async function issueRefund(input: IssueRefundInput): Promise<Refund> {
-  const { refund, razorpayPaymentId } = await prisma.$transaction(async (tx) => {
+  const { refund, razorpayPaymentId, isNew } = await prisma.$transaction(async (tx) => {
     const existing = await tx.refund.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
     if (existing) {
-      return { refund: existing, razorpayPaymentId: null };
+      return { refund: existing, razorpayPaymentId: null, isNew: false };
     }
 
     const [order] = await tx.$queryRaw<
@@ -175,11 +177,16 @@ export async function issueRefund(input: IssueRefundInput): Promise<Refund> {
     return {
       refund: created,
       razorpayPaymentId: method === RefundMethod.RAZORPAY ? order.razorpayPaymentId : null,
+      isNew: true,
     };
   }, MULTI_STEP_TRANSACTION);
 
   // Only a refund this call just created goes to Razorpay — a repeat of the
   // same idempotency key returns the existing row untouched.
+  // A bank-transfer refund is complete the moment it is recorded.
+  if (isNew && refund.status === RefundStatus.PROCESSED) {
+    runAfterResponse(`refund ${refund.id} completed`, () => notifyRefundCompleted(refund.id));
+  }
   if (!razorpayPaymentId || refund.status !== RefundStatus.PENDING || refund.razorpayRefundId) {
     return refund;
   }
@@ -200,7 +207,13 @@ export async function issueRefund(input: IssueRefundInput): Promise<Refund> {
       console.error(`[refunds] ${refund.id}: Razorpay outcome unknown, left pending`, error);
     }
   }
-  return prisma.refund.findUniqueOrThrow({ where: { id: refund.id } });
+  const settled = await prisma.refund.findUniqueOrThrow({ where: { id: refund.id } });
+  // Accepted by Razorpay but not yet paid out. (Paid out already → applyRazorpayRefund
+  // sent "completed"; refused → Sarita sees it flagged, the customer hears nothing.)
+  if (settled.status === RefundStatus.PENDING && settled.razorpayRefundId) {
+    runAfterResponse(`refund ${refund.id} initiated`, () => notifyRefundInitiated(refund.id));
+  }
+  return settled;
 }
 
 /**
@@ -213,15 +226,15 @@ export async function applyRazorpayRefund(refundId: string, remote: RazorpayRefu
     return;
   }
 
-  await prisma.$transaction(async (tx) => {
+  const completed = await prisma.$transaction(async (tx) => {
     const refund = await tx.refund.findUnique({ where: { id: refundId } });
-    if (!refund || refund.status !== RefundStatus.PENDING) return;
+    if (!refund || refund.status !== RefundStatus.PENDING) return false;
 
     if (remote.status === 'pending') {
       if (!refund.razorpayRefundId) {
         await tx.refund.update({ where: { id: refundId }, data: { razorpayRefundId: remote.id } });
       }
-      return;
+      return false;
     }
 
     await tx.refund.update({
@@ -238,7 +251,13 @@ export async function applyRazorpayRefund(refundId: string, remote: RazorpayRefu
       },
     });
     await settleOrderIfFullyRefundedInTx(tx, refund.orderId);
+    return true;
   }, MULTI_STEP_TRANSACTION);
+
+  // Only the call that moved it to PROCESSED announces it — webhook or "Check status", never both.
+  if (completed) {
+    runAfterResponse(`refund ${refundId} completed`, () => notifyRefundCompleted(refundId));
+  }
 }
 
 /** Mark a PENDING refund FAILED and flag the order for Sarita. */

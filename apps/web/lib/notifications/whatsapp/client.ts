@@ -20,7 +20,7 @@ import { prisma } from '@dronagiri/db';
 
 import { serverConfig } from '@/lib/config.server';
 import { hasMarketingConsent } from '@/lib/customers/consent-service';
-import type { WhatsAppTemplate } from '@/lib/notifications/whatsapp/templates';
+import type { WhatsAppBodyParameter, WhatsAppTemplate } from '@/lib/notifications/whatsapp/templates';
 
 /** Inputs the caller provides. Phone may be E.164 with or without leading `+`. */
 export interface SendWhatsAppTemplateOptions<P extends Record<string, string>> {
@@ -60,6 +60,16 @@ interface MetaMessagePayload {
 /** Meta success response shape we read; ignored fields elided. */
 interface MetaSendSuccess {
   messages: Array<{ id: string }>;
+}
+
+/**
+ * Meta refuses a parameter containing a newline or tab, or more than four
+ * spaces in a row, and an empty one. Addresses and reasons typed in admin can
+ * hold any of these, so every value is flattened to one clean line.
+ */
+function metaSafeParameter(parameter: WhatsAppBodyParameter): WhatsAppBodyParameter {
+  const text = parameter.text.replace(/\s+/g, ' ').trim();
+  return { ...parameter, text: text.length > 0 ? text : '-' };
 }
 
 /** Phone number → digits-only, validated. Returns null when not a plausible number. */
@@ -140,7 +150,7 @@ export async function sendWhatsAppTemplate<P extends Record<string, string>>(
     template: {
       name: template.name,
       language: { code: template.language },
-      components: [{ type: 'body', parameters: template.build(params) }],
+      components: [{ type: 'body', parameters: template.build(params).map(metaSafeParameter) }],
     },
   };
 

@@ -10,13 +10,17 @@ import type { IndianStateCode, PaymentMethod } from '@dronagiri/validators';
 
 import {
   amountInWords,
+  apportionByRate,
   computeLine,
+  formatRate,
   sumTotals,
+  summarizeByRate,
   taxTypeFor,
   type GstRateBps,
   type InvoiceLine,
   type InvoiceLineInput,
   type InvoiceTotals,
+  type RateSummary,
   type TaxType,
 } from './invoice-math';
 
@@ -50,6 +54,8 @@ export interface InvoiceParty {
   addressLines: string[];
   stateCode: IndianStateCode;
   phone: string | null;
+  /** A business buyer's GSTIN, so they can claim input tax credit. Absent for consumers. */
+  gstin?: string | null;
 }
 
 export interface InvoicePayment {
@@ -69,8 +75,11 @@ export interface InvoiceInput {
   billTo: InvoiceParty;
   shipTo: InvoiceParty;
   items: InvoiceLineInput[];
-  /** GST-inclusive shipping charge, taxed as its own line; null when shipping is free. */
-  shipping: { pricePaise: number; gstRateBps: GstRateBps } | null;
+  /**
+   * GST-inclusive shipping charged on the order; 0 when free. It takes the
+   * rate of the goods it delivers — split across rates on a mixed order.
+   */
+  shippingPaise: number;
   payment: InvoicePayment;
   /** Prints a SPECIMEN watermark — for design previews, never for issued invoices. */
   specimen?: boolean;
@@ -81,11 +90,18 @@ export interface Invoice extends InvoiceInput {
   placeOfSupply: IndianStateCode;
   taxType: TaxType;
   lines: InvoiceLine[];
+  /** Tax grouped by rate — printed as the tax summary, and what the GST return needs. */
+  rateSummary: RateSummary[];
   totals: InvoiceTotals;
   totalInWords: string;
 }
 
 export const SHIPPING_LINE_DESCRIPTION = 'Shipping Charges';
+
+/** "Shipping Charges", or "Shipping Charges (on 5% items)" when split across rates. */
+function shippingLineDescription(rateBps: GstRateBps, split: boolean): string {
+  return split ? `${SHIPPING_LINE_DESCRIPTION} (on ${formatRate(rateBps)} items)` : SHIPPING_LINE_DESCRIPTION;
+}
 
 export function buildInvoice(input: InvoiceInput): Invoice {
   if (input.items.length === 0) {
@@ -96,15 +112,16 @@ export function buildInvoice(input: InvoiceInput): Invoice {
   const taxType = taxTypeFor(input.seller.stateCode, placeOfSupply);
 
   const lines = input.items.map((item) => computeLine(item, taxType));
-  if (input.shipping && input.shipping.pricePaise > 0) {
+  const shippingShares = apportionByRate(input.items, input.shippingPaise);
+  for (const share of shippingShares) {
     lines.push(
       computeLine(
         {
-          description: SHIPPING_LINE_DESCRIPTION,
+          description: shippingLineDescription(share.rateBps, shippingShares.length > 1),
           hsnCode: '',
-          unitPricePaise: input.shipping.pricePaise,
+          unitPricePaise: share.amountPaise,
           quantity: 1,
-          gstRateBps: input.shipping.gstRateBps,
+          gstRateBps: share.rateBps,
         },
         taxType,
       ),
@@ -117,6 +134,7 @@ export function buildInvoice(input: InvoiceInput): Invoice {
     placeOfSupply,
     taxType,
     lines,
+    rateSummary: summarizeByRate(lines),
     totals,
     totalInWords: amountInWords(totals.totalPaise),
   };

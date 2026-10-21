@@ -122,6 +122,12 @@ function PartyBlock({ heading, party, align }: { heading: string; party: Invoice
         </Text>
       ))}
       {party.phone ? <Text style={textStyle}>Phone: {party.phone}</Text> : null}
+      {party.gstin ? (
+        <Text style={textStyle}>
+          <Text style={styles.label}>GSTIN: </Text>
+          {party.gstin}
+        </Text>
+      ) : null}
       <Text style={textStyle}>
         <Text style={styles.label}>State/UT Code: </Text>
         {party.stateCode}
@@ -209,6 +215,41 @@ function ItemTable({ invoice }: { invoice: Invoice }) {
           <Text style={styles.bold}>Authorized Signatory</Text>
         </View>
       </View>
+    </View>
+  );
+}
+
+/** Tax grouped by rate — one row per rate on the invoice, as the GST return reports it. */
+function TaxSummaryTable({ invoice }: { invoice: Invoice }) {
+  const components = invoice.taxType === 'IGST' ? (['IGST'] as const) : (['CGST', 'SGST'] as const);
+  const width = 539 / (3 + components.length);
+  return (
+    <View style={styles.paymentTable} wrap={false}>
+      <View style={[styles.row, styles.headRow, styles.bold]}>
+        <Text style={[styles.cell, { width }]}>Tax Summary — GST Rate</Text>
+        <Text style={[styles.cell, styles.num, { width }]}>Taxable Value</Text>
+        {components.map((label) => (
+          <Text key={label} style={[styles.cell, styles.num, { width }]}>
+            {label}
+          </Text>
+        ))}
+        <Text style={[styles.cell, styles.num, { width }]}>Total Tax</Text>
+      </View>
+      {invoice.rateSummary.map((summary) => (
+        <View key={summary.rateBps} style={styles.row}>
+          <Text style={[styles.cell, { width }]}>{formatRate(summary.rateBps)}</Text>
+          <Text style={[styles.cell, styles.num, { width }]}>{formatPriceExact(summary.taxablePaise)}</Text>
+          {components.map((label) => {
+            const tax = summary.taxes.find((component) => component.label === label);
+            return (
+              <Text key={label} style={[styles.cell, styles.num, { width }]}>
+                {tax ? `${formatPriceExact(tax.amountPaise)} (${formatRate(tax.rateBps)})` : '—'}
+              </Text>
+            );
+          })}
+          <Text style={[styles.cell, styles.num, { width }]}>{formatPriceExact(summary.taxPaise)}</Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -303,6 +344,8 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
         </View>
 
         <ItemTable invoice={invoice} />
+
+        <TaxSummaryTable invoice={invoice} />
 
         <Text style={styles.note}>Whether tax is payable under reverse charge - No</Text>
 

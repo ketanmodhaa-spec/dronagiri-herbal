@@ -41,6 +41,8 @@ export interface TaxComponent {
 export interface InvoiceLine {
   description: string;
   hsnCode: string;
+  /** The line's full GST rate — what the rate-wise summary groups by. */
+  rateBps: GstRateBps;
   quantity: number;
   unitTaxablePaise: number;
   taxablePaise: number;
@@ -100,6 +102,7 @@ export function computeLine(input: InvoiceLineInput, taxType: TaxType): InvoiceL
   return {
     description: input.description,
     hsnCode: input.hsnCode,
+    rateBps: input.gstRateBps,
     quantity: input.quantity,
     unitTaxablePaise,
     taxablePaise,
@@ -118,6 +121,76 @@ export function sumTotals(lines: InvoiceLine[]): InvoiceTotals {
     }),
     { taxablePaise: 0, taxPaise: 0, totalPaise: 0 },
   );
+}
+
+/** One share of an amount, carried at one GST rate. */
+export interface RateShare {
+  rateBps: GstRateBps;
+  amountPaise: number;
+}
+
+/**
+ * Split an amount across GST rates in proportion to the value of the items
+ * at each rate. Used for shipping: delivery charged by the seller is part of
+ * the value of the goods (CGST Act s.15(2)(c)), so on a mixed-rate order each
+ * rate carries its share. Largest-remainder rounding keeps the shares summing
+ * exactly to the amount. One rate in the order → one share, the whole amount.
+ */
+export function apportionByRate(items: InvoiceLineInput[], amountPaise: number): RateShare[] {
+  const valueByRate = new Map<GstRateBps, number>();
+  for (const item of items) {
+    valueByRate.set(item.gstRateBps, (valueByRate.get(item.gstRateBps) ?? 0) + item.unitPricePaise * item.quantity);
+  }
+  const totalValue = [...valueByRate.values()].reduce((sum, value) => sum + value, 0);
+  const rates = [...valueByRate.keys()].sort((a, b) => a - b);
+  if (amountPaise <= 0 || totalValue <= 0) return [];
+
+  const shares = rates.map((rateBps) => {
+    const exact = (amountPaise * (valueByRate.get(rateBps) ?? 0)) / totalValue;
+    return { rateBps, amountPaise: Math.floor(exact), remainder: exact - Math.floor(exact) };
+  });
+  let leftover = amountPaise - shares.reduce((sum, share) => sum + share.amountPaise, 0);
+  for (const share of [...shares].sort((a, b) => b.remainder - a.remainder)) {
+    if (leftover === 0) break;
+    share.amountPaise += 1;
+    leftover -= 1;
+  }
+  return shares.filter((share) => share.amountPaise > 0).map(({ rateBps, amountPaise: paise }) => ({
+    rateBps,
+    amountPaise: paise,
+  }));
+}
+
+/** The invoice's tax, grouped by rate — the summary GST returns are filed from. */
+export interface RateSummary {
+  rateBps: GstRateBps;
+  taxablePaise: number;
+  /** CGST + SGST, or IGST, summed across every line at this rate. */
+  taxes: TaxComponent[];
+  taxPaise: number;
+  totalPaise: number;
+}
+
+export function summarizeByRate(lines: InvoiceLine[]): RateSummary[] {
+  const byRate = new Map<GstRateBps, RateSummary>();
+  for (const line of lines) {
+    const summary = byRate.get(line.rateBps) ?? {
+      rateBps: line.rateBps,
+      taxablePaise: 0,
+      taxes: line.taxes.map((tax) => ({ ...tax, amountPaise: 0 })),
+      taxPaise: 0,
+      totalPaise: 0,
+    };
+    summary.taxablePaise += line.taxablePaise;
+    summary.taxPaise += line.taxPaise;
+    summary.totalPaise += line.totalPaise;
+    for (const tax of line.taxes) {
+      const component = summary.taxes.find((existing) => existing.label === tax.label);
+      if (component) component.amountPaise += tax.amountPaise;
+    }
+    byRate.set(line.rateBps, summary);
+  }
+  return [...byRate.values()].sort((a, b) => a.rateBps - b.rateBps);
 }
 
 /** `formatRate(250)` → `"2.5%"`, `formatRate(1800)` → `"18%"`. */

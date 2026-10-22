@@ -11,11 +11,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
 
 import type { CartView } from '@dronagiri/types';
 import { checkoutRequestSchema, INDIAN_STATES } from '@dronagiri/validators';
 
+import { PincodeNote } from '@/components/address/pincode-note';
+import { usePincodeLookup } from '@/components/address/use-pincode-lookup';
 import { useCart } from '@/components/cart/cart-provider';
 import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/checkbox-field';
@@ -148,6 +150,17 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<{ message: string; reviewCart: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const fillDelivery = useCallback(
+    (patch: Partial<typeof DELIVERY>) => setDelivery((current) => ({ ...current, ...patch })),
+    [],
+  );
+  const fillBilling = useCallback(
+    (patch: Partial<typeof BILLING>) => setBilling((current) => ({ ...current, ...patch })),
+    [],
+  );
+  const deliveryPin = usePincodeLookup(delivery, fillDelivery);
+  const billingPin = usePincodeLookup(billing, fillBilling);
 
   // Arriving from the cart drawer: close it once, so the form is not hidden
   // behind it — not on every render, or "Edit cart" could never open it.
@@ -335,14 +348,6 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <TextField
-                id={id('shippingAddress.city')}
-                label="City"
-                autoComplete="address-level2"
-                value={delivery.city}
-                onChange={(event) => setDeliveryField('city', event.target.value)}
-                error={err('shippingAddress.city')}
-              />
-              <TextField
                 id={id('shippingAddress.pincode')}
                 label="PIN code"
                 inputMode="numeric"
@@ -351,6 +356,14 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
                 value={delivery.pincode}
                 onChange={(event) => setDeliveryField('pincode', event.target.value)}
                 error={err('shippingAddress.pincode')}
+              />
+              <TextField
+                id={id('shippingAddress.city')}
+                label="City"
+                autoComplete="address-level2"
+                value={delivery.city}
+                onChange={(event) => setDeliveryField('city', event.target.value)}
+                error={err('shippingAddress.city')}
               />
               <SelectField
                 id={id('shippingAddress.state')}
@@ -368,6 +381,7 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
                 ))}
               </SelectField>
             </div>
+            <PincodeNote lookup={deliveryPin} state={delivery.state} audience="customer" address="delivery" />
             {!businessOpen && (
               <CheckboxField
                 name="billingSame"
@@ -415,14 +429,6 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
               />
               <div className="grid gap-4 sm:grid-cols-3">
                 <TextField
-                  id={id('billing.billingAddress.city')}
-                  label="City"
-                  autoComplete="billing address-level2"
-                  value={billing.city}
-                  onChange={(event) => setBillingField('city', event.target.value)}
-                  error={err('billing.billingAddress.city')}
-                />
-                <TextField
                   id={id('billing.billingAddress.pincode')}
                   label="PIN code"
                   inputMode="numeric"
@@ -431,6 +437,14 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
                   value={billing.pincode}
                   onChange={(event) => setBillingField('pincode', event.target.value)}
                   error={err('billing.billingAddress.pincode')}
+                />
+                <TextField
+                  id={id('billing.billingAddress.city')}
+                  label="City"
+                  autoComplete="billing address-level2"
+                  value={billing.city}
+                  onChange={(event) => setBillingField('city', event.target.value)}
+                  error={err('billing.billingAddress.city')}
                 />
                 <SelectField
                   id={id('billing.billingAddress.state')}
@@ -447,6 +461,7 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
                   ))}
                 </SelectField>
               </div>
+              <PincodeNote lookup={billingPin} state={billing.state} audience="customer" address="billing" />
             </Section>
           )}
 

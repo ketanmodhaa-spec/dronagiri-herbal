@@ -121,6 +121,13 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 
 ---
 
+### [22 Oct 2026] PIN codes — verify, warn, never block
+**Decision:** Address PINs are checked against India Post's directory (`apps/web/lib/address/pincode-directory.json`, ~19,300 PINs, built by `apps/web/scripts/build-pincode-directory.mjs`). Typing a PIN fills city and state and shows "Delivering to <area>, <district>, <state>". A PIN not in the directory, or in a different state, shows a warning but the order still goes through; once paid, a delivery address like that lands in **Needs attention** (`attentionReason`) instead of "To pack". Billing PINs are only warned about.
+**Reason:** Jaydeep chose option (b): never turn a customer away over a PIN India Post hasn't published yet; Sarita confirms the rare odd one on WhatsApp. The directory is still the source of truth for city/state autofill.
+**Rule:** Refresh the directory from data.gov.in a couple of times a year. A courier serviceability check (Shiprocket) is a separate, later layer.
+
+---
+
 ## Service Credentials Reference
 *(Values are in .env.local — this is just a checklist)*
 

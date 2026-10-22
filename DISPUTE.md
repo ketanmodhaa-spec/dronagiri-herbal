@@ -17,12 +17,12 @@ Still open: credit-note series (e.g. DH-CN-2627-00001) and invoice series start 
 
 ---
 
-### [OPEN] — Backups: only a 6-hour restore window
+### [RESOLVED] — Backups: only a 6-hour restore window
 **Opened:** 21 Oct 2026 (pre-launch QA)
 **Description:** Neon free plan keeps 6 h of point-in-time history. A mistake noticed the next morning cannot be undone. Options: (a) Neon paid tier with 7+ days PITR and daily snapshots; (b) daily `pg_dump` → encrypted, private Cloudflare R2 bucket, 30-day retention, via a scheduled **GitHub Action** (needs no Vercel Pro). Dumps contain customer personal data — encrypt and restrict.
 **Impact:** Launch blocker
 **Assigned to:** Jaydeep (plan) · Claude (build if b)
-**Resolution:** ⏳ Option (b) built 22 Oct 2026 — `.github/workflows/nightly-db-backup.yml`, setup in `BACKUPS.md`. Closes after the bucket, secrets and age key are set up and one test restore succeeds.
+**Resolution:** ✅ Option (b), live 22 Oct 2026 — `.github/workflows/nightly-db-backup.yml`, nightly 02:30 IST, age-encrypted, private R2 bucket `dronagiri-backups`, 30-day lifecycle rule. First backup decrypted with the private key; all 21 tables present and row counts match production. Setup and restore: `BACKUPS.md`.
 
 ---
 

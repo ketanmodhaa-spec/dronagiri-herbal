@@ -23,6 +23,12 @@ build/
 env.local.txt
 *.env.txt
 
+# Database backups and their decryption key — customer data
+*.age
+*.sql
+*.sql.gz
+*.key
+
 # Logs
 *.log
 npm-debug.log*

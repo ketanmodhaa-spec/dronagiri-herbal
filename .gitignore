@@ -28,6 +28,7 @@ env.local.txt
 *.sql
 *.sql.gz
 *.key
+!packages/db/prisma/migrations/**/*.sql
 
 # Logs
 *.log

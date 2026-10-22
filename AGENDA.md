@@ -186,6 +186,8 @@ Still open:
 ## Parking Lot
 *(Ideas to revisit — not blocking anything)*
 
+- **GSTIN-first business details** (agreed 22 Oct 2026; do before invoicing dealers regularly — not a launch blocker). Business buyer enters GSTIN first → after the checksum passes, a paid GSTIN verification service returns legal name, trade name, status and registered address → fill the business name (legal name, so the invoice matches GST records) and billing address; **refuse cancelled / suspended GSTINs**. Never block if the service is down (fall back to today's manual entry + checksum + state check). Cache each GSTIN 30 days in Redis, look up only after the checksum passes, rate-limit per visitor. Also use it on the admin new-order form and the distributor enquiry form. **Needs Jaydeep first:** pick a provider (compare 2–3 established ones on price, reliability, fields — avoid portal scrapers), complete their KYC, put the API key in Doppler. Build ≈ 1 day.
+- **Edit delivery address on an order** (raised 22 Oct 2026 with the PIN check): when Sarita confirms a corrected address with the customer, she can't change it on the order yet — she notes it when resolving "Needs attention".
 - **Product image in WhatsApp messages** (agreed 14 Oct 2026; start after ~100 confirmed orders and reviews): new templates `order_placed_image` and `order_delivered_image` with an image header showing the first item's hero photo. Fall back to the text-only templates when a product has no photo. Needs `NEXT_PUBLIC_CDN_URL` set.
 
 - Vertex AI Imagen 3 for automatic product photography on new product creation

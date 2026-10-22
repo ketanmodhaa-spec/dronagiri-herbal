@@ -22,7 +22,7 @@ Still open: credit-note series (e.g. DH-CN-2627-00001) and invoice series start 
 **Description:** Neon free plan keeps 6 h of point-in-time history. A mistake noticed the next morning cannot be undone. Options: (a) Neon paid tier with 7+ days PITR and daily snapshots; (b) daily `pg_dump` → encrypted, private Cloudflare R2 bucket, 30-day retention, via a scheduled **GitHub Action** (needs no Vercel Pro). Dumps contain customer personal data — encrypt and restrict.
 **Impact:** Launch blocker
 **Assigned to:** Jaydeep (plan) · Claude (build if b)
-**Resolution:** ⏳ Open
+**Resolution:** ⏳ Option (b) built 22 Oct 2026 — `.github/workflows/nightly-db-backup.yml`, setup in `BACKUPS.md`. Closes after the bucket, secrets and age key are set up and one test restore succeeds.
 
 ---
 

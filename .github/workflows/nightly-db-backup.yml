@@ -1,0 +1,103 @@
+name: Nightly Neon Backup
+
+# Dumps the production database, encrypts it, and stores it in a private R2 bucket.
+# Setup and restore steps: BACKUPS.md
+#
+# Scheduled runs only fire from the repository's default branch.
+
+on:
+  schedule:
+    # 02:30 IST = 21:00 UTC the previous day
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: nightly-db-backup
+  cancel-in-progress: false
+
+defaults:
+  run:
+    # Explicit bash turns on pipefail, so a failed pg_dump fails the job
+    # instead of uploading an empty archive.
+    shell: bash
+
+jobs:
+  backup:
+    name: Backup production database to R2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    env:
+      BUCKET: dronagiri-backups
+      PREFIX: neon/production
+      # AWS CLI 2.23+ sends checksum headers R2 does not accept by default.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+
+    steps:
+      - name: Check secrets
+        env:
+          NEON_DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BACKUP_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+          R2_BACKUP_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          missing=0
+          for name in NEON_DIRECT_URL R2_ACCOUNT_ID R2_BACKUP_ACCESS_KEY_ID R2_BACKUP_SECRET_ACCESS_KEY BACKUP_AGE_RECIPIENT; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing repository secret ${name}"
+              missing=1
+            fi
+          done
+          exit "${missing}"
+
+      # pg_dump must be at least the server's major version — Neon runs Postgres 17.
+      - name: Install PostgreSQL 17 client and age
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17 age
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      - name: Dump, compress and encrypt
+        env:
+          PGSSLMODE: require
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          FILENAME="dronagiri-$(date -u +%Y-%m-%d_%H-%M-%S).sql.gz.age"
+          echo "FILENAME=${FILENAME}" >> "$GITHUB_ENV"
+
+          # The plaintext dump never touches disk: only the encrypted archive is written.
+          /usr/lib/postgresql/17/bin/pg_dump "${DATABASE_URL}" --no-owner --no-acl \
+            | gzip -9 \
+            | age --encrypt --recipient "${BACKUP_AGE_RECIPIENT}" --output "${FILENAME}"
+          ls -lh "${FILENAME}"
+
+      - name: Upload to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          aws s3 cp "${FILENAME}" "s3://${BUCKET}/${PREFIX}/${FILENAME}" \
+            --endpoint-url "${R2_ENDPOINT}" --only-show-errors
+
+          LOCAL_SIZE=$(stat -c %s "${FILENAME}")
+          REMOTE_SIZE=$(aws s3api head-object --bucket "${BUCKET}" --key "${PREFIX}/${FILENAME}" \
+            --endpoint-url "${R2_ENDPOINT}" --query ContentLength --output text)
+          if [[ "${LOCAL_SIZE}" != "${REMOTE_SIZE}" ]]; then
+            echo "::error::Uploaded size ${REMOTE_SIZE} does not match local size ${LOCAL_SIZE}"
+            exit 1
+          fi
+
+          echo "### Backup stored" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`${PREFIX}/${FILENAME}\` — $(numfmt --to=iec "${LOCAL_SIZE}")" >> "$GITHUB_STEP_SUMMARY"

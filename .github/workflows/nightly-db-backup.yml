@@ -75,6 +75,10 @@ jobs:
           FILENAME="dronagiri-$(date -u +%Y-%m-%d_%H-%M-%S).sql.gz.age"
           echo "FILENAME=${FILENAME}" >> "$GITHUB_ENV"
 
+          # Secrets pasted into GitHub often carry a trailing newline or space.
+          DATABASE_URL="${DATABASE_URL//[[:space:]]/}"
+          BACKUP_AGE_RECIPIENT="${BACKUP_AGE_RECIPIENT//[[:space:]]/}"
+
           # The plaintext dump never touches disk: only the encrypted archive is written.
           /usr/lib/postgresql/17/bin/pg_dump "${DATABASE_URL}" --no-owner --no-acl \
             | gzip -9 \
@@ -88,6 +92,11 @@ jobs:
           AWS_DEFAULT_REGION: auto
           R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: |
+          AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID//[[:space:]]/}"
+          AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY//[[:space:]]/}"
+          R2_ENDPOINT="${R2_ENDPOINT//[[:space:]]/}"
+          export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+
           aws s3 cp "${FILENAME}" "s3://${BUCKET}/${PREFIX}/${FILENAME}" \
             --endpoint-url "${R2_ENDPOINT}" --only-show-errors
 

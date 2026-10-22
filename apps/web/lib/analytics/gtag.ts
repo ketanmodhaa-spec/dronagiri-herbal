@@ -15,8 +15,8 @@
 
 import { readConsent } from '@/lib/analytics/consent';
 
-/** Existing GA4 property for dronagiriherbal.in — never recreate (CLAUDE.md). */
-export const GA_MEASUREMENT_ID = 'G-W8GDHYY8RT';
+/** GA4 property for dronagiriherbal.in, owned by store@dronagiriherbal.in (CLAUDE.md). */
+export const GA_MEASUREMENT_ID = 'G-Z0GJEECHZP';
 
 /**
  * Only the production domain reports. Vercel previews and local dev would

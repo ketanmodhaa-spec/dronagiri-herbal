@@ -338,7 +338,7 @@
 - [ ] Product structured data (JSON-LD) with price, availability, image → Google can index it as a product
 - [ ] sitemap.xml generated and accessible at `/sitemap.xml`
 - [ ] robots.txt allows crawlers for shop, disallows for /admin
-- [ ] GA4 tag `G-W8GDHYY8RT` firing on every page (verify in GA real-time)
+- [ ] GA4 tag `G-Z0GJEECHZP` firing on every page (verify in GA real-time)
 - [ ] Favicon shows correctly in browser tab
 - [ ] 404 page helps customer get back to shop, not a dead end
 - [ ] Google Search Console verified — sitemap submitted

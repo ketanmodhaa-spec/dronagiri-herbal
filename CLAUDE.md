@@ -44,7 +44,7 @@ Email:       Resend
 AI:          Anthropic Claude API (DronaBot)
 Hosting:     Vercel (Hobby until full-store launch → Pro)
 Monitoring:  Sentry
-Analytics:   GA4 — property G-W8GDHYY8RT (DO NOT recreate)
+Analytics:   GA4 — G-Z0GJEECHZP, owned by store@dronagiriherbal.in (replaced G-W8GDHYY8RT, 22 Oct 2026)
 ```
 
 ---

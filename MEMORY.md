@@ -32,6 +32,7 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 
 ### [15 May 2026] GA4 property preserved
 **Decision:** Use existing G-W8GDHYY8RT — do NOT create new  
+**Superseded 22 Oct 2026:** nobody could find the login that owns G-W8GDHYY8RT. Switched to **G-Z0GJEECHZP**, owned by store@dronagiriherbal.in, stream https://dronagiriherbal.in. The "trust clock" reason was wrong — GA has no effect on search ranking; only the old visitor history is lost.  
 **Reason:** Property exists since WordPress launch 2022. Creating new resets domain trust clock.
 
 ---

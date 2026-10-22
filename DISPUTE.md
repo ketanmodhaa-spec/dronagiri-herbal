@@ -110,13 +110,13 @@ Still open: credit-note series (e.g. DH-CN-2627-00001) and invoice series start 
 
 ---
 
-### [OPEN] — DNS migration timing
+### [RESOLVED] — DNS migration timing
 **Opened:** 15 May 2026 | **Updated:** 20 May 2026 — canonical domain switched to .in  
 **Description:** New site launches on **dronagiriherbal.in** (Vercel). Old WordPress at dronagiriherbal.com must be handled — either redirected to .in or moved to old.dronagiriherbal.com permanently.  
 **Risk:** Brief downtime during DNS propagation (10–30 minutes). SEO impact if .com → .in redirect not configured correctly (301s required, sitemap regen, GSC change-of-address).  
 **Plan:** TBD — pending Jaydeep's decision on .com fate (kill, redirect, or keep as old.*).  
 **Assigned to:** Deployment agency + Jaydeep  
-**Resolution:** ⏳ Open — scheduled for end of Step 1
+**Resolution:** ✅ 22 Oct 2026 — .com moved to our GoDaddy account, nameservers switched from the old host (`supercp.com`) to Cloudflare (`autumn` / `donovan.ns.cloudflare.com`). Cloudflare Redirect Rule `com-to-in` sends every path on .com and www.com to the same path on .in with a 301, query string kept. Google Workspace email records (MX, SPF, DKIM `google._domainkey`, DMARC) copied and verified. Still to do: map old WordPress `/product/<slug>/` links to new product pages; GSC change-of-address; delete leftover cPanel DNS records, then cancel the old hosting.
 
 ---
 

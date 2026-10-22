@@ -11,10 +11,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FocusEvent,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 
 import type { CartView } from '@dronagiri/types';
-import { checkoutRequestSchema, INDIAN_STATES } from '@dronagiri/validators';
+import {
+  checkoutRequestSchema,
+  INDIAN_STATES,
+  normaliseIndianMobile,
+  shippingAddressSchema,
+} from '@dronagiri/validators';
 
 import { PincodeNote } from '@/components/address/pincode-note';
 import { usePincodeLookup } from '@/components/address/use-pincode-lookup';
@@ -40,13 +53,8 @@ const BILLING = { name: '', line1: '', line2: '', city: '', pincode: '', state: 
 
 type Errors = Record<string, string>;
 
-/** "+91 98250 12345", "098250 12345" → "9825012345". */
-function tenDigitMobile(input: string): string {
-  const digits = input.replace(/\D/g, '');
-  if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
-  if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
-  return digits;
-}
+/** Checked the moment the customer leaves the field, so a typo shows before the final button. */
+type CheckedField = 'phone' | 'recipientName';
 
 const blankToUndefined = (value: string) => (value.trim() ? value.trim() : undefined);
 
@@ -203,6 +211,31 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
   const setBillingField = (field: keyof typeof BILLING, value: string) =>
     setBilling((current) => ({ ...current, [field]: value }));
 
+  /** Flag or clear one delivery field's error from its current value. */
+  function checkDeliveryField(field: CheckedField, raw: string) {
+    const value = field === 'phone' ? normaliseIndianMobile(raw) : raw;
+    const result = shippingAddressSchema.shape[field].safeParse(value);
+    const path = `shippingAddress.${field}`;
+    setErrors((current) => {
+      const next = { ...current };
+      if (result.success) delete next[path];
+      else next[path] = result.error.issues[0]?.message ?? 'Please check this field';
+      return next;
+    });
+  }
+
+  /** Typing fixes an error as soon as the value is right; leaving the field flags a wrong one. */
+  const checkedFieldProps = (field: CheckedField) => ({
+    value: delivery[field],
+    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+      setDeliveryField(field, event.target.value);
+      if (errors[`shippingAddress.${field}`]) checkDeliveryField(field, event.target.value);
+    },
+    onBlur: (event: FocusEvent<HTMLInputElement>) => {
+      if (event.target.value.trim()) checkDeliveryField(field, event.target.value);
+    },
+  });
+
   function openBusiness() {
     setBusinessOpen(true);
     setBillingSame(false);
@@ -212,7 +245,7 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
     return {
       shippingAddress: {
         recipientName: delivery.recipientName.trim(),
-        phone: tenDigitMobile(delivery.phone),
+        phone: normaliseIndianMobile(delivery.phone),
         line1: delivery.line1.trim(),
         line2: blankToUndefined(delivery.line2),
         landmark: blankToUndefined(delivery.landmark),
@@ -309,16 +342,14 @@ export function CheckoutForm({ flatShippingPaise, consentText }: CheckoutFormPro
               autoComplete="tel-national"
               placeholder="10-digit mobile"
               hint="Order updates come to this number on WhatsApp."
-              value={delivery.phone}
-              onChange={(event) => setDeliveryField('phone', event.target.value)}
+              {...checkedFieldProps('phone')}
               error={err('shippingAddress.phone')}
             />
             <TextField
               id={id('shippingAddress.recipientName')}
               label="Full name"
               autoComplete="name"
-              value={delivery.recipientName}
-              onChange={(event) => setDeliveryField('recipientName', event.target.value)}
+              {...checkedFieldProps('recipientName')}
               error={err('shippingAddress.recipientName')}
             />
             <TextField

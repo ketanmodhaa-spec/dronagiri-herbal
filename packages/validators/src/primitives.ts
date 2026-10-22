@@ -29,6 +29,35 @@ export const indianPhoneSchema = z
   .trim()
   .regex(INDIAN_PHONE_REGEX, 'Enter a valid 10-digit Indian mobile number');
 
+/**
+ * "+91 98250 12345", "098250-12345" → "9825012345". Only spacing and the
+ * country / trunk prefix are removed: a letter or stray symbol stays in, so
+ * validation flags the typo instead of quietly dropping it.
+ */
+export function normaliseIndianMobile(input: string): string {
+  const compact = input.replace(/[\s-]/g, '');
+  if (/^\+?91\d{10}$/.test(compact)) return compact.slice(-10);
+  if (/^0\d{10}$/.test(compact)) return compact.slice(1);
+  return compact;
+}
+
+/**
+ * A person's name: letters in any script (with their combining marks, so
+ * Devanagari and Gujarati work), and the space, full stop, apostrophe and
+ * hyphen real names use — "R. K. Patel", "D'Souza". It must start with a
+ * letter. Digits and other symbols are typos, never part of a name.
+ */
+export const PERSON_NAME_REGEX = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
+
+export function personNameSchema(emptyMessage: string) {
+  return z
+    .string()
+    .trim()
+    .min(2, emptyMessage)
+    .max(80, 'Name is too long')
+    .regex(PERSON_NAME_REGEX, 'Use letters only — no numbers or symbols');
+}
+
 /** A 6-digit Indian PIN code. */
 export const indianPincodeSchema = z
   .string()

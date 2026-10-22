@@ -10,7 +10,7 @@
 import { z } from 'zod';
 
 import { gstinSchema } from './partner';
-import { indianPhoneSchema, indianPincodeSchema } from './primitives';
+import { indianPhoneSchema, indianPincodeSchema, personNameSchema } from './primitives';
 import { indianStateNameSchema, stateCodeForName } from './states';
 
 const addressLine = (label: string) =>
@@ -19,7 +19,7 @@ const optionalLine = z.string().trim().max(120, 'Address line is too long').opti
 
 /** Shipping address. Mirrors the immutable `ship*` snapshot on the Order model. */
 export const shippingAddressSchema = z.strictObject({
-  recipientName: z.string().trim().min(2, "Enter the recipient's name").max(80, 'Name is too long'),
+  recipientName: personNameSchema("Enter the recipient's name"),
   phone: indianPhoneSchema,
   line1: addressLine('address'),
   line2: optionalLine,

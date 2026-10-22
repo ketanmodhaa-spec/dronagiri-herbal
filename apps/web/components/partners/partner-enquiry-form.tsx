@@ -8,6 +8,7 @@ import {
   PARTNER_BACKGROUNDS,
   PARTNER_INVESTMENTS,
   PARTNER_TYPES,
+  partnerEnquirySchema,
   type PartnerType,
 } from '@dronagiri/validators';
 
@@ -66,14 +67,26 @@ export function PartnerEnquiryForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [nameError, setNameError] = useState<string | undefined>();
 
   function setField(name: FieldName, value: string) {
     setFields((current) => ({ ...current, [name]: value }));
   }
 
+  /** A name with a digit or symbol in it is a typo — say so next to the field. */
+  function problemWithName(value: string): string | undefined {
+    const result = partnerEnquirySchema.shape.name.safeParse(value);
+    return result.success ? undefined : (result.error.issues[0]?.message ?? 'Please check your name');
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    const nameProblem = problemWithName(fields.name);
+    if (nameProblem) {
+      setNameError(nameProblem);
+      return;
+    }
     if (!partnerType) {
       setError('Choose how you would like to partner with us.');
       return;
@@ -188,7 +201,14 @@ export function PartnerEnquiryForm() {
           autoComplete="name"
           required
           value={fields.name}
-          onChange={(event) => setField('name', event.target.value)}
+          onChange={(event) => {
+            setField('name', event.target.value);
+            if (nameError) setNameError(problemWithName(event.target.value));
+          }}
+          onBlur={(event) => {
+            if (event.target.value.trim()) setNameError(problemWithName(event.target.value));
+          }}
+          error={nameError}
           disabled={submitting}
         />
         <TextField

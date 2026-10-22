@@ -8,7 +8,7 @@
  */
 import { z } from 'zod';
 
-import { indianPhoneSchema, indianPincodeSchema } from './primitives';
+import { indianPhoneSchema, indianPincodeSchema, personNameSchema } from './primitives';
 import { indianStateCodeSchema } from './states';
 
 export const PARTNER_TYPES = ['DISTRIBUTOR', 'STOCKIST', 'RETAILER', 'SALES_AGENT'] as const;
@@ -64,7 +64,7 @@ function optional<T extends z.ZodType>(schema: T) {
 
 export const partnerEnquirySchema = z.strictObject({
   partnerType: z.enum(PARTNER_TYPES, { error: 'Choose how you would like to partner with us' }),
-  name: z.string().trim().min(2, 'Enter your name').max(80, 'Name is too long'),
+  name: personNameSchema('Enter your name'),
   phone: indianPhoneSchema,
   email: optional(z.email({ error: 'Enter a valid email address' }).max(120)),
   businessName: optional(z.string().trim().max(120, 'Business name is too long')),

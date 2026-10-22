@@ -10,7 +10,9 @@
  * this form.
  */
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useMemo, useState, type ChangeEvent, type FocusEvent, type FormEvent } from 'react';
+
+import { normaliseIndianMobile, shippingAddressSchema } from '@dronagiri/validators';
 
 import { PincodeNote } from '@/components/address/pincode-note';
 import { usePincodeLookup } from '@/components/address/use-pincode-lookup';
@@ -42,6 +44,9 @@ interface Line {
   productId: string;
   quantity: string;
 }
+
+/** Checked as soon as Sarita leaves the field — a typo here reaches the customer's WhatsApp. */
+type CheckedField = 'phone' | 'recipientName';
 
 const EMPTY_ADDRESS = {
   phone: '',
@@ -75,6 +80,7 @@ export function ManualOrderForm({
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<CheckedField, string>>>({});
 
   const fillDelivery = useCallback((patch: { city?: string; state?: string }) => {
     if (patch.city !== undefined) setAddress((current) => ({ ...current, city: patch.city ?? current.city }));
@@ -100,6 +106,27 @@ export function ManualOrderForm({
   const setField = (field: keyof typeof EMPTY_ADDRESS, value: string) =>
     setAddress((current) => ({ ...current, [field]: value }));
 
+  /** The problem with a phone or name as typed, or undefined when it is fine. */
+  const problemWith = (field: CheckedField, raw: string) => {
+    const value = field === 'phone' ? normaliseIndianMobile(raw) : raw;
+    const result = shippingAddressSchema.shape[field].safeParse(value);
+    return result.success ? undefined : (result.error.issues[0]?.message ?? 'Please check this field');
+  };
+
+  /** Typing clears an error once the value is right; leaving the field flags a wrong one. */
+  const checkedFieldProps = (field: CheckedField) => ({
+    value: address[field],
+    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+      setField(field, event.target.value);
+      if (fieldErrors[field]) setFieldErrors((current) => ({ ...current, [field]: problemWith(field, event.target.value) }));
+    },
+    onBlur: (event: FocusEvent<HTMLInputElement>) => {
+      if (!event.target.value.trim()) return;
+      setFieldErrors((current) => ({ ...current, [field]: problemWith(field, event.target.value) }));
+    },
+    error: fieldErrors[field],
+  });
+
   const setLine = (key: number, patch: Partial<Line>) =>
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...patch } : line)));
 
@@ -111,6 +138,15 @@ export function ManualOrderForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    const checked = {
+      phone: problemWith('phone', address.phone),
+      recipientName: problemWith('recipientName', address.recipientName),
+    };
+    if (checked.phone || checked.recipientName) {
+      setFieldErrors(checked);
+      setError('Fix the customer details marked in red.');
+      return;
+    }
     const items = lines
       .filter((line) => line.productId)
       .map((line) => ({ productId: line.productId, quantity: Number(line.quantity) }));
@@ -127,7 +163,7 @@ export function ManualOrderForm({
         body: JSON.stringify({
           shippingAddress: {
             recipientName: address.recipientName,
-            phone: address.phone.replace(/\D/g, '').slice(-10),
+            phone: normaliseIndianMobile(address.phone),
             line1: address.line1,
             line2: address.line2 || undefined,
             landmark: address.landmark || undefined,
@@ -183,17 +219,10 @@ export function ManualOrderForm({
           autoComplete="off"
           placeholder="10-digit mobile"
           hint="The customer's identity. The pay link is sent here on WhatsApp."
-          value={address.phone}
-          onChange={(event) => setField('phone', event.target.value)}
+          {...checkedFieldProps('phone')}
           required
         />
-        <TextField
-          label="Name"
-          name="recipientName"
-          value={address.recipientName}
-          onChange={(event) => setField('recipientName', event.target.value)}
-          required
-        />
+        <TextField label="Name" name="recipientName" {...checkedFieldProps('recipientName')} required />
       </section>
 
       <section className="space-y-4 rounded-2xl border border-forest-100 bg-white p-5">

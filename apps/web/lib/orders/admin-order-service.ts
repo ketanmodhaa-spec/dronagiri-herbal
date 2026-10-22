@@ -19,6 +19,7 @@ import {
   type DbTransaction,
 } from '@dronagiri/db';
 
+import { unverifiedDeliveryReason } from '@/lib/address/pincode-directory';
 import { SAMPLE_WINDOW } from '@/lib/customers/loyalty';
 import { AppError, NotFoundError } from '@/lib/errors';
 import { runAfterResponse } from '@/lib/notifications/background';
@@ -306,8 +307,10 @@ export async function markDelivered(orderId: string, adminId: string): Promise<v
  */
 export async function confirmHeldOrder(orderId: string, adminId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
-    const [order] = await tx.$queryRaw<{ status: OrderStatus; paymentStatus: PaymentStatus }[]>`
-      SELECT "status", "paymentStatus" FROM "Order" WHERE "id" = ${orderId} FOR UPDATE
+    const [order] = await tx.$queryRaw<
+      { status: OrderStatus; paymentStatus: PaymentStatus; shipPincode: string; shipState: string }[]
+    >`
+      SELECT "status", "paymentStatus", "shipPincode", "shipState" FROM "Order" WHERE "id" = ${orderId} FOR UPDATE
     `;
     if (!order) throw new NotFoundError('That order does not exist.');
     if (order.status !== OrderStatus.PENDING || order.paymentStatus !== PaymentStatus.PAID) {
@@ -324,13 +327,21 @@ export async function confirmHeldOrder(orderId: string, adminId: string): Promis
       throw new OrderStateError(`Still not enough stock: ${describeShortages(shortages)}.`, 'STOCK_SHORT');
     }
 
+    // The stock hold ends here, but an address India Post cannot place still
+    // keeps the order out of the packing queue — the same check payment makes.
+    const addressReason = unverifiedDeliveryReason(order.shipPincode, order.shipState);
     await tx.order.update({
       where: { id: orderId },
-      data: { status: OrderStatus.CONFIRMED, attentionReason: null },
+      data: { status: OrderStatus.CONFIRMED, attentionReason: addressReason },
     });
     await tx.orderEvent.create({
       data: { orderId, status: OrderStatus.CONFIRMED, note: 'Stock available — confirmed.', createdBy: adminId },
     });
+    if (addressReason) {
+      await tx.orderEvent.create({
+        data: { orderId, status: OrderStatus.CONFIRMED, note: addressReason, createdBy: SYSTEM_ACTOR },
+      });
+    }
   }, MULTI_STEP_TRANSACTION);
   // Sarita released it herself, so only the customer needs telling.
   runAfterResponse(`order ${orderId} released`, () => notifyOrderConfirmed(orderId));

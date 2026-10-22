@@ -10,8 +10,10 @@
  * this form.
  */
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useMemo, useState, type FormEvent } from 'react';
 
+import { PincodeNote } from '@/components/address/pincode-note';
+import { usePincodeLookup } from '@/components/address/use-pincode-lookup';
 import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 import { SelectField } from '@/components/ui/select-field';
@@ -73,6 +75,17 @@ export function ManualOrderForm({
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fillDelivery = useCallback((patch: { city?: string; state?: string }) => {
+    if (patch.city !== undefined) setAddress((current) => ({ ...current, city: patch.city ?? current.city }));
+    if (patch.state !== undefined) setState(patch.state);
+  }, []);
+  const fillBilling = useCallback(
+    (patch: { city?: string; state?: string }) => setBill((current) => ({ ...current, ...patch })),
+    [],
+  );
+  const deliveryPin = usePincodeLookup({ pincode: address.pincode, city: address.city, state }, fillDelivery);
+  const billingPin = usePincodeLookup(bill, fillBilling);
 
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
 
@@ -206,19 +219,19 @@ export function ManualOrderForm({
         />
         <div className="grid grid-cols-2 gap-4">
           <TextField
-            label="City"
-            name="city"
-            value={address.city}
-            onChange={(event) => setField('city', event.target.value)}
-            required
-          />
-          <TextField
             label="PIN code"
             name="pincode"
             inputMode="numeric"
             maxLength={6}
             value={address.pincode}
             onChange={(event) => setField('pincode', event.target.value)}
+            required
+          />
+          <TextField
+            label="City"
+            name="city"
+            value={address.city}
+            onChange={(event) => setField('city', event.target.value)}
             required
           />
         </div>
@@ -229,6 +242,7 @@ export function ManualOrderForm({
             </option>
           ))}
         </SelectField>
+        <PincodeNote lookup={deliveryPin} state={state} audience="admin" address="delivery" />
       </section>
 
       <section className="space-y-4 rounded-2xl border border-forest-100 bg-white p-5">
@@ -270,18 +284,18 @@ export function ManualOrderForm({
             />
             <div className="grid grid-cols-2 gap-4">
               <TextField
-                label="City"
-                name="billCity"
-                value={bill.city}
-                onChange={(event) => setBill((current) => ({ ...current, city: event.target.value }))}
-              />
-              <TextField
                 label="PIN code"
                 name="billPincode"
                 inputMode="numeric"
                 maxLength={6}
                 value={bill.pincode}
                 onChange={(event) => setBill((current) => ({ ...current, pincode: event.target.value }))}
+              />
+              <TextField
+                label="City"
+                name="billCity"
+                value={bill.city}
+                onChange={(event) => setBill((current) => ({ ...current, city: event.target.value }))}
               />
             </div>
             <SelectField
@@ -296,6 +310,7 @@ export function ManualOrderForm({
                 </option>
               ))}
             </SelectField>
+            <PincodeNote lookup={billingPin} state={bill.state} audience="admin" address="billing" />
           </>
         )}
       </section>

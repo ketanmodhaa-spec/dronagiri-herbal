@@ -27,6 +27,7 @@ import {
   type DbTransaction,
 } from '@dronagiri/db';
 
+import { unverifiedDeliveryReason } from '@/lib/address/pincode-directory';
 import { serverConfig } from '@/lib/config.server';
 import { formatPrice } from '@/lib/format';
 import { runAfterResponse } from '@/lib/notifications/background';
@@ -294,9 +295,11 @@ async function confirmPaidOrderInTx(
       paymentStatus: PaymentStatus;
       razorpayPaymentId: string | null;
       customerId: string;
+      shipPincode: string;
+      shipState: string;
     }[]
   >`
-    SELECT "status", "paymentStatus", "razorpayPaymentId", "customerId"
+    SELECT "status", "paymentStatus", "razorpayPaymentId", "customerId", "shipPincode", "shipState"
     FROM "Order" WHERE "id" = ${args.orderId} FOR UPDATE
   `;
   if (!order) {
@@ -356,6 +359,13 @@ async function confirmPaidOrderInTx(
     },
   });
   await tx.customer.update({ where: { id: order.customerId }, data: { lastOrderAt: now } });
+
+  // Paid and confirmed as usual, but kept out of the packing queue until
+  // Sarita has checked an address whose PIN India Post cannot place.
+  const addressReason = unverifiedDeliveryReason(order.shipPincode, order.shipState);
+  if (addressReason) {
+    await holdForAttention(tx, args.orderId, OrderStatus.CONFIRMED, addressReason);
+  }
 
   return { outcome: 'CONFIRMED' };
 }

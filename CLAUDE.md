@@ -18,6 +18,12 @@
 
 ---
 
+## Standing Principles
+
+@AGENTS.md
+
+---
+
 ## The Three Mandates
 
 Every decision is governed by these, in this order:
@@ -54,6 +60,7 @@ Analytics:   GA4 — G-Z0GJEECHZP, owned by store@dronagiriherbal.in (replaced G
 ```
 dronagiri-herbal/                   ← root (D:/dronagiri-herbal)
 ├── CLAUDE.md                       ← this file
+├── AGENTS.md                       ← standing principles (imported above)
 ├── MEMORY.md                       ← architectural decisions log
 ├── AGENDA.md                       ← current tasks and sprint
 ├── DISCUSSION.md                   ← key discussions log

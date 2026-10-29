@@ -19,6 +19,7 @@ import { clientIp, clientPlace } from '@/lib/http';
 import { runAfterResponse } from '@/lib/notifications/background';
 import { sendEmail } from '@/lib/notifications/email/client';
 import { getRedis } from '@/lib/redis';
+import { absoluteUrl } from '@/lib/seo/site';
 
 export enum SecurityEvent {
   ADMIN_LOGIN_FAILED = 'admin_login_failed',
@@ -111,7 +112,7 @@ const ALARM_RULES: Record<SecurityEvent, AlarmRule> = {
   [SecurityEvent.WHATSAPP_SEND_FAILED]: {
     threshold: 1,
     headline: () => 'Admin login alert did not reach Sarita',
-    action: 'Check /admin/messages for the error. Until it is fixed, login alerts reach only this inbox.',
+    action: `Check ${absoluteUrl('/admin/messages')} for the error. Until it is fixed, login alerts reach only this inbox.`,
   },
 };
 
@@ -120,6 +121,20 @@ const MUTE_SECONDS = 4 * 60 * 60;
 const RECENT_KEPT = 5;
 /** Dev and production share one Redis — a dev test must never mute a real alarm. */
 const KEY_PREFIX = serverConfig.isProduction ? 'sec' : 'sec-dev';
+
+const istFormat = new Intl.DateTimeFormat('en-IN', {
+  timeZone: 'Asia/Kolkata',
+  day: 'numeric',
+  month: 'short',
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+});
+
+/** "29 Oct, 12:40 pm" — Indian time, as Sarita and Jaydeep read it. */
+export function formatIst(date: Date): string {
+  return istFormat.format(date);
+}
 
 /** A short, stable hash of an identifier — never reversible to the email itself. */
 export function fingerprint(value: string): string {
@@ -171,7 +186,7 @@ async function sendAlarm(
   console.error(`[security] ALARM ${event}: ${headline}`);
 
   const lines = recent.map((entry) =>
-    [entry.at, entry.route, entry.ip ?? 'unknown address', entry.place, entry.source, entry.target]
+    [formatIst(new Date(entry.at)), entry.route, entry.ip ?? 'unknown address', entry.place, entry.source, entry.target]
       .filter((part): part is string => typeof part === 'string' && part.length > 0)
       .join(' · '),
   );

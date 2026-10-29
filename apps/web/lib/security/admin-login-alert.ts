@@ -17,7 +17,7 @@ import { clientIp, clientPlace } from '@/lib/http';
 import { sendEmail } from '@/lib/notifications/email/client';
 import { sendWhatsAppTemplate } from '@/lib/notifications/whatsapp/client';
 import { adminLoginAlertTemplate } from '@/lib/notifications/whatsapp/templates';
-import { SecurityEvent, recordSecurityEvent } from '@/lib/security/security-events';
+import { SecurityEvent, formatIst, recordSecurityEvent } from '@/lib/security/security-events';
 import { absoluteUrl } from '@/lib/seo/site';
 
 export interface AdminLoginAlert {
@@ -28,15 +28,6 @@ export interface AdminLoginAlert {
   place: string;
   ip: string | null;
 }
-
-const signedInAtFormat = new Intl.DateTimeFormat('en-IN', {
-  timeZone: 'Asia/Kolkata',
-  day: 'numeric',
-  month: 'short',
-  hour: 'numeric',
-  minute: '2-digit',
-  hour12: true,
-});
 
 /** "Chrome on Android" — or as much of it as the browser reveals. */
 function describeDevice(req: NextRequest): string {
@@ -50,7 +41,7 @@ export function adminLoginAlertFrom(admin: AdminClaims, req: NextRequest): Admin
   return {
     adminName: admin.name,
     role: admin.role,
-    signedInAt: signedInAtFormat.format(new Date()),
+    signedInAt: formatIst(new Date()),
     device: describeDevice(req),
     place: clientPlace(req) ?? 'Unknown location',
     ip: clientIp(req),
@@ -86,7 +77,8 @@ export async function sendAdminLoginAlert(alert: AdminLoginAlert): Promise<void>
   await sendEmail({
     to: serverConfig.security.alertEmail,
     templateName: 'admin_login_alert',
-    subject: `[Dronagiri security] Admin login: ${alert.adminName}`,
+    // The time keeps each login its own email; Gmail folds identical subjects together.
+    subject: `[Dronagiri security] Admin login: ${alert.adminName}, ${alert.signedInAt}`,
     text: [
       `${alert.adminName} (${alert.role}) signed in to the admin panel at ${alert.signedInAt}.`,
       '',
@@ -94,7 +86,7 @@ export async function sendAdminLoginAlert(alert: AdminLoginAlert): Promise<void>
       `Place: ${alert.place}`,
       `Address: ${alert.ip ?? 'unknown'}`,
       '',
-      whatsapp.sent ? 'Sarita was alerted on WhatsApp.' : 'Sarita was NOT alerted on WhatsApp — see /admin/messages.',
+      whatsapp.sent ? 'Sarita was alerted on WhatsApp.' : `Sarita was NOT alerted on WhatsApp — see ${absoluteUrl('/admin/messages')}`,
       '',
       `Not expected? Change the password — it signs out every device: ${changePasswordUrl}`,
       'Then follow SECURITY-PLAYBOOK.md, scenario 1.',

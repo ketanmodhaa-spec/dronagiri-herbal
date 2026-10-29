@@ -14,7 +14,9 @@ import {
 import { adminAccessCookie, adminRefreshCookie } from '@/lib/auth/admin-session';
 import { AuthError, RateLimitError, ValidationError } from '@/lib/errors';
 import { errorResponse, jsonData } from '@/lib/http';
+import { runAfterResponse } from '@/lib/notifications/background';
 import { getAdminLoginLimiter } from '@/lib/ratelimit';
+import { adminLoginAlertFrom, sendAdminLoginAlert } from '@/lib/security/admin-login-alert';
 import { SecurityEvent, fingerprint, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 
 /** bcrypt, Prisma and the Node crypto module — this route must run on Node. */
@@ -51,6 +53,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       },
     );
     const session = await startAdminSession(admin, context);
+
+    const loginAlert = adminLoginAlertFrom(session.admin, req);
+    runAfterResponse(`admin login alert ${session.admin.id}`, () => sendAdminLoginAlert(loginAlert));
 
     const response = jsonData({ admin: toSafeAdmin(session.admin) });
     response.cookies.set(adminAccessCookie(session.accessToken));

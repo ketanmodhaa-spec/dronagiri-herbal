@@ -16,6 +16,7 @@ import { placeCheckoutOrder } from '@/lib/checkout/checkout-service';
 import { RateLimitError, ValidationError } from '@/lib/errors';
 import { clientIp, errorResponse, jsonData } from '@/lib/http';
 import { getCheckoutLimiter } from '@/lib/ratelimit';
+import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const sessionId = await requireGuestSession();
     const { success } = await getCheckoutLimiter().limit(`${sessionId}:${clientIp(req) ?? 'unknown'}`);
     if (!success) {
+      recordSecurityEvent(SecurityEvent.RATE_LIMITED, { ...requestDetails(req), source: 'checkout' });
       throw new RateLimitError('Too many attempts. Please wait a minute and try again.');
     }
 

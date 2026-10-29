@@ -10,6 +10,7 @@ import { reviewSubmitSchema } from '@dronagiri/validators';
 import { RateLimitError, ValidationError } from '@/lib/errors';
 import { clientIp, errorResponse, jsonData } from '@/lib/http';
 import { getReviewSubmitLimiter } from '@/lib/ratelimit';
+import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 import { submitReview } from '@/lib/reviews/review-service';
 
 export const runtime = 'nodejs';
@@ -19,6 +20,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const { success } = await getReviewSubmitLimiter().limit(clientIp(req) ?? 'unknown');
     if (!success) {
+      recordSecurityEvent(SecurityEvent.RATE_LIMITED, { ...requestDetails(req), source: 'review-submit' });
       throw new RateLimitError();
     }
 

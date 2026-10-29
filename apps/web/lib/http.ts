@@ -16,6 +16,28 @@ export function clientIp(req: Request): string | null {
   return first ? first : null;
 }
 
+/**
+ * Roughly where the client is — "Ahmedabad, GJ, IN" — from the geo headers
+ * Vercel's edge adds. Null when they are absent (local dev).
+ */
+export function clientPlace(req: Request): string | null {
+  const parts = ['x-vercel-ip-city', 'x-vercel-ip-country-region', 'x-vercel-ip-country']
+    .map((name) => req.headers.get(name))
+    .filter((value): value is string => value !== null && value.length > 0)
+    .map(decodeHeaderValue);
+  return parts.length > 0 ? parts.join(', ') : null;
+}
+
+/** Vercel URL-encodes the city ("New%20Delhi"); a malformed escape is shown as sent. */
+function decodeHeaderValue(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch (error) {
+    if (!(error instanceof URIError)) throw error;
+    return value;
+  }
+}
+
 /** Success envelope — `{ "data": ... }`. */
 export function jsonData<T>(data: T, init?: ResponseInit): NextResponse {
   return NextResponse.json({ data }, init);

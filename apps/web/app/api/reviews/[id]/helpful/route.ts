@@ -10,6 +10,7 @@ import { requireGuestSession } from '@/lib/auth/require-guest-session';
 import { NotFoundError, RateLimitError } from '@/lib/errors';
 import { clientIp, errorResponse, jsonData } from '@/lib/http';
 import { getReviewVoteLimiter } from '@/lib/ratelimit';
+import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 import { markHelpful } from '@/lib/reviews/review-service';
 
 export const runtime = 'nodejs';
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest, context: RouteContext): Promise<Res
     }
     const { success } = await getReviewVoteLimiter().limit(clientIp(req) ?? 'unknown');
     if (!success) {
+      recordSecurityEvent(SecurityEvent.RATE_LIMITED, { ...requestDetails(req), source: 'review-vote' });
       throw new RateLimitError('Too many votes. Please wait a few minutes.');
     }
     const helpfulCount = await markHelpful(params.id, sessionId);

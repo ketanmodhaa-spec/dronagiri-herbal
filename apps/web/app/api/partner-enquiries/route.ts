@@ -14,6 +14,7 @@ import { RateLimitError, ValidationError } from '@/lib/errors';
 import { clientIp, errorResponse, jsonData } from '@/lib/http';
 import { submitPartnerEnquiry } from '@/lib/partners/partner-enquiry-service';
 import { getPartnerEnquiryLimiter } from '@/lib/ratelimit';
+import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const { success } = await getPartnerEnquiryLimiter().limit(clientIp(req) ?? 'unknown');
     if (!success) {
+      recordSecurityEvent(SecurityEvent.RATE_LIMITED, { ...requestDetails(req), source: 'partner-enquiry' });
       throw new RateLimitError(
         'We have already received your enquiry. Please wait a while before sending another.',
       );

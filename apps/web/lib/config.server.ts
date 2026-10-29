@@ -91,6 +91,42 @@ export const serverConfig = {
     },
   },
 
+  /**
+   * Security alarms — emails to Jaydeep on attack patterns, and the
+   * admin-login alert to Sarita (WhatsApp) and Jaydeep (email).
+   *
+   * `alarmsEnabled` is the kill switch: only `'true'` sends. When off, every
+   * security event is still written to the log; nothing is counted or sent.
+   */
+  security: {
+    get alarmsEnabled(): boolean {
+      return process.env.SECURITY_ALARMS_ENABLED === 'true';
+    },
+    /** Jaydeep's inbox for alarms and admin-login copies. */
+    get alertEmail(): string {
+      return required('SECURITY_ALERT_EMAIL');
+    },
+  },
+
+  /**
+   * Cloudflare Turnstile — proves a real browser on the admin login and the
+   * partner enquiry form. Dev uses Cloudflare's published test keys, which
+   * always pass and report a placeholder hostname and action.
+   */
+  turnstile: {
+    /** Public by design — rendered into the widget. */
+    get siteKey(): string {
+      return required('TURNSTILE_SITE_KEY');
+    },
+    get secretKey(): string {
+      return required('TURNSTILE_SECRET_KEY');
+    },
+    /** Cloudflare's test secrets all start `1x0000`, `2x0000` or `3x0000`. */
+    get isTestMode(): boolean {
+      return /^[123]x0000/.test(required('TURNSTILE_SECRET_KEY'));
+    },
+  },
+
   shipping: {
     /**
      * Order subtotal, in paise, at which shipping becomes free (₹499 = 49900).

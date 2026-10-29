@@ -17,7 +17,8 @@ import {
   type AdminClaims,
 } from '@/lib/auth/admin-session';
 import { AuthError } from '@/lib/errors';
-import { clientIp } from '@/lib/http';
+import { clientIp, clientPlace } from '@/lib/http';
+import { SecurityEvent, fingerprint, recordSecurityEvent } from '@/lib/security/security-events';
 
 /** bcrypt cost factor — matches the catalogue seed and the ensure-admin script. */
 const BCRYPT_ROUNDS = 12;
@@ -52,6 +53,8 @@ export function toSafeAdmin(admin: AdminUser | AdminClaims): AdminClaims {
 export interface SessionContext {
   ipAddress: string | null;
   userAgent: string | null;
+  /** Roughly where — for security alerts only, not stored. */
+  place: string | null;
 }
 
 /** Derive the session context from an incoming request. */
@@ -59,6 +62,7 @@ export function sessionContextFromRequest(req: NextRequest): SessionContext {
   return {
     ipAddress: clientIp(req),
     userAgent: req.headers.get('user-agent'),
+    place: clientPlace(req),
   };
 }
 
@@ -148,6 +152,12 @@ export async function refreshAdminSession(
   if (existing.revokedAt) {
     // A revoked token being presented = reuse = theft. Burn the whole family.
     await revokeAllAdminSessions(existing.adminUserId);
+    recordSecurityEvent(SecurityEvent.ADMIN_REFRESH_REUSE, {
+      route: '/api/admin/auth/refresh',
+      ip: context.ipAddress,
+      place: context.place,
+      target: fingerprint(existing.adminUserId),
+    });
     throw new AuthError(
       'Your session was ended for security. Please sign in again.',
       'SESSION_REVOKED',

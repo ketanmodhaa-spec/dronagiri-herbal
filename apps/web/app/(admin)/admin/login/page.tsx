@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { AdminLoginForm } from '@/components/admin/admin-login-form';
+import { serverConfig } from '@/lib/config.server';
 
 export const metadata: Metadata = { title: 'Sign in' };
 
@@ -12,7 +13,7 @@ export default function AdminLoginPage() {
           <p className="font-display text-2xl font-semibold text-forest-900">Dronagiri Herbal</p>
           <p className="mt-1 text-sm text-stone">Admin sign in</p>
         </div>
-        <AdminLoginForm />
+        <AdminLoginForm turnstileSiteKey={serverConfig.turnstile.siteKey} />
       </div>
     </main>
   );

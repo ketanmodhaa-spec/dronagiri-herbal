@@ -1,6 +1,6 @@
 # WhatsApp Template Submission Sheet
 
-> Copy-paste source for submitting Dronagiri Herbal's 15 templates in
+> Copy-paste source for submitting Dronagiri Herbal's 16 templates in
 > **Meta WhatsApp Manager → Message templates → Create template**.
 >
 > ⚠️ **The `{{n}}` order below is not cosmetic.** It must match the order each
@@ -263,6 +263,33 @@ Samples: `DH-1042` · `598` · `paid online` · `2 × Hair Protein Pack, 1 × Ro
 > Meta refuses parameters containing line breaks, so the items arrive as one
 > comma-separated line. The last line is fixed text on purpose: Meta rejects
 > a body that ends with a variable.
+
+---
+
+## 16. `admin_login_alert` — Category: **Utility** *(recipient: Sarita)*
+
+Sent to Sarita's personal WhatsApp every time anyone signs in to the admin
+panel with a password — her or a staff member. Silent session refreshes do
+not send it. An email copy goes to Jaydeep (`SECURITY_ALERT_EMAIL`).
+
+Variables: `{{1}}` adminName · `{{2}}` signedInAt · `{{3}}` device ·
+`{{4}}` place · `{{5}}` changePasswordUrl
+
+```
+🔐 {{1}} signed in to the Dronagiri Herbal admin at {{2}}.
+
+Device: {{3}}
+Place: {{4}}
+
+If this wasn't you, change the password now — it signs out every device: {{5}}
+
+Dronagiri Herbal security alert
+```
+
+Samples: `Sarita` · `29 Oct, 9:42 pm` · `Chrome on Android` · `Ahmedabad, GJ, IN` · `https://dronagiriherbal.in/admin/change-password`
+
+> The place is approximate — it comes from the internet connection, so mobile
+> data often shows a nearby city.
 
 ---
 

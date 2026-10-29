@@ -8,10 +8,12 @@ import {
   PARTNER_BACKGROUNDS,
   PARTNER_INVESTMENTS,
   PARTNER_TYPES,
+  TURNSTILE_TOKEN_HEADER,
   partnerEnquirySchema,
   type PartnerType,
 } from '@dronagiri/validators';
 
+import { TurnstileWidget } from '@/components/security/turnstile-widget';
 import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 import { CheckIcon } from '@/components/ui/icons';
@@ -60,7 +62,7 @@ const EMPTY_FIELDS: Record<FieldName, string> = {
  * city, state and consent are required — a short form gets more real leads.
  * The server re-validates everything; this component only collects.
  */
-export function PartnerEnquiryForm() {
+export function PartnerEnquiryForm({ turnstileSiteKey }: { turnstileSiteKey: string }) {
   const [partnerType, setPartnerType] = useState<PartnerType | null>(null);
   const [fields, setFields] = useState(EMPTY_FIELDS);
   const [consent, setConsent] = useState(false);
@@ -68,6 +70,8 @@ export function PartnerEnquiryForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [nameError, setNameError] = useState<string | undefined>();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   function setField(name: FieldName, value: string) {
     setFields((current) => ({ ...current, [name]: value }));
@@ -91,12 +95,13 @@ export function PartnerEnquiryForm() {
       setError('Choose how you would like to partner with us.');
       return;
     }
+    if (!turnstileToken) return;
     setSubmitting(true);
 
     try {
       const response = await fetch('/api/partner-enquiries', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', [TURNSTILE_TOKEN_HEADER]: turnstileToken },
         body: JSON.stringify({ ...fields, partnerType, consent }),
       });
       if (response.ok) {
@@ -111,6 +116,8 @@ export function PartnerEnquiryForm() {
     } catch {
       setError('Could not reach the server. Check your connection and try again.');
     }
+    // The token was spent on this attempt — fetch a fresh one for the next.
+    setTurnstileResetKey((key) => key + 1);
     setSubmitting(false);
   }
 
@@ -356,8 +363,21 @@ export function PartnerEnquiryForm() {
         .
       </p>
 
+      <TurnstileWidget
+        siteKey={turnstileSiteKey}
+        action="partner_enquiry"
+        onToken={setTurnstileToken}
+        onError={() => setError('The security check could not load. Refresh the page and try again.')}
+        resetKey={turnstileResetKey}
+      />
+
       {/* Greyed out until consent is ticked; the server still enforces consent. */}
-      <Button type="submit" size="lg" disabled={submitting || !consent} className="w-full sm:w-auto">
+      <Button
+        type="submit"
+        size="lg"
+        disabled={submitting || !consent || !turnstileToken}
+        className="w-full sm:w-auto"
+      >
         {submitting ? 'Sending…' : 'Send enquiry'}
       </Button>
     </form>

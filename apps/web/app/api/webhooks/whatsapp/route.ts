@@ -30,6 +30,7 @@ import { serverConfig } from '@/lib/config.server';
 import { applyConsentKeyword, consentKeyword } from '@/lib/customers/consent-service';
 import { customerPhoneFromWhatsApp } from '@/lib/customers/customer-phone';
 import { verifyWhatsAppSignature } from '@/lib/notifications/whatsapp/signature';
+import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 
 /** Node runtime — `node:crypto` (used by the signature helper) isn't on edge. */
 export const runtime = 'nodejs';
@@ -182,6 +183,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const signature = req.headers.get('x-hub-signature-256');
 
   if (!verifyWhatsAppSignature(rawBody, signature, serverConfig.whatsapp.webhookAppSecret)) {
+    recordSecurityEvent(SecurityEvent.WEBHOOK_BAD_SIGNATURE, { ...requestDetails(req), source: 'whatsapp' });
     return new Response('Invalid signature', { status: 401 });
   }
 

@@ -27,6 +27,7 @@ import { recordFailedPaymentAttempt, settleOnlinePayment } from '@/lib/payments/
 import type { RazorpayRefund } from '@/lib/payments/razorpay-client';
 import { verifyWebhookSignature } from '@/lib/payments/razorpay-signature';
 import { getRedis } from '@/lib/redis';
+import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const rawBody = await req.text();
   const signature = req.headers.get('x-razorpay-signature');
   if (!verifyWebhookSignature(rawBody, signature, serverConfig.razorpay.webhookSecret)) {
+    recordSecurityEvent(SecurityEvent.WEBHOOK_BAD_SIGNATURE, { ...requestDetails(req), source: 'razorpay' });
     return new Response('Invalid signature', { status: 401 });
   }
 

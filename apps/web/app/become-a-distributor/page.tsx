@@ -6,6 +6,7 @@ import { SiteHeader } from '@/components/shop/site-header';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { LeafIcon } from '@/components/ui/icons';
+import { serverConfig } from '@/lib/config.server';
 import { DEFAULT_OG_IMAGE, absoluteUrl } from '@/lib/seo/site';
 
 /**
@@ -160,7 +161,7 @@ export default function BecomeADistributorPage() {
                 </p>
               </div>
               <div className="mt-10">
-                <PartnerEnquiryForm />
+                <PartnerEnquiryForm turnstileSiteKey={serverConfig.turnstile.siteKey} />
               </div>
             </div>
           </Container>

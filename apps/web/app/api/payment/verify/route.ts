@@ -22,6 +22,7 @@ import { PaymentError } from '@/lib/payments/payment-error';
 import { settleOnlinePayment } from '@/lib/payments/payment-service';
 import { verifyCheckoutSignature } from '@/lib/payments/razorpay-signature';
 import { getPaymentVerifyLimiter } from '@/lib/ratelimit';
+import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       `${sessionId}:${clientIp(req) ?? 'unknown'}`,
     );
     if (!success) {
+      recordSecurityEvent(SecurityEvent.RATE_LIMITED, { ...requestDetails(req), source: 'payment-verify' });
       throw new RateLimitError();
     }
 
@@ -50,6 +52,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       keySecret: serverConfig.razorpay.keySecret,
     });
     if (!genuine) {
+      recordSecurityEvent(SecurityEvent.PAYMENT_BAD_SIGNATURE, requestDetails(req));
       throw new PaymentError('We could not verify this payment.', 'INVALID_SIGNATURE');
     }
 

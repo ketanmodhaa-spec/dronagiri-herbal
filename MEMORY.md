@@ -128,6 +128,14 @@ Would require two auth systems running in parallel. Firebase Phone Auth handles 
 
 ---
 
+### [29 Oct 2026] Security alarms, admin-login alert, Turnstile
+**Decision:** Every blocked attempt is a `SecurityEvent` (`lib/security/security-events.ts`) — one `[security]` log line, an hourly Redis count, and one email to `SECURITY_ALERT_EMAIL` when a threshold is reached, then a 4-hour mute per event type. Every password login to admin sends `admin_login_alert` to Sarita (WhatsApp) and Jaydeep (email). Cloudflare Turnstile guards the admin login and the partner enquiry form only.  
+**Reason:** Every defence blocked silently — an attack or a stolen password would never be noticed. Alarm logic lives in the repo (Redis + Resend), not in Sentry alert rules, so it is explicit and testable.  
+**Rulings (architect, 29 Oct):** Turnstile **fails open on admin login** when Cloudflare is unreachable (rate limit + bcrypt still stand; `TURNSTILE_UNAVAILABLE` alarms) — a Cloudflare outage must not lock Sarita out. The enquiry form fails closed. No Turnstile on checkout (friction on the money step), reviews (signed token), cart, votes, webhooks. WhatsApp OTP issue gets Turnstile when its route is built — every OTP is a paid send.  
+**Kill switch:** `SECURITY_ALARMS_ENABLED` (only `true` sends). Dev Redis keys are prefixed `sec-dev:` because dev and prd share one Upstash database.
+
+---
+
 ## Service Credentials Reference
 *(Values are in .env.local — this is just a checklist)*
 

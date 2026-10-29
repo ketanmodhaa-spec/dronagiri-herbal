@@ -260,6 +260,31 @@ export const newOrderAlertTemplate = defineTemplate<{
   ],
 });
 
+/**
+ * Admin-login alert to Sarita, sent on every password sign-in to the admin
+ * panel — hers or a staff member's. If it wasn't expected, the link changes
+ * the password, which signs out every device.
+ */
+export const adminLoginAlertTemplate = defineTemplate<{
+  adminName: string;
+  /** "29 Oct, 9:42 pm" — IST. */
+  signedInAt: string;
+  device: string;
+  place: string;
+  changePasswordUrl: string;
+}>({
+  name: 'admin_login_alert',
+  category: 'UTILITY',
+  language: 'en',
+  build: (p) => [
+    { type: 'text', text: p.adminName },
+    { type: 'text', text: p.signedInAt },
+    { type: 'text', text: p.device },
+    { type: 'text', text: p.place },
+    { type: 'text', text: p.changePasswordUrl },
+  ],
+});
+
 /* ─── Marketing (requires marketingConsent on the Customer) ───────────── */
 
 /** Repeat-order nudge — sent N days after the typical re-purchase interval. */
@@ -304,6 +329,8 @@ export const allTemplates = [
   refundCompletedTemplate,
   restockAlertTemplate,
   dailySummaryTemplate,
+  newOrderAlertTemplate,
+  adminLoginAlertTemplate,
   repurchaseNudgeTemplate,
   winbackNudgeTemplate,
 ] as const;

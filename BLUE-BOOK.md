@@ -178,10 +178,10 @@ Each of these lives in the repo. Each has a reason. None is optional.
 | `BACKUPS.md` | Nightly backup + how to restore | When the backup job or storage changes |
 | `SECRET-ROTATION.md` | Drill book — how to rotate each secret *(not yet written)* | When a service is added/removed |
 | `ROTATION-LOG.md` | Dated log of every rotation performed *(not yet written)* | Every time a secret rotates |
-| `SECURITY-PLAYBOOK.md` | Five incident response scenarios *(not yet written)* | After any incident teaches a lesson |
+| `SECURITY-PLAYBOOK.md` | Five incident response scenarios | After any incident teaches a lesson |
 
-Until the three unwritten files exist, any step below that points to
-them falls back to Part VII step 3.
+Until the two unwritten files exist, the SECURITY-PLAYBOOK carries
+the rotation steps for an emergency (scenario 2).
 
 **A document that is never updated is a lie.** Either keep it current
 or delete it. Stale docs are worse than missing docs — they mislead.
@@ -243,8 +243,7 @@ When something breaks in production:
 
 ```
 1. Breathe. Nothing is on fire that minutes can't contain.
-2. Open the SECURITY-PLAYBOOK — find the matching scenario
-   (not yet written — go to step 3).
+2. Open the SECURITY-PLAYBOOK — find the matching scenario.
 3. If no match → is it containable? → feature flag OFF.
 4. If not containable → scale down traffic (Vercel pause).
 5. Document what you did, in real time, in DISPUTE.md.

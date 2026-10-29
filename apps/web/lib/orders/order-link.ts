@@ -10,6 +10,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import { serverConfig } from '@/lib/config.server';
+import { SecurityEvent, recordSecurityEvent } from '@/lib/security/security-events';
 
 export type OrderLinkPurpose = 'review' | 'pay';
 
@@ -34,5 +35,8 @@ export function orderIdFromSignedToken(purpose: OrderLinkPurpose, token: string)
   const [, orderId, signature] = match;
   const expected = Buffer.from(sign(purpose, orderId));
   const received = Buffer.from(signature);
-  return expected.length === received.length && timingSafeEqual(expected, received) ? orderId : null;
+  if (expected.length === received.length && timingSafeEqual(expected, received)) return orderId;
+  // Well-formed but unsigned by us — a guessed or edited link, not a copy-paste slip.
+  recordSecurityEvent(SecurityEvent.ORDER_LINK_TAMPERED, { route: `${purpose} link` });
+  return null;
 }

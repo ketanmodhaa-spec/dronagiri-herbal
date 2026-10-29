@@ -25,6 +25,7 @@ import { sendWhatsAppTemplate } from '@/lib/notifications/whatsapp/client';
 import { otpLoginTemplate } from '@/lib/notifications/whatsapp/templates';
 import { getOtpIssueLimiter } from '@/lib/ratelimit';
 import { getRedis } from '@/lib/redis';
+import { SecurityEvent, fingerprint, recordSecurityEvent } from '@/lib/security/security-events';
 
 /** TTL applied to the OTP and its attempt counter (seconds). */
 const OTP_TTL_SECONDS = 5 * 60;
@@ -72,7 +73,14 @@ export async function issueOtp(phone: string): Promise<IssueOtpResult> {
 
   const limiter = getOtpIssueLimiter();
   const { success } = await limiter.limit(normalised);
-  if (!success) return { issued: false, reason: 'rate_limited' };
+  if (!success) {
+    recordSecurityEvent(SecurityEvent.RATE_LIMITED, {
+      route: 'whatsapp otp',
+      source: 'otp-issue',
+      target: fingerprint(normalised),
+    });
+    return { issued: false, reason: 'rate_limited' };
+  }
 
   // randomInt(0, 1_000_000) gives a 6-digit space; pad so we never strip a
   // leading zero (e.g. `000123`).

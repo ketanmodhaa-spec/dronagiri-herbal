@@ -6,6 +6,7 @@ import { config } from '@/lib/config';
 import { NotFoundError, RateLimitError } from '@/lib/errors';
 import { clientIp, jsonData } from '@/lib/http';
 import { getCartMutationLimiter } from '@/lib/ratelimit';
+import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
 
 /** While the cart flag is off, the cart API does not exist. */
 export function assertCartEnabled(): void {
@@ -19,6 +20,7 @@ export async function enforceCartRateLimit(req: Request, sessionId: string): Pro
   const key = `${sessionId}:${clientIp(req) ?? 'unknown'}`;
   const { success } = await getCartMutationLimiter().limit(key);
   if (!success) {
+    recordSecurityEvent(SecurityEvent.RATE_LIMITED, { ...requestDetails(req), source: 'cart' });
     throw new RateLimitError('You are updating your cart too quickly. Please wait a moment.');
   }
 }

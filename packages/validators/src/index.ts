@@ -23,3 +23,4 @@ export * from './payment';
 export * from './review';
 export * from './coupon';
 export * from './partner';
+export * from './security';

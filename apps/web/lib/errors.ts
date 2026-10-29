@@ -64,3 +64,13 @@ export class RateLimitError extends AppError {
     super(code, message, 429);
   }
 }
+
+/** 503 — a service we depend on is unreachable; the caller should retry shortly. */
+export class ServiceUnavailableError extends AppError {
+  constructor(
+    message = 'This is unavailable just now. Please try again in a minute.',
+    code = 'SERVICE_UNAVAILABLE',
+  ) {
+    super(code, message, 503);
+  }
+}

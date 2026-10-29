@@ -12,12 +12,13 @@ import {
   toSafeAdmin,
 } from '@/lib/admin/admin-auth-service';
 import { adminAccessCookie, adminRefreshCookie } from '@/lib/auth/admin-session';
-import { AuthError, RateLimitError, ValidationError } from '@/lib/errors';
+import { AuthError, ForbiddenError, RateLimitError, ValidationError } from '@/lib/errors';
 import { errorResponse, jsonData } from '@/lib/http';
 import { runAfterResponse } from '@/lib/notifications/background';
 import { getAdminLoginLimiter } from '@/lib/ratelimit';
 import { adminLoginAlertFrom, sendAdminLoginAlert } from '@/lib/security/admin-login-alert';
 import { SecurityEvent, fingerprint, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
+import { verifyTurnstile } from '@/lib/security/turnstile';
 
 /** bcrypt, Prisma and the Node crypto module — this route must run on Node. */
 export const runtime = 'nodejs';
@@ -32,6 +33,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (!success) {
       recordSecurityEvent(SecurityEvent.ADMIN_LOGIN_RATE_LIMITED, requestDetails(req));
       throw new RateLimitError();
+    }
+
+    // Fails open: with Cloudflare unreachable, the rate limit and bcrypt still
+    // stand, and the outage is recorded and alarmed — Sarita is never locked out.
+    if ((await verifyTurnstile(req, 'admin_login')) === 'failed') {
+      throw new ForbiddenError('The security check failed. Please try again.', 'TURNSTILE_FAILED');
     }
 
     const body: unknown = await req.json().catch(() => null);

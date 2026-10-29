@@ -2,19 +2,21 @@
  * POST /api/partner-enquiries — the "become a distributor / dealer" form.
  *
  * Public and unauthenticated, so it is defended in layers: an IP rate limit
- * before any work, strict Zod validation, and a honeypot field — a filled
- * honeypot gets the same success response as a real enquiry but is never
- * stored, so a bot learns nothing.
+ * before any work, a honeypot field — a filled honeypot gets the same success
+ * response as a real enquiry but is never stored, so a bot learns nothing —
+ * then Cloudflare Turnstile and strict Zod validation. With Turnstile
+ * unreachable the form refuses rather than letting bots through.
  */
 import type { NextRequest } from 'next/server';
 
 import { partnerEnquirySchema } from '@dronagiri/validators';
 
-import { RateLimitError, ValidationError } from '@/lib/errors';
+import { ForbiddenError, RateLimitError, ServiceUnavailableError, ValidationError } from '@/lib/errors';
 import { clientIp, errorResponse, jsonData } from '@/lib/http';
 import { submitPartnerEnquiry } from '@/lib/partners/partner-enquiry-service';
 import { getPartnerEnquiryLimiter } from '@/lib/ratelimit';
 import { SecurityEvent, recordSecurityEvent, requestDetails } from '@/lib/security/security-events';
+import { verifyTurnstile } from '@/lib/security/turnstile';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,6 +40,14 @@ export async function POST(req: NextRequest): Promise<Response> {
       body.website.length > 0;
     if (isBot) {
       return jsonData({ received: true });
+    }
+
+    const verdict = await verifyTurnstile(req, 'partner_enquiry');
+    if (verdict === 'failed') {
+      throw new ForbiddenError('The security check failed. Please try again.', 'TURNSTILE_FAILED');
+    }
+    if (verdict === 'unavailable') {
+      throw new ServiceUnavailableError('We could not send your enquiry just now. Please try again in a minute.');
     }
 
     const parsed = partnerEnquirySchema.safeParse(body);

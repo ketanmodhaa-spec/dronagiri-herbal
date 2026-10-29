@@ -22,6 +22,8 @@
 
 @AGENTS.md
 
+@BLUE-BOOK.md
+
 ---
 
 ## The Three Mandates
@@ -171,6 +173,9 @@ if (order.status === 'confirmed') // use enum
 
 // ❌ God functions — split if you use "and" in the name
 async function validateAndChargeAndNotify() { ... }
+
+// ❌ TODO in shipped code — finish it or don't ship it
+// TODO: handle this edge case later
 ```
 
 ### Required patterns
@@ -315,6 +320,7 @@ Print and laminate alias cheatsheet for Sarita's production area.
 | Resend | ✅ Done | API key in Doppler. Domain verified for dronagiriherbal.in. |
 | Anthropic | ⏳ Pending | |
 | Sentry | ✅ Configured (19 Oct 2026) | DSN + auth token in Doppler `dev` and `prd` (`NEXT_PUBLIC_SENTRY_DSN` — the code reads only this name). Server errors logged with `console.error` are forwarded (captureConsoleIntegration); uncaught ones via `onRequestError`. It was silently off in production until 19 Oct because the prd→Vercel sync was disabled — see Build & Deploy. |
+| Better Stack | ✅ Active | Uptime monitors every 3 min. Checked weekly (BLUE-BOOK Part VI). |
 | Vercel | ✅ Done | Project live (account "dronagiriherbal's projects"). dronagiriherbal.in attached with SSL. Production branch is `dev` — see Build & Deploy. **On Hobby temporarily (8 Oct 2026)** — upgrade to Pro just before the full store goes live (orders, payment, fulfilment). Hobby is non-commercial-use only and limits crons, so `vercel.json` crons stay empty until then. |
 
 ---
